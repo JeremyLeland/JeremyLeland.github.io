@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Jazz Ball</title>
+		<script type="text/javascript" src="code.js"></script>
+      <script type="text/javascript" src="jazzball.js"></script>
+		<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+      <script>
+         window.onload = function() {
+            new JazzBall()
+         }
+      </script>
+	</head>
+	<body bgcolor="black" text="white">
+		<canvas style="float:left; padding-right:10px; padding-bottom:10px" id="game" width="480" height="320" oncontextmenu="return false"></canvas>
+      <div>
+         <b>Lives: </b><span id="lives">#</span><br/>
+         <b>Cleared: </b><span id="cleared">#</span>%<br/>
+         <b>Time: </b><span id="elapsed">#</span>
+      </div>
+      <h3 style="clear: both">Jazz Ball</h3>
+      <p>Slice and dice away the playfield to isolate the balls</p>
+      <ul>
+         <li><b>Left Click</b>: Vertical split</li>
+		   <li><b>Right Click</b>: Horizontal split</li>
+      </ul>
+	</body>
+</html>
