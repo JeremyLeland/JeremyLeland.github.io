@@ -11,8 +11,7 @@ export class Game {
       window.addEventListener('resize', () => this.resize(), false)
 
       this.fpsUI = document.createElement('div')
-      this.fpsUI.style = "position: absolute; top: 10px; font: 18px sans-serif"
-      this.fpsUI.style.left = (window.innerWidth - 50) + "px"
+      this.fpsUI.style = "position: absolute; left: 100%; top: 100%; transform: translate(-14px, -14px); font: 10px sans-serif"
       document.body.appendChild(this.fpsUI)
       this.frames = 0
       setInterval(() => this.updateFPS(), 1000)
@@ -43,8 +42,6 @@ export class Game {
       this.renderer.setSize( window.innerWidth, window.innerHeight )
       this.camera.aspect = window.innerWidth / window.innerHeight
       this.camera.updateProjectionMatrix()
-
-      this.fpsUI.style.left = (window.innerWidth - 50) + "px"
    }
 
    animate() {

@@ -7,6 +7,8 @@ export class Jumper extends Game {
    static CAMERA_FOLLOW_Y = 3
    static CAMERA_FOLLOW_Z = 4
 
+   static VERSION = 0.8
+
    static GameState = {
       LEVEL_LOADING: 0,
       LEVEL_START: 1,
@@ -66,8 +68,13 @@ export class Jumper extends Game {
       document.body.appendChild(speedDiv)
 
       this.levelUI = document.createElement('div')
-      this.levelUI.style = "position: absolute; left: 100px; top: 100px; font: 28px sans-serif"
+      this.levelUI.style = "position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font: 28px sans-serif"
       document.body.appendChild(this.levelUI)
+
+      this.versionUI = document.createElement('div')
+      this.versionUI.textContent = "Version: " + Jumper.VERSION
+      this.versionUI.style = "position: absolute; left: 2px; top: 100%; transform: translate(0, -14px); font: 10px sans-serif"
+      document.body.appendChild(this.versionUI)
    }
 
    nextLevel() {
