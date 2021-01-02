@@ -2,7 +2,7 @@ import * as THREE from "./three.module.js" //'https://unpkg.com/three/build/thre
 import { Level } from "./level.js"
 
 export class Player {
-   static SPEED = 0.006
+   static SPEED = 0.01
    static MAX_SPEED = 8
    static ACCEL = 0.006
    static SIDE_SPEED = 0.008
