@@ -10,7 +10,7 @@ export class Player {
    static SIZE = 0.4
    static SPAWN_Y = 5.0
    static GRAVITY = -0.0001
-   static COLLISION_FUDGE = 0.12
+   static COLLISION_FUDGE = 0.3
    static FALL_NO_RETURN = -0.4
    static FALL_END = -40
 
@@ -91,11 +91,18 @@ export class Player {
    }
 
    isOnSolidGround() {
-      let col = Math.floor(this.x / Level.BLOCK_WIDTH)
-      let row = Math.floor(this.z / Level.BLOCK_LENGTH)
+      //let col = Math.floor(this.x / Level.BLOCK_WIDTH)
+      //let row = Math.floor(this.z / Level.BLOCK_LENGTH)
+
+      // More generous collision
+      let colLeft = Math.floor((this.x - Player.COLLISION_FUDGE) / Level.BLOCK_WIDTH)
+      let colRight = Math.floor((this.x + Player.COLLISION_FUDGE) / Level.BLOCK_WIDTH)
+      let rowFront = Math.floor((this.z - Player.COLLISION_FUDGE) / Level.BLOCK_LENGTH)
+      let rowBack = Math.floor((this.z + Player.COLLISION_FUDGE) / Level.BLOCK_LENGTH)
 
       return this.y <= Player.SIZE && this.y > Player.FALL_NO_RETURN &&
-             this.level.isSolidAt(col, row)
+             (this.level.isSolidAt(colLeft, rowFront) || this.level.isSolidAt(colRight, rowFront) ||
+              this.level.isSolidAt(colLeft, rowBack)  || this.level.isSolidAt(colRight, rowBack))
    }
 
    update(dt) {

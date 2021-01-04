@@ -7,7 +7,7 @@ export class Jumper extends Game {
    static CAMERA_FOLLOW_Y = 3
    static CAMERA_FOLLOW_Z = 4
 
-   static VERSION = 0.8
+   static VERSION = 0.81
 
    static GameState = {
       LEVEL_LOADING: 0,
@@ -81,7 +81,10 @@ export class Jumper extends Game {
       this.gameState = Jumper.GameState.LEVEL_LOADING
 
       let nextLevel = Jumper.LEVELS[this.levelNdx ++]
-      this.level = new Level(nextLevel.title, nextLevel.src)
+
+      if (nextLevel != undefined) {
+         this.level = new Level(nextLevel.title, nextLevel.src)
+      }
    }
 
    anyKeyPressed() {
@@ -167,7 +170,7 @@ export class Jumper extends Game {
       this.speedUI.textContent = this.player.speed
       this.camera.position.z = this.player.z + Jumper.CAMERA_FOLLOW_Z
 
-      if (this.player.z <= Level.BLOCK_LENGTH && this.player.isOnSolidGround) {
+      if (this.player.z <= Level.BLOCK_LENGTH && this.player.isOnSolidGround()) {
          this.gameState = Jumper.GameState.LEVEL_END
       }
    }
