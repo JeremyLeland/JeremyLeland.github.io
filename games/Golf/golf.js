@@ -67,6 +67,32 @@ export class Golf extends Game {
       terrainMesh.castShadow = true;
 
       this.scene.add( terrainMesh )
+
+      const textureLoader = new THREE.TextureLoader()
+      textureLoader.load( "textures/Seamless_golf_green_grass_texture.jpg", function ( texture ) {
+         texture.wrapS = THREE.RepeatWrapping
+         texture.wrapT = THREE.RepeatWrapping
+         texture.repeat.set(10, 10)
+         groundMaterial.map = texture
+         groundMaterial.needsUpdate = true
+      })
+
+      textureLoader.load( "textures/Seamless_golf_green_grass_texture_DISP.jpg", function ( texture ) {
+         texture.wrapS = THREE.RepeatWrapping
+         texture.wrapT = THREE.RepeatWrapping
+         texture.repeat.set(10, 10)
+         groundMaterial.displacementMap = texture
+         groundMaterial.displacementScale = 0.4
+         groundMaterial.needsUpdate = true
+      })
+
+      textureLoader.load( "textures/Seamless_golf_green_grass_texture_NORMAL.jpg", function ( texture ) {
+         texture.wrapS = THREE.RepeatWrapping
+         texture.wrapT = THREE.RepeatWrapping
+         texture.repeat.set(10, 10)
+         groundMaterial.normalMap = texture
+         groundMaterial.needsUpdate = true
+      })
    }
 
    generateHeight(width, depth, minHeight, maxHeight) {
