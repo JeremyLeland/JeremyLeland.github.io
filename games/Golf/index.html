@@ -8,9 +8,15 @@
       </style>
    </head>
    <body>
+      <script src="./libs/ammo.wasm.js"></script>
       <script type="module">
          import { Golf } from "./golf.js"
-         globalThis.golf = new Golf()
+
+         Ammo().then( function ( AmmoLib ) {
+            Ammo = AmmoLib
+
+            globalThis.golf = new Golf()
+         })
       </script>
    </body>
 </html>

@@ -20,6 +20,8 @@ export class Golf extends Game {
       const controls = new OrbitControls( this.camera, this.renderer.domElement )
 
       this.prepareTerrain()
+      this.addBall()
+
       this.prepareLights()
 
       this.startGame()
@@ -46,13 +48,14 @@ export class Golf extends Game {
    }
 
    prepareTerrain() {
-      const LEVEL_WIDTH = 100, LEVEL_HEIGHT = 100
-      const LEVEL_WIDTH_SEGMENTS = 128, LEVEL_HEIGHT_SEGMENTS = 128
+      const LEVEL_WIDTH = 100, LEVEL_DEPTH = 100
+      const LEVEL_WIDTH_SEGMENTS = 128, LEVEL_DEPTH_SEGMENTS = 128
+      const LEVEL_MIN_HEIGHT = -2, LEVEL_MAX_HEIGHT = 8
 
-      const geometry = new THREE.PlaneBufferGeometry( LEVEL_WIDTH, LEVEL_HEIGHT, LEVEL_WIDTH_SEGMENTS - 1, LEVEL_HEIGHT_SEGMENTS - 1 )
+      const geometry = new THREE.PlaneBufferGeometry( LEVEL_WIDTH, LEVEL_DEPTH, LEVEL_WIDTH_SEGMENTS - 1, LEVEL_DEPTH_SEGMENTS - 1 )
       geometry.rotateX( -Math.PI / 2 )
 
-      const heightData = this.generateHeight( LEVEL_WIDTH_SEGMENTS, LEVEL_HEIGHT_SEGMENTS, -2, 8 )
+      const heightData = this.generateHeight( LEVEL_WIDTH_SEGMENTS, LEVEL_DEPTH_SEGMENTS, LEVEL_MIN_HEIGHT, LEVEL_MAX_HEIGHT )
 
       const vertices = geometry.attributes.position.array
       for (let i = 0, j = 0, l = vertices.length; i < l; i ++, j += 3) {
@@ -93,6 +96,19 @@ export class Golf extends Game {
          groundMaterial.normalMap = texture
          groundMaterial.needsUpdate = true
       })
+
+      const groundShape = this.createTerrainShape(LEVEL_WIDTH, LEVEL_DEPTH, LEVEL_WIDTH_SEGMENTS, LEVEL_DEPTH_SEGMENTS, LEVEL_MIN_HEIGHT, LEVEL_MAX_HEIGHT, heightData);
+      const groundTransform = new Ammo.btTransform();
+      groundTransform.setIdentity();
+      // Shifts the terrain, since bullet re-centers it on its bounding box.
+      groundTransform.setOrigin( new Ammo.btVector3( 0, ( LEVEL_MAX_HEIGHT + LEVEL_MIN_HEIGHT ) / 2, 0 ) );
+      const groundMass = 0;
+      const groundLocalInertia = new Ammo.btVector3( 0, 0, 0 );
+      const groundMotionState = new Ammo.btDefaultMotionState( groundTransform );
+      const groundBody = new Ammo.btRigidBody( new Ammo.btRigidBodyConstructionInfo( groundMass, groundMotionState, groundShape, groundLocalInertia ) );
+      this.physicsWorld.addRigidBody( groundBody );
+
+      this.transformAux1 = new Ammo.btTransform();
    }
 
    generateHeight(width, depth, minHeight, maxHeight) {
@@ -120,7 +136,108 @@ export class Golf extends Game {
       return data;
    }
 
+   createTerrainShape(width, depth, widthSegments, depthSegments, minHeight, maxHeight, heightData) {
+      // This parameter is not really used, since we are using PHY_FLOAT height data type and hence it is ignored
+      const heightScale = 1;
+
+      // Up axis = 0 for X, 1 for Y, 2 for Z. Normally 1 = Y is used.
+      const upAxis = 1;
+
+      // hdt, height data type. "PHY_FLOAT" is used. Possible values are "PHY_FLOAT", "PHY_UCHAR", "PHY_SHORT"
+      const hdt = "PHY_FLOAT";
+
+      // Set this to your needs (inverts the triangles)
+      const flipQuadEdges = false;
+
+      // Creates height data buffer in Ammo heap
+      const ammoHeightData = Ammo._malloc( 4 * widthSegments * depthSegments );
+
+      // Copy the javascript height data array to the Ammo one.
+      let p = 0;
+      let p2 = 0;
+
+      for ( let j = 0; j < depthSegments; j ++ ) {
+         for ( let i = 0; i < widthSegments; i ++ ) {
+            // write 32-bit float data to memory
+            Ammo.HEAPF32[ ammoHeightData + p2 >> 2 ] = heightData[ p ];
+
+            p ++;
+
+            // 4 bytes/float
+            p2 += 4;
+         }
+      }
+
+      // Creates the heightfield physics shape
+      const heightFieldShape = new Ammo.btHeightfieldTerrainShape(
+         widthSegments,
+         depthSegments,
+         ammoHeightData,
+         heightScale,
+         minHeight,
+         maxHeight,
+         upAxis,
+         hdt,
+         flipQuadEdges
+      );
+
+      // Set horizontal scale
+      const scaleX = width / ( widthSegments - 1 );
+      const scaleZ = depth / ( depthSegments - 1 );
+      heightFieldShape.setLocalScaling( new Ammo.btVector3( scaleX, 1, scaleZ ) );
+
+      heightFieldShape.setMargin( 0.05 );
+
+      return heightFieldShape;
+   }
+
+   addBall() {
+      const margin = 0.05
+      const radius = 2.0
+      const threeObject = new THREE.Mesh( new THREE.SphereBufferGeometry( radius, 20, 20 ), new THREE.MeshPhongMaterial( { color: "white" } ) );
+      const physicsShape = new Ammo.btSphereShape( radius );
+      physicsShape.setMargin( margin );
+
+      threeObject.position.set( -20, 10, 10);
+
+      const mass = 5;
+      const localInertia = new Ammo.btVector3( 0, 0, 0 );
+      physicsShape.calculateLocalInertia( mass, localInertia );
+      const transform = new Ammo.btTransform();
+      transform.setIdentity();
+      const pos = threeObject.position;
+      transform.setOrigin( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
+      const motionState = new Ammo.btDefaultMotionState( transform );
+      const rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, physicsShape, localInertia );
+      const body = new Ammo.btRigidBody( rbInfo );
+
+      threeObject.userData.physicsBody = body;
+
+      threeObject.receiveShadow = true;
+      threeObject.castShadow = true;
+
+      this.ball = threeObject
+
+      this.scene.add( threeObject );
+      this.physicsWorld.addRigidBody( body );
+   }
+
    update(dt) {
+      // TODO: use three.js clock for dt?
+
+      this.physicsWorld.stepSimulation( dt, 10 )
+
+      const objThree = this.ball
+      const objPhys = objThree.userData.physicsBody
+      const ms = objPhys.getMotionState()
+
+      if (ms) {
+         ms.getWorldTransform( this.transformAux1 )
+         const p = this.transformAux1.getOrigin()
+         const q = this.transformAux1.getRotation()
+         objThree.position.set( p.x(), p.y(), p.z() )
+         objThree.quaternion.set( q.x(), q.y(), q.z(), q.w() )
+      }
    }
 
    render(renderer) {
