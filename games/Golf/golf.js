@@ -10,6 +10,8 @@ export class Golf extends Game {
 
       this.keyBindings = { }
 
+      this.renderer.shadowMap.enabled = true
+
       this.scene = new THREE.Scene()
       this.scene.background = new THREE.Color( 0xbfd1e5 )
 
@@ -194,11 +196,14 @@ export class Golf extends Game {
    addBall() {
       const margin = 0.05
       const radius = 2.0
-      const threeObject = new THREE.Mesh( new THREE.SphereBufferGeometry( radius, 20, 20 ), new THREE.MeshPhongMaterial( { color: "white" } ) );
+
+
+      const golfMaterial = new THREE.MeshPhongMaterial( { color: "white" } )
+      const threeObject = new THREE.Mesh( new THREE.SphereBufferGeometry( radius, 20, 20 ), golfMaterial );
       const physicsShape = new Ammo.btSphereShape( radius );
       physicsShape.setMargin( margin );
 
-      threeObject.position.set( -20, 10, 10);
+      threeObject.position.set( -20, 10, 10 );
 
       const mass = 5;
       const localInertia = new Ammo.btVector3( 0, 0, 0 );
@@ -217,6 +222,14 @@ export class Golf extends Game {
       threeObject.castShadow = true;
 
       this.ball = threeObject
+
+      const textureLoader = new THREE.TextureLoader()
+      textureLoader.load( "textures/golfball.jpg", function ( texture ) {
+         texture.wrapS = THREE.RepeatWrapping
+         texture.wrapT = THREE.RepeatWrapping
+         golfMaterial.map = texture
+         golfMaterial.needsUpdate = true
+      })
 
       this.scene.add( threeObject );
       this.physicsWorld.addRigidBody( body );
