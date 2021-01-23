@@ -50,8 +50,8 @@ export class Golf extends Game {
    }
 
    prepareTerrain() {
-      const LEVEL_WIDTH = 100, LEVEL_DEPTH = 100
-      const LEVEL_WIDTH_SEGMENTS = 128, LEVEL_DEPTH_SEGMENTS = 128
+      const LEVEL_WIDTH = 200, LEVEL_DEPTH = 200
+      const LEVEL_WIDTH_SEGMENTS = 256, LEVEL_DEPTH_SEGMENTS = 256
       const LEVEL_MIN_HEIGHT = -2, LEVEL_MAX_HEIGHT = 8
 
       const geometry = new THREE.PlaneBufferGeometry( LEVEL_WIDTH, LEVEL_DEPTH, LEVEL_WIDTH_SEGMENTS - 1, LEVEL_DEPTH_SEGMENTS - 1 )
@@ -129,7 +129,7 @@ export class Golf extends Game {
             const radius = Math.sqrt(
                Math.pow( ( i - w2 ) / w2, 2.0 ) +
                   Math.pow( ( j - d2 ) / d2, 2.0 ) );
-            const height = ( Math.sin( radius * phaseMult ) + 1 ) * 0.5 * hRange + minHeight;
+            const height = ( Math.sin( radius * phaseMult ) + 1 ) * 0.5 * hRange + minHeight + Math.cos(i / 8);
             data[ p ] = height;
             p ++;
          }
@@ -224,10 +224,17 @@ export class Golf extends Game {
       this.ball = threeObject
 
       const textureLoader = new THREE.TextureLoader()
-      textureLoader.load( "textures/golfball.jpg", function ( texture ) {
+      textureLoader.load( "textures/Seamless_Aegean_Marble_Texture.jpg", function ( texture ) {
          texture.wrapS = THREE.RepeatWrapping
          texture.wrapT = THREE.RepeatWrapping
          golfMaterial.map = texture
+         golfMaterial.needsUpdate = true
+      })
+
+      textureLoader.load( "textures/Seamless_Aegean_Marble_Texture_NORMAL.jpg", function ( texture ) {
+         texture.wrapS = THREE.RepeatWrapping
+         texture.wrapT = THREE.RepeatWrapping
+         golfMaterial.normalMap = texture
          golfMaterial.needsUpdate = true
       })
 
