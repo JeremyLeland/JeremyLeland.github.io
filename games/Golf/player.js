@@ -65,7 +65,8 @@ export class Player {
       worldTransform.setOrigin( new Ammo.btVector3( x, y, z ) )
       worldTransform.setRotation( new Ammo.btVector3( 1, 0, 0, 1 ) )
 
-      // TODO: Reset velocity
+      this.physicsBody.setLinearVelocity( new Ammo.btVector3( 0, 0, 0 ) )
+      this.physicsBody.setAngularVelocity( new Ammo.btVector3( 0, 0, 0 ) )
    }
 
    update(dt) {
