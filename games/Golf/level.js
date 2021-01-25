@@ -1,7 +1,7 @@
 import * as THREE from "./libs/three.module.js"
 
 export class Level {
-   constructor(scene, physicsWorld) {
+   constructor(scene, physicsWorld, heightFunction) {
       this.width = 200
       this.depth = 200
       this.widthSegments = 256
@@ -9,7 +9,7 @@ export class Level {
       this.minHeight = -2
       this.maxHeight = 8
 
-      this.heightData = this.generateHeight( this.widthSegments, this.depthSegments, this.minHeight, this.maxHeight )
+      this.heightData = this.generateHeight( this.widthSegments, this.depthSegments, this.minHeight, this.maxHeight, heightFunction )
 
       this.initGraphics( scene )
       this.initPhysics( physicsWorld )
@@ -27,9 +27,9 @@ export class Level {
       geometry.computeVertexNormals()
 
       const groundMaterial = new THREE.MeshPhongMaterial( { color: 0xC7C7C7 } );
-      const terrainMesh = new THREE.Mesh( geometry, groundMaterial );
-      terrainMesh.receiveShadow = true;
-      terrainMesh.castShadow = true;
+      this.terrainMesh = new THREE.Mesh( geometry, groundMaterial );
+      this.terrainMesh.receiveShadow = true;
+      this.terrainMesh.castShadow = true;
 
       const REPEAT_S = 10, REPEAT_T = 10
 
@@ -59,7 +59,7 @@ export class Level {
          groundMaterial.needsUpdate = true
       })
 
-      scene.add( terrainMesh )
+      scene.add( this.terrainMesh )
    }
 
    initPhysics(physicsWorld) {
@@ -71,12 +71,17 @@ export class Level {
       const groundMass = 0;
       const groundLocalInertia = new Ammo.btVector3( 0, 0, 0 );
       const groundMotionState = new Ammo.btDefaultMotionState( groundTransform );
-      const groundBody = new Ammo.btRigidBody( new Ammo.btRigidBodyConstructionInfo( groundMass, groundMotionState, groundShape, groundLocalInertia ) );
+      this.groundBody = new Ammo.btRigidBody( new Ammo.btRigidBodyConstructionInfo( groundMass, groundMotionState, groundShape, groundLocalInertia ) );
      
-      physicsWorld.addRigidBody( groundBody );
+      physicsWorld.addRigidBody( this.groundBody );
    }
 
-   generateHeight(width, depth, minHeight, maxHeight) {
+   release(scene, physicsWorld) {
+      scene.remove( this.terrainMesh )
+      physicsWorld.removeRigidBody( this.groundBody )
+   }
+
+   generateHeight(width, depth, minHeight, maxHeight, heightFunction) {
       const size = width * depth;
       const data = new Float32Array( size );
 
@@ -89,10 +94,8 @@ export class Level {
 
       for ( let j = 0; j < depth; j ++ ) {
          for ( let i = 0; i < width; i ++ ) {
-            const radius = Math.sqrt(
-               Math.pow( ( i - w2 ) / w2, 2.0 ) +
-                  Math.pow( ( j - d2 ) / d2, 2.0 ) );
-            const height = ( Math.sin( radius * phaseMult ) + 1 ) * 0.5 * hRange + minHeight + Math.cos(j / 8);
+            //const height = Math.sin((j + i ) / 8) + Math.cos((j * i) / 800) * 2
+            const height = heightFunction(i, j)
             data[ p ] = height;
             p ++;
          }

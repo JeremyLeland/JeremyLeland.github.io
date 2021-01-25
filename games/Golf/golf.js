@@ -17,20 +17,34 @@ export class Golf extends Game {
       this.scene = new THREE.Scene()
       this.scene.background = new THREE.Color( 0xbfd1e5 )
 
-      this.camera.position.y = 40
-      this.camera.position.z = 40
+      this.camera.position.y = 100
+      this.camera.position.z = 140
       this.camera.lookAt(0, 0, 0)
 
       const controls = new OrbitControls( this.camera, this.renderer.domElement )
 
-      this.level = new Level(this.scene, this.physicsWorld)
-      this.player = new Player(this.scene, this.physicsWorld)
-
-      this.player.spawn(30, 10, 10)
+      const heightFunction = function(x, y) {
+         return Math.sin((x + y ) / 8) + Math.cos((x * y) / 800) * 2
+      }
+      this.loadLevel(heightFunction)
 
       this.prepareLights()
 
       this.startGame()
+   }
+
+   loadLevel(heightFunction) {
+      if (this.level) {
+         this.level.release(this.scene, this.physicsWorld)
+      }
+      if (this.player) {
+         this.player.release(this.scene, this.physicsWorld)
+      }
+
+      this.level = new Level(this.scene, this.physicsWorld, heightFunction)
+      this.player = new Player(this.scene, this.physicsWorld)
+
+      this.player.spawn(0, 50, 0)
    }
 
    prepareLights() {

@@ -60,6 +60,11 @@ export class Player {
       this.transformAux1 = new Ammo.btTransform()
    }
 
+   release(scene, physicsWorld) {
+      scene.remove( this.threeObject )
+      physicsWorld.removeRigidBody( this.physicsBody )
+   }
+
    spawn(x, y, z) {
       const worldTransform = this.physicsBody.getWorldTransform()
       worldTransform.setOrigin( new Ammo.btVector3( x, y, z ) )
@@ -67,6 +72,10 @@ export class Player {
 
       this.physicsBody.setLinearVelocity( new Ammo.btVector3( 0, 0, 0 ) )
       this.physicsBody.setAngularVelocity( new Ammo.btVector3( 0, 0, 0 ) )
+   }
+
+   hit(x, y, z) {
+      this.physicsBody.applyCentralImpulse( new Ammo.btVector3(x, y, z))
    }
 
    update(dt) {
