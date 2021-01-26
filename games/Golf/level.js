@@ -1,22 +1,49 @@
 import * as THREE from "./libs/three.module.js"
 
 export class Level {
-   constructor(scene, physicsWorld, heightFunction) {
-      this.width = 200
-      this.depth = 200
-      this.widthSegments = 256
-      this.depthSegments = 256
-      this.minHeight = -2
-      this.maxHeight = 8
 
-      this.heightData = this.generateHeight( this.widthSegments, this.depthSegments, this.minHeight, this.maxHeight, heightFunction )
+   static SEGMENT_SIZE = 4
+   static MAX_HEIGHT = 60
+
+   constructor(scene, physicsWorld, src) {
+      this.isReady = false
+
+      const image = new Image()
+      image.src = src
+      image.onload = () => this.loadFromImage(scene, physicsWorld, image)
+   }
+
+   loadFromImage(scene, physicsWorld, image) {
+      this.width = image.width
+      this.depth = image.height
+      this.heightData = new Float32Array( this.width * this.depth )
+
+      const levelCanvas = document.createElement('canvas')
+      levelCanvas.width = image.width
+      levelCanvas.height = image.height
+      const levelContext = levelCanvas.getContext('2d')
+      levelContext.drawImage(image, 0, 0)
+      const imageData = levelContext.getImageData(0, 0, levelCanvas.width, levelCanvas.height)
+
+      let heightNdx = 0, imageNdx = 0
+      for (let z = 0; z < this.depth; z ++) {
+         for (let x = 0; x < this.width; x ++) {
+            this.heightData[ heightNdx ] = (imageData.data[ imageNdx ] / 256) * Level.MAX_HEIGHT
+            heightNdx ++
+            imageNdx += 4 // skip green, blue, and alpha for now
+         }
+      }
 
       this.initGraphics( scene )
       this.initPhysics( physicsWorld )
+
+      this.isReady = true
    }
 
    initGraphics(scene) {
-      const geometry = new THREE.PlaneBufferGeometry( this.width, this.depth, this.widthSegments - 1, this.depthSegments - 1 )
+      const geometry = new THREE.PlaneBufferGeometry( this.width * Level.SEGMENT_SIZE, 
+                                                      this.depth * Level.SEGMENT_SIZE, 
+                                                      this.width - 1, this.depth - 1 )
       geometry.rotateX( -Math.PI / 2 )
 
       const vertices = geometry.attributes.position.array
@@ -63,11 +90,12 @@ export class Level {
    }
 
    initPhysics(physicsWorld) {
-      const groundShape = this.createTerrainShape(this.width, this.depth, this.widthSegments, this.depthSegments, this.minHeight, this.maxHeight, this.heightData);
+      const groundShape = this.createTerrainShape(this.width * Level.SEGMENT_SIZE, this.depth * Level.SEGMENT_SIZE, 
+                                                  this.width, this.depth, 0, Level.MAX_HEIGHT, this.heightData);
       const groundTransform = new Ammo.btTransform();
       groundTransform.setIdentity();
       // Shifts the terrain, since bullet re-centers it on its bounding box.
-      groundTransform.setOrigin( new Ammo.btVector3( 0, ( this.maxHeight + this.minHeight ) / 2, 0 ) );
+      groundTransform.setOrigin( new Ammo.btVector3( 0, Level.MAX_HEIGHT / 2, 0 ) );
       const groundMass = 0;
       const groundLocalInertia = new Ammo.btVector3( 0, 0, 0 );
       const groundMotionState = new Ammo.btDefaultMotionState( groundTransform );
@@ -79,29 +107,6 @@ export class Level {
    release(scene, physicsWorld) {
       scene.remove( this.terrainMesh )
       physicsWorld.removeRigidBody( this.groundBody )
-   }
-
-   generateHeight(width, depth, minHeight, maxHeight, heightFunction) {
-      const size = width * depth;
-      const data = new Float32Array( size );
-
-      const hRange = maxHeight - minHeight;
-      const w2 = width / 2;
-      const d2 = depth / 2;
-      const phaseMult = 12;
-
-      let p = 0;
-
-      for ( let j = 0; j < depth; j ++ ) {
-         for ( let i = 0; i < width; i ++ ) {
-            //const height = Math.sin((j + i ) / 8) + Math.cos((j * i) / 800) * 2
-            const height = heightFunction(i, j)
-            data[ p ] = height;
-            p ++;
-         }
-      }
-
-      return data;
    }
 
    createTerrainShape(width, depth, widthSegments, depthSegments, minHeight, maxHeight, heightData) {

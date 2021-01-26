@@ -23,17 +23,14 @@ export class Golf extends Game {
 
       const controls = new OrbitControls( this.camera, this.renderer.domElement )
 
-      const heightFunction = function(x, y) {
-         return Math.sin((x + y ) / 8) + Math.cos((x * y) / 800) * 2
-      }
-      this.loadLevel(heightFunction)
+      this.loadLevel("./levels/test1.png")
 
       this.prepareLights()
 
       this.startGame()
    }
 
-   loadLevel(heightFunction) {
+   loadLevel(src) {
       if (this.level) {
          this.level.release(this.scene, this.physicsWorld)
       }
@@ -41,7 +38,7 @@ export class Golf extends Game {
          this.player.release(this.scene, this.physicsWorld)
       }
 
-      this.level = new Level(this.scene, this.physicsWorld, heightFunction)
+      this.level = new Level(this.scene, this.physicsWorld, src)
       this.player = new Player(this.scene, this.physicsWorld)
 
       this.player.spawn(0, 50, 0)
