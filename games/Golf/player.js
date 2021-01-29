@@ -12,7 +12,7 @@ export class Player {
    }
 
    update(dt) {
-      //this.dy += this.level.gravity
+      this.dy += this.level.gravity
 
       this.x += this.dx * dt
       this.y += this.dy * dt

@@ -20,6 +20,9 @@ export class Golf extends Game {
    }
 
    draw(ctx) {
+      ctx.fillStyle = "black"
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+
       this.level.draw(ctx)
    }
 }
