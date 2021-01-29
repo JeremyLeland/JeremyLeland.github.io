@@ -1,11 +1,9 @@
-import * as THREE from "./libs/three.module.js" //'https://unpkg.com/three/build/three.module.js'
-
 export class Game {
    static VERSION = 0
 
    constructor() {
-      this.initGraphics()
-      this.initPhysics()
+      this.canvas = document.getElementById("game")
+      this.context = this.canvas.getContext("2d")
 
       this.prepareUI()
 
@@ -13,25 +11,6 @@ export class Game {
       this.keyDown = {}
       document.onkeydown = (e) => this.keyDownCallback(e)
       document.onkeyup = (e) => this.keyUpCallback(e)
-   }
-
-   initGraphics() {
-      this.renderer = new THREE.WebGLRenderer()
-      this.renderer.setSize( window.innerWidth, window.innerHeight )
-      document.body.appendChild( this.renderer.domElement )
-
-      this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 )
-
-      window.addEventListener('resize', () => this.resize(), false)
-   }
-
-   initPhysics() {
-      const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration()
-      const dispatcher = new Ammo.btCollisionDispatcher( collisionConfiguration )
-      const broadphase = new Ammo.btDbvtBroadphase()
-      const solver = new Ammo.btSequentialImpulseConstraintSolver()
-      this.physicsWorld = new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfiguration )
-      this.physicsWorld.setGravity( new Ammo.btVector3( 0, -9.8, 0 ) )
    }
 
    prepareUI() {
@@ -68,12 +47,6 @@ export class Game {
       }
    }
 
-   resize() {
-      this.renderer.setSize( window.innerWidth, window.innerHeight )
-      this.camera.aspect = window.innerWidth / window.innerHeight
-      this.camera.updateProjectionMatrix()
-   }
-
    animate() {
       requestAnimationFrame( () => this.animate() )
 
@@ -88,7 +61,7 @@ export class Game {
 
       this.lastTime = now
 
-      this.render(this.renderer)
+      this.draw(this.context)
       this.frames ++
    }
 
@@ -98,5 +71,5 @@ export class Game {
    }
 
    update(dt) {}
-   render(renderer) {}
+   draw(context) {}
 }

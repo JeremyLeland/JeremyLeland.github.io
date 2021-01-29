@@ -7,16 +7,15 @@
          body { margin: 0; }
       </style>
    </head>
-   <body>
-      <script src="./libs/ammo.wasm.js"></script>
+   <body bgcolor="black" text="white">
       <script type="module">
          import { Golf } from "./golf.js"
-
-         Ammo().then( function ( AmmoLib ) {
-            Ammo = AmmoLib
-
-            globalThis.golf = new Golf()
-         })
+         globalThis.golf = new Golf()
       </script>
+
+      <canvas style="float:left; padding-right:10px; padding-bottom:10px" id="game" width="480" height="320" oncontextmenu="return false"></canvas>
+      <h3 style="clear: both">Golf</h3>
+      <p>Click and drag to hit ball</p>
+   </body>
    </body>
 </html>
