@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+   <head>
+      <title>Golf</title>
+      <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+      <style>
+         body { margin: 0; }
+      </style>
+   </head>
+   <body>
+      <script src="./libs/ammo.wasm.js"></script>
+      <script type="module">
+         import { Golf } from "./golf.js"
+
+         Ammo().then( function ( AmmoLib ) {
+            Ammo = AmmoLib
+
+            globalThis.golf = new Golf()
+         })
+      </script>
+   </body>
+</html>
