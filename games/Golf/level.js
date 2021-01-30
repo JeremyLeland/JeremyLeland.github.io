@@ -7,33 +7,47 @@ class Segment {
       this.x2 = x2
       this.y2 = y2
 
-      const x = x2 - x1
-      const y = y2 - y1
-      const len = Math.sqrt(x*x + y*y)
+      const diffX = x2 - x1
+      const diffY = y2 - y1
+      const len = Math.sqrt(diffX * diffX + diffY * diffY)
 
-      this.normalX = y / len
-      this.normalY = -x / len
+      this.normalX = diffY / len
+      this.normalY = -diffX / len
    }
 
-   isCollidingWith(player) {
-      let fromEdge = (this.x1 - player.x) * this.normalX + (this.y1 - player.y) * this.normalY
-      const hitX = player.x + this.normalX * fromEdge
-      const hitY = player.y + this.normalY * fromEdge
+   checkCollisionWith(player) {
+      // Find closest point on segment to player
+      const distFromEdge = (this.x1 - player.x) * this.normalX + (this.y1 - player.y) * this.normalY
+      let closestX = player.x + this.normalX * distFromEdge
+      let closestY = player.y + this.normalY * distFromEdge
 
       // The line is infinite, but our segment is not
-      // if "hit" point is outside our segment, use distance from ends of line
-      if (hitX < this.x1) {
-         const x = player.x - this.x1
-         const y = player.y - this.y1
-         fromEdge = Math.sqrt(x*x + y*y)
+      // if closest point is outside our segment, use end of line instead
+      if (closestX < this.x1) {
+         closestX = this.x1
+         closestY = this.y1
       }
-      else if (hitX > this.x2) {
-         const x = player.x - this.x2
-         const y = player.y - this.y2
-         fromEdge = Math.sqrt(x*x + y*y)
+      else if (closestX > this.x2) {
+         closestX = this.x2
+         closestY = this.y2
       }
 
-      return fromEdge <= player.radius
+      const diffX = closestX - player.x
+      const diffY = closestY - player.y
+      const distBetween = Math.sqrt(diffX * diffX + diffY * diffY)
+
+      if (distBetween <= player.radius) {
+         // Nudge player out of the collision
+         const distToMove = player.radius - distBetween
+         const angle = Math.atan2(diffY, diffX)
+         player.x -= Math.cos(angle) * distToMove
+         player.y -= Math.sin(angle) * distToMove
+
+         // Bounce
+         const p = player.dx * this.normalX + player.dy * this.normalY
+         player.dx -= 2 * p * this.normalX
+         player.dy -= 2 * p * this.normalY
+      }
    }
 }
 
@@ -43,7 +57,7 @@ export class Level {
       this.segmentWidth = 20
       this.generateSegments()
       
-      this.gravity = 0.1
+      this.gravity = 0.01
 
       this.player = new Player(this /*level*/)
       this.player.spawn(10, 10)
@@ -56,7 +70,7 @@ export class Level {
       let x1, y1, x2, y2
       for (let i = 0; i < 50; i ++) {
          x2 = i * this.segmentWidth
-         y2 = Math.sin(i / 5) * 100 + 200
+         y2 = -Math.sin(Math.PI/2 + i / 5) * 100 + 200
          
          if (i > 0) {
             this.segments.push( new Segment(x1, y1, x2, y2) )
@@ -77,9 +91,7 @@ export class Level {
       this.player.update(dt)
 
       const segment = this.segmentAt(this.player.x)
-      if (segment.isCollidingWith(this.player)) {
-         this.player.dy = 0
-      }
+      segment.checkCollisionWith(this.player)
    }
 
    draw(ctx) {
