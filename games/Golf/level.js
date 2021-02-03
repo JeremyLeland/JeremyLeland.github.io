@@ -14,6 +14,10 @@ export class Segment {
       this.normalX = diffY / len
       this.normalY = -diffX / len
    }
+
+   getDistance(x, y) {
+      return (this.x1 - x) * this.normalX + (this.y1 - y) * this.normalY
+   }
 }
 
 export class Level {
@@ -42,10 +46,18 @@ export class Level {
       }
    }
 
-   segmentAt(x) {
-      const ndx = Math.floor(x / this.segmentWidth)
+   getSegmentsNear(player) {
+      const left = Math.floor((player.x - player.radius) / this.segmentWidth)
+      const right = Math.floor((player.x + player.radius) / this.segmentWidth)
       
-      return this.segments[ndx]
+      // TODO: top and bottom once we have a 2D map
+
+      const segments = []
+      for (let x = left; x >= 0 && x <= right && x < this.segments.length; x ++) {
+         segments.push(this.segments[x])
+      }
+
+      return segments
    }
 
    draw(ctx) {

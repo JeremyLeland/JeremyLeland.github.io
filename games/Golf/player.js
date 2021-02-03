@@ -19,44 +19,84 @@ export class Player {
       this.y += this.dy * dt
    }
 
-   bounceOff(segment) {
-      const p = this.dx * segment.normalX + this.dy * segment.normalY
-      this.dx -= 2 * p * segment.normalX
-      this.dy -= 2 * p * segment.normalY
+   applyBounce(segment) {
+      const DAMPING = 0.9
+      const vDotN = this.dx * segment.normalX + this.dy * segment.normalY
+      this.dx -= 2 * vDotN * segment.normalX * DAMPING
+      this.dy -= 2 * vDotN * segment.normalY * DAMPING
+   }
+
+   applyFriction(segment, dt) {
+      const FRICTION = 0.01
+      const vDotF = this.dx * segment.normalY + this.dy * segment.normalX
+      this.dx -= vDotF * segment.normalY * FRICTION * dt
+      this.dy -= vDotF * segment.normalX * FRICTION * dt
    }
 
    update(dt) {
-      while (dt > 0) {
+      //while (dt > 0) {
          const lastX = this.x
          const lastY = this.y
          const lastDX = this.dx
          const lastDY = this.dy
          this.updatePosition(dt)
 
-         const segment = this.level.segmentAt(this.x)
+         const segments = this.level.getSegmentsNear(this)
+         let closestSegment = null
+         let closestHitTime = 1.0
 
-         // Based on: https://www.gamasutra.com/view/feature/131790/simple_intersection_tests_for_games.php
-         const d0 = (segment.x1 - lastX) * segment.normalX + (segment.y1 - lastY) * segment.normalY
-         const d1 = (segment.x1 - this.x) * segment.normalX + (segment.y1 - this.y) * segment.normalY
+         segments.forEach(s => {
+            // Based on: https://www.gamasutra.com/view/feature/131790/simple_intersection_tests_for_games.php
+            const d0 = s.getDistance(lastX, lastY)
+            const d1 = s.getDistance(this.x, this.y)
 
-         // Negative is "outside" of segment, positive is "inside" of segment
-         if (d0 < -this.radius && d1 > -this.radius) {
+            // Negative is "outside" of segment, positive is "inside" of segment
             const hitTime = (d0 + this.radius) / ( d0 - d1 ) // normalized time
-         
+
+            if (hitTime < closestHitTime) {
+               closestSegment = s
+               closestHitTime = hitTime
+            }
+         })
+
+         if (closestHitTime < 0.0) {
+            // If we were already hitting something, nudge out of it
+            let dist = this.radius + closestSegment.getDistance(this.x, this.y)
+
+            if (dist > 0) {
+               let nudgeX = closestSegment.normalX * dist
+               let nudgeY = closestSegment.normalY * dist
+
+               this.x += nudgeX
+               this.y += nudgeY
+               this.dx = lastDX
+               this.dy = lastDY
+
+               this.applyBounce(closestSegment)
+               //this.applyFriction(closestSegment, dt)
+
+               // update position for rest of time?
+            }
+         }
+         else if (closestHitTime < 1.0) {
             // If we hit something, start over and only update until the hit
             this.x = lastX
             this.y = lastY
             this.dx = lastDX
             this.dy = lastDY
-            this.updatePosition(hitTime * dt)
-            this.bounceOff(segment)
 
-            dt -= hitTime * dt
+            const partialDT = closestHitTime * dt
+
+            this.updatePosition(partialDT)
+
+            dt -= partialDT
+
+            this.applyBounce(closestSegment)
+            //this.applyFriction(closestSegment, dt)
+
+            this.updatePosition(dt)
          }
-         else {
-            dt = 0
-         }
-      }
+      //}
    }
 
    draw(ctx) {

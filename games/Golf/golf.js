@@ -4,7 +4,7 @@ import { Player } from "./player.js"
 
 export class Golf extends Game {
    constructor() {
-      Game.VERSION = 0.02
+      Game.VERSION = 0.021
 
       super()
 
@@ -12,12 +12,22 @@ export class Golf extends Game {
 
       this.level = new Level()
       this.player = new Player(this.level)
-      this.player.spawn(10, 10)
+      this.player.spawn(450, 10)
 
       this.startGame()
    }
 
+   prepareUI() {
+      super.prepareUI()
+
+      this.debugUI = document.createElement('div')
+      this.debugUI.style = "position: absolute; white-space: pre; left: 2px; top: 2px; font: 10px sans-serif"
+      document.body.appendChild(this.debugUI)
+   }
+
    update(dt) {
+      this.debugUI.textContent = "x = " + this.player.x + "\r\ny = " + this.player.y + "\r\ndx = " + this.player.dx + "\r\ndy = " + this.player.dy 
+
       this.player.update(dt)
    }
 
