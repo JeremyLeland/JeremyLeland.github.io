@@ -2,7 +2,14 @@ export class Game {
    static VERSION = 0
 
    constructor() {
-      this.canvas = document.getElementById("game")
+      this.canvas = document.createElement("canvas")
+      this.canvas.style = "display: block"
+      this.canvas.width = window.innerWidth
+      this.canvas.height = window.innerHeight
+      document.body.appendChild(this.canvas)
+
+      window.addEventListener('resize', () => this.resize(), false)
+
       this.context = this.canvas.getContext("2d")
 
       this.prepareUI()
@@ -11,6 +18,11 @@ export class Game {
       this.keyDown = {}
       document.onkeydown = (e) => this.keyDownCallback(e)
       document.onkeyup = (e) => this.keyUpCallback(e)
+   }
+
+   resize() {
+      this.canvas.width = window.innerWidth
+      this.canvas.height = window.innerHeight
    }
 
    prepareUI() {
