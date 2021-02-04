@@ -33,9 +33,9 @@ export class Level {
 
       // for now, just a sine wave of heights
       let x1, y1, x2, y2
-      for (let i = 0; i < 50; i ++) {
+      for (let i = 0; i < 100; i ++) {
          x2 = i * this.segmentWidth
-         y2 = -Math.sin(Math.PI/2 + i / 5) * 100 + 200
+         y2 = -Math.sin(Math.PI/2 + i / 5) * 100 + -Math.sin(Math.PI/2 + i / 10) * 100 + 500
          
          if (i > 0) {
             this.segments.push( new Segment(x1, y1, x2, y2) )

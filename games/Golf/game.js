@@ -18,6 +18,14 @@ export class Game {
       this.keyDown = {}
       document.onkeydown = (e) => this.keyDownCallback(e)
       document.onkeyup = (e) => this.keyUpCallback(e)
+
+      this.mousex = 0
+      this.mousey = 0
+      this.mouseIsDown = false
+      this.mouseButton = -1
+      this.canvas.onmousedown = (e) => this.mouseDownCallback(e)
+      this.canvas.onmouseup = (e) => this.mouseUpCallback(e)
+      this.canvas.onmousemove = (e) => this.mouseMovedCallback(e)
    }
 
    resize() {
@@ -57,6 +65,27 @@ export class Game {
             this.keyDown[k] = false
          }
       }
+   }
+
+   mouseDownCallback(e) {
+      this.mouseIsDown = true
+
+      this.mousex = e.offsetX
+      this.mousey = e.offsetY
+      this.mouseButton = e.button
+   }
+
+   mouseUpCallback(e) {
+      this.mouseIsDown = false
+
+      this.mousex = e.offsetX
+      this.mousey = e.offsetY
+      this.mouseButton = -1
+   }
+
+   mouseMovedCallback(e) {
+      this.mousex = e.offsetX
+      this.mousey = e.offsetY
    }
 
    animate() {

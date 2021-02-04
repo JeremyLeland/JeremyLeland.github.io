@@ -19,18 +19,21 @@ export class Player {
       this.y += this.dy * dt
    }
 
+   addImpulse(impulseX, impulseY) {
+      this.dx += impulseX
+      this.dy += impulseY
+   }
+
    applyBounce(segment) {
       const DAMPING = 0.9
       const vDotN = this.dx * segment.normalX + this.dy * segment.normalY
       this.dx -= 2 * vDotN * segment.normalX * DAMPING
       this.dy -= 2 * vDotN * segment.normalY * DAMPING
-   }
 
-   applyFriction(segment, dt) {
-      const FRICTION = 0.01
+      const FRICTION = 0.1
       const vDotF = this.dx * segment.normalY + this.dy * segment.normalX
-      this.dx -= vDotF * segment.normalY * FRICTION * dt
-      this.dy -= vDotF * segment.normalX * FRICTION * dt
+      this.dx -= vDotF * segment.normalY * FRICTION
+      this.dy -= vDotF * segment.normalX * FRICTION
    }
 
    update(dt) {

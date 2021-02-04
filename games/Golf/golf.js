@@ -28,6 +28,13 @@ export class Golf extends Game {
    update(dt) {
       this.debugUI.textContent = "x = " + this.player.x + "\r\ny = " + this.player.y + "\r\ndx = " + this.player.dx + "\r\ndy = " + this.player.dy 
 
+      if (this.mouseIsDown) {
+         const IMPULSE = 0.001
+         const impulseX = (this.mousex - this.player.x) * IMPULSE
+         const impulseY = (this.mousey - this.player.y) * IMPULSE
+         this.player.addImpulse(impulseX, impulseY)
+      }
+
       this.player.update(dt)
    }
 
@@ -37,5 +44,13 @@ export class Golf extends Game {
 
       this.level.draw(ctx)
       this.player.draw(ctx)
+
+      // power/direction meter
+      ctx.strokeStyle = "red"
+      ctx.beginPath()
+      ctx.moveTo(this.player.x, this.player.y)
+      ctx.lineTo(this.mousex, this.mousey)
+      ctx.stroke()
+      ctx.closePath()
    }
 }
