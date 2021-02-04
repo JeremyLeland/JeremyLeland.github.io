@@ -13,6 +13,11 @@ export class Player {
       this.dx = this.dy = 0
    }
 
+   isMoving() {
+      const MIN_MOVE = 0.02
+      return Math.abs(this.dx) > MIN_MOVE || Math.abs(this.dy) > MIN_MOVE
+   }
+
    updatePosition(dt) {
       this.dy += this.level.gravity * dt
       this.x += this.dx * dt
@@ -25,7 +30,7 @@ export class Player {
    }
 
    applyBounce(segment) {
-      const DAMPING = 0.9
+      const DAMPING = 0.7
       const vDotN = this.dx * segment.normalX + this.dy * segment.normalY
       this.dx -= 2 * vDotN * segment.normalX * DAMPING
       this.dy -= 2 * vDotN * segment.normalY * DAMPING
