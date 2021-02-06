@@ -10,6 +10,9 @@ export class Golf extends Game {
 
       this.keyBindings = { }
 
+      this.scrollX = 0
+      this.scrollY = 0
+
       this.level = new Level()
       this.player = new Player(this.level)
       this.player.spawn(450, 10)
@@ -25,9 +28,9 @@ export class Golf extends Game {
       document.body.appendChild(this.debugUI)
    }
 
-   getAimAngle() {
-      const diffX = this.mousex - this.player.x
-      const diffY = this.mousey - this.player.y
+   getAimAngle(scrollX, scrollY) {
+      const diffX = this.mousex - (this.player.x - scrollX)
+      const diffY = this.mousey - (this.player.y - scrollY)
       return Math.atan2(diffY, diffX)
    }
 
@@ -36,17 +39,22 @@ export class Golf extends Game {
 
       if (this.mouseIsDown) {
          const IMPULSE = 0.001
-         const impulseX = (this.mousex - this.player.x) * IMPULSE
-         const impulseY = (this.mousey - this.player.y) * IMPULSE
+         const impulseX = (this.mousex - (this.player.x - this.scrollX)) * IMPULSE
+         const impulseY = (this.mousey - (this.player.y - this.scrollY)) * IMPULSE
          this.player.addImpulse(impulseX, impulseY)
       }
 
       this.player.update(dt)
+
+      this.scrollX = Math.min(this.level.MAX_X - this.canvas.width, 
+                              Math.max(0, this.player.x - this.canvas.width / 2))
+      this.scrollY = Math.min(this.level.MAX_Y - this.canvas.height, 
+                              Math.max(0, this.player.y - this.canvas.height / 2))
    }
 
-   drawAimer(ctx) {
+   drawAimer(ctx, scrollX, scrollY) {
       const AIM_WIDTH = this.player.radius / 2, AIM_MAX_LENGTH = 100
-      const angle = this.getAimAngle()
+      const angle = this.getAimAngle(scrollX, scrollY)
       const sinAng = Math.sin(angle), cosAng = Math.cos(angle)
       const leftX = this.player.x - sinAng * AIM_WIDTH
       const leftY = this.player.y + cosAng * AIM_WIDTH
@@ -57,11 +65,11 @@ export class Golf extends Game {
 
       ctx.strokeStyle = "red"
       ctx.beginPath()
-      ctx.moveTo(this.player.x, this.player.y)
-      ctx.lineTo(leftX, leftY)
-      ctx.lineTo(frontX, frontY)
-      ctx.lineTo(rightX, rightY)
-      ctx.lineTo(this.player.x, this.player.y)
+      ctx.moveTo(this.player.x - scrollX, this.player.y - scrollY)
+      ctx.lineTo(leftX - scrollX, leftY - scrollY)
+      ctx.lineTo(frontX - scrollX, frontY - scrollY)
+      ctx.lineTo(rightX - scrollX, rightY - scrollY)
+      ctx.lineTo(this.player.x - scrollX, this.player.y - scrollY)
       ctx.stroke()
       ctx.closePath()
    }
@@ -70,11 +78,11 @@ export class Golf extends Game {
       ctx.fillStyle = "black"
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
-      this.level.draw(ctx)
-      this.player.draw(ctx)
+      this.level.draw(ctx, this.scrollX, this.scrollY)
+      this.player.draw(ctx, this.scrollX, this.scrollY)
 
       if (!this.player.isMoving()) {
-         this.drawAimer(ctx)
+         this.drawAimer(ctx, this.scrollX, this.scrollY)
       }
    }
 }

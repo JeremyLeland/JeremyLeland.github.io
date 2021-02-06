@@ -23,14 +23,16 @@ export class Segment {
 export class Level {
    constructor() {
       this.segmentWidth = 20
-      this.generateSegments()
+      this.segments = []
+      this.generateSegments(this.segments)
+
+      this.MAX_X = this.segmentWidth * this.segments.length
+      this.MAX_Y = 800
       
       this.gravity = 0.001
    }
 
-   generateSegments() {
-      this.segments = []
-
+   generateSegments(segments) {
       // for now, just a sine wave of heights
       let x1, y1, x2, y2
       for (let i = 0; i < 100; i ++) {
@@ -38,7 +40,7 @@ export class Level {
          y2 = -Math.sin(Math.PI/2 + i / 5) * 100 + -Math.sin(Math.PI/2 + i / 10) * 100 + 500
          
          if (i > 0) {
-            this.segments.push( new Segment(x1, y1, x2, y2) )
+            segments.push( new Segment(x1, y1, x2, y2) )
          }
 
          x1 = x2
@@ -60,17 +62,23 @@ export class Level {
       return segments
    }
 
-   draw(ctx) {
-      ctx.strokeStyle = "green"
+   draw(ctx, scrollX, scrollY) {
+      ctx.strokeStyle = "black"
+      ctx.fillStyle = "green"
 
       ctx.beginPath()
 
-      // TODO: additional points so we can fill
-
       const first = this.segments[0]
-      ctx.moveTo(first.x1, first.y1)
-      this.segments.forEach(s => ctx.lineTo(s.x2, s.y2))
-      //ctx.fill()
+      ctx.moveTo(first.x1 - scrollX, this.MAX_Y - scrollY)
+      ctx.lineTo(first.x1 - scrollX, first.y1 - scrollY)
+
+      this.segments.forEach(s => ctx.lineTo(s.x2 - scrollX, s.y2 - scrollY))
+
+      const last = this.segments[this.segments.length - 1]
+      ctx.lineTo(last.x2 - scrollX, this.MAX_Y - scrollY)
+      ctx.lineTo(first.x1 - scrollX, this.MAX_Y - scrollY)
+
+      ctx.fill()
       ctx.stroke()
       ctx.closePath()
    }
