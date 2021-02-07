@@ -4,7 +4,7 @@ import { Player } from "./player.js"
 
 export class Golf extends Game {
    constructor() {
-      Game.VERSION = 0.022
+      Game.VERSION = 0.03
 
       super()
 

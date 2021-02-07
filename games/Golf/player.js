@@ -35,10 +35,10 @@ export class Player {
       this.dx -= 2 * vDotN * segment.normalX * DAMPING
       this.dy -= 2 * vDotN * segment.normalY * DAMPING
 
-      const FRICTION = 0.1
-      const vDotF = this.dx * segment.normalY + this.dy * segment.normalX
-      this.dx -= vDotF * segment.normalY * FRICTION
-      this.dy -= vDotF * segment.normalX * FRICTION
+      const FRICTION = 0.05
+      const vDotF = this.dx * segment.groundX + this.dy * segment.groundY
+      this.dx -= vDotF * segment.groundX * FRICTION
+      this.dy -= vDotF * segment.groundY * FRICTION
    }
 
    update(dt) {
@@ -54,22 +54,28 @@ export class Player {
          let closestHitTime = 1.0
 
          segments.forEach(s => {
-            // Based on: https://www.gamasutra.com/view/feature/131790/simple_intersection_tests_for_games.php
-            const d0 = s.getDistance(lastX, lastY)
-            const d1 = s.getDistance(this.x, this.y)
+            // Ignore segment if we are outside of it
+            if (Math.abs(s.getDistanceFromSegmentBounds(this.x, this.y)) < this.radius) {
 
-            // Negative is "outside" of segment, positive is "inside" of segment
-            const hitTime = (d0 + this.radius) / ( d0 - d1 ) // normalized time
+               // Based on: https://www.gamasutra.com/view/feature/131790/simple_intersection_tests_for_games.php
+               const d0 = s.getDistanceFromInfiniteLine(lastX, lastY)
+               const d1 = s.getDistanceFromInfiniteLine(this.x, this.y)
 
-            if (hitTime < closestHitTime) {
-               closestSegment = s
-               closestHitTime = hitTime
+               // Negative is "outside" of segment, positive is "inside" of segment
+               if (d0 < d1) {
+                  const hitTime = (d0 + this.radius) / ( d0 - d1 ) // normalized time
+
+                  if (hitTime < closestHitTime) {
+                     closestSegment = s
+                     closestHitTime = hitTime
+                  }
+               }
             }
          })
 
          if (closestHitTime < 0.0) {
             // If we were already hitting something, nudge out of it
-            let dist = this.radius + closestSegment.getDistance(this.x, this.y)
+            let dist = this.radius + closestSegment.getDistanceFromInfiniteLine(this.x, this.y)
 
             if (dist > 0) {
                let nudgeX = closestSegment.normalX * dist
