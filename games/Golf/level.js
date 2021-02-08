@@ -123,10 +123,10 @@ export class Level {
 
       this.generateSegments()
 
-      this.addHoleAt(31)
+      /*this.addHoleAt(31)
       this.addHoleAt(45)
       this.addHoleAt(70)
-      this.addHoleAt(90)
+      this.addHoleAt(90)*/
 
       this.MAX_X = this.GRID_SIZE * this.GRID_COLS
       this.MAX_Y = 800
@@ -134,8 +134,81 @@ export class Level {
       this.gravity = 0.001
    }
 
+   // See http://csharphelper.com/blog/2019/04/draw-a-smooth-curve-in-wpf-and-c/
+   getPointsWithControls(points, tension) {
+      if (points.length < 2)
+         return null
+
+      const control_scale = tension / 0.5 * 0.175
+
+      const result_points = []
+      result_points.push(points[0])
+
+      for (let i = 0; i < points.length - 1; i++)
+      {
+         // Get the point and its neighbors.
+         const pt_before = points[Math.max(i - 1, 0)]
+         const pt = points[i]
+         const pt_after = points[i + 1]
+         const pt_after2 = points[Math.min(i + 2, points.length - 1)]
+
+         const p1 = points[i]
+         const p4 = pt_after
+
+         //let dx = pt_after[0] - pt_before[0]
+         let dy = pt_after - pt_before
+         const p2 = pt + control_scale * dy
+
+         //dx = pt_after2[0] - pt[0]
+         dy = pt_after2 - pt
+         const p3 = pt_after - control_scale * dy
+
+         result_points.push(p2)
+         result_points.push(p3)
+         result_points.push(p4)
+      }
+
+      return result_points
+   }
+
    generateSegments() {
-      // for now, just a sine wave of heights
+
+
+      // playing with Bezier interpolation
+      const WIDTH = 200
+      const curvePoints = [ 300, 200, 300, 400, 500, 330, 210, 410, 420, 100, 120, 140, 160 ]
+      const points = this.getPointsWithControls(curvePoints, 1.0)
+
+
+      let x1, y1, x2, y2
+      for (let i = 0; i <= this.GRID_COLS; i ++) {
+         x2 = i * this.GRID_SIZE
+
+         const pointNdx = Math.floor(x2 / WIDTH) * 3
+         const t = (x2 % WIDTH) / WIDTH
+
+         y2 = (1-t)*(1-t)*(1-t)*points[pointNdx] + 3*t*(1-t)*(1-t)*points[pointNdx + 1] + 3*t*t*(1-t)*points[pointNdx + 2] + t*t*t*points[pointNdx + 3]
+      
+
+         if (i > 0) {
+
+            // For now, just reference the same (full) segment in all applicable rows
+            const segment = new Segment(x1, y1, x2, y2)
+            const col = i - 1
+            const minRow = Math.floor(Math.min(y1, y2) / this.GRID_SIZE)
+            const maxRow = Math.floor(Math.max(y1, y2) / this.GRID_SIZE)
+
+            for (let row = minRow; row <= maxRow; row ++) {
+               this.grid[col][row].addSegment(segment)
+            }
+         }
+
+         x1 = x2
+         y1 = y2
+      }
+
+
+      /*/ for now, just a sine wave of heights
       let x1, y1, x2, y2
       for (let i = 0; i <= this.GRID_COLS; i ++) {
          x2 = i * this.GRID_SIZE
@@ -156,7 +229,7 @@ export class Level {
 
          x1 = x2
          y1 = y2
-      }
+      }*/
    }
 
    addHoleAt(col) {
