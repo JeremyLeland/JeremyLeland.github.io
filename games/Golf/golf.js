@@ -35,7 +35,7 @@ export class Golf extends Game {
    }
 
    update(dt) {
-      this.debugUI.textContent = "x = " + this.player.x + "\r\ny = " + this.player.y + "\r\ndx = " + this.player.dx + "\r\ndy = " + this.player.dy 
+      //this.debugUI.textContent = "x = " + this.player.x + "\r\ny = " + this.player.y + "\r\ndx = " + this.player.dx + "\r\ndy = " + this.player.dy 
 
       if (this.mouseIsDown) {
          const IMPULSE = 0.001

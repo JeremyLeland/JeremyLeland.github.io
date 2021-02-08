@@ -4,7 +4,7 @@ export class Player {
 
    constructor(level) {
       this.level = level
-      this.radius = 8
+      this.radius = 5
    }
 
    spawn(x, y) {
@@ -35,6 +35,7 @@ export class Player {
       this.dx -= 2 * vDotN * segment.normalX * DAMPING
       this.dy -= 2 * vDotN * segment.normalY * DAMPING
 
+      // TODO: Should friction be time based?
       const FRICTION = 0.05
       const vDotF = this.dx * segment.groundX + this.dy * segment.groundY
       this.dx -= vDotF * segment.groundX * FRICTION
@@ -82,7 +83,6 @@ export class Player {
             this.y += nudgeY
 
             this.applyBounce(closestSegment)
-            //this.applyFriction(closestSegment, dt)
 
             // update position for rest of time?
          }
@@ -92,7 +92,6 @@ export class Player {
          this.updatePosition((closestHitTime - 1.0) * dt)
 
          this.applyBounce(closestSegment)
-         //this.applyFriction(closestSegment, dt)
 
          this.updatePosition((1.0 - closestHitTime) * dt)
       }
