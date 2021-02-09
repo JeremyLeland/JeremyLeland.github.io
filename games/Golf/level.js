@@ -84,26 +84,6 @@ class Grid {
       this.segments.push(right)
       this.isHole = true
    }
-
-   draw(ctx, scrollX, scrollY) {
-      if (this.segments.length > 0) {
-         ctx.strokeStyle = "green"  // "black"
-         //ctx.fillStyle = "green"
-
-         ctx.beginPath()
-
-         const first = this.segments[0]
-
-         ctx.moveTo(first.x1 - scrollX, first.y1 - scrollY)
-         this.segments.forEach(s => ctx.lineTo(s.x2 - scrollX, s.y2 - scrollY))
-
-         // TODO: figure out how to fill these
-
-         //ctx.fill()
-         ctx.stroke()
-         ctx.closePath()
-      }
-   }
 }
 
 export class Level {
@@ -112,8 +92,10 @@ export class Level {
       this.GRID_ROWS = 50
       this.GRID_SIZE = 20
 
-      this.grid = []
+      this.MAX_X = this.GRID_SIZE * this.GRID_COLS
+      this.MAX_Y = this.GRID_SIZE * this.GRID_ROWS
 
+      this.grid = []
       for (let col = 0; col < this.GRID_COLS; col ++) {
          this.grid[col] = []
          for (let row = 0; row < this.GRID_ROWS; row ++) {
@@ -121,17 +103,41 @@ export class Level {
          }
       }
 
-      this.generateSegments()
+      // Generate ground segments
+      this.curvePoints = this.generateCurvePoints(0, 500, this.GRID_COLS * this.GRID_SIZE, 500, 100, 200, Math.PI / 2)
+      this.segments = this.generateSegmentsFromCurvePoints(this.curvePoints)
+      this.segments.forEach(s => this.addSegmentToGrid(s))
 
       /*this.addHoleAt(31)
       this.addHoleAt(45)
       this.addHoleAt(70)
       this.addHoleAt(90)*/
 
-      this.MAX_X = this.GRID_SIZE * this.GRID_COLS
-      this.MAX_Y = 800
-      
       this.gravity = 0.001
+   }
+
+   
+
+   // Generate points going from left to right
+   generateCurvePoints(startX, startY, endX, endY, minStep, maxStep, spreadAngle) {
+      const curvePoints = [ [startX, startY] ]
+
+      let lastX = startX, lastY = startY
+      while (lastX < endX) {
+         const ang = Math.random() * spreadAngle - spreadAngle / 2
+         const dist = Math.random() * (maxStep - minStep) + minStep
+         const x = lastX + Math.cos(ang) * dist
+         const y = lastY + Math.sin(ang) * dist
+
+         curvePoints.push( [x, y] )
+
+         lastX = x
+         lastY = y
+      }
+
+      curvePoints.push( [endX, endY] )
+
+      return curvePoints
    }
 
    // See http://csharphelper.com/blog/2019/04/draw-a-smooth-curve-in-wpf-and-c/
@@ -152,84 +158,69 @@ export class Level {
          const pt_after = points[i + 1]
          const pt_after2 = points[Math.min(i + 2, points.length - 1)]
 
-         const p1 = points[i]
-         const p4 = pt_after
+         let dx = pt_after[0] - pt_before[0]
+         let dy = pt_after[1] - pt_before[1]
+         const p2 = [ pt[0] + control_scale * dx, pt[1] + control_scale * dy ]
 
-         //let dx = pt_after[0] - pt_before[0]
-         let dy = pt_after - pt_before
-         const p2 = pt + control_scale * dy
-
-         //dx = pt_after2[0] - pt[0]
-         dy = pt_after2 - pt
-         const p3 = pt_after - control_scale * dy
+         dx = pt_after2[0] - pt[0]
+         dy = pt_after2[1] - pt[1]
+         const p3 = [ pt_after[0] - control_scale * dx, pt_after[1] - control_scale * dy ]
 
          result_points.push(p2)
          result_points.push(p3)
-         result_points.push(p4)
+         result_points.push(pt_after)
       }
 
       return result_points
    }
 
-   generateSegments() {
+   generateSegmentsFromCurvePoints(curvePoints) {
+      const points = this.getPointsWithControls(curvePoints, 0.5)
 
+      const segments = []
 
-      // playing with Bezier interpolation
-      const WIDTH = 200
-      const curvePoints = [ 300, 200, 300, 400, 500, 330, 210, 410, 420, 100, 120, 140, 160 ]
-      const points = this.getPointsWithControls(curvePoints, 1.0)
+      const T_STEP = 1.0 / 10
+      for (let pointNdx = 0; pointNdx < points.length - 3; pointNdx += 3) {
+         let x1, y1, x2, y2
+         for (let t = 0; t <= 1.0; t += T_STEP) {
+            x2 = (1-t)*(1-t)*(1-t)*points[pointNdx][0] +
+                 3*t*(1-t)*(1-t)*points[pointNdx + 1][0] + 
+                 3*t*t*(1-t)*points[pointNdx + 2][0] + 
+                 t*t*t*points[pointNdx + 3][0]
 
+            y2 = (1-t)*(1-t)*(1-t)*points[pointNdx][1] +
+                 3*t*(1-t)*(1-t)*points[pointNdx + 1][1] + 
+                 3*t*t*(1-t)*points[pointNdx + 2][1] + 
+                 t*t*t*points[pointNdx + 3][1]
 
-      let x1, y1, x2, y2
-      for (let i = 0; i <= this.GRID_COLS; i ++) {
-         x2 = i * this.GRID_SIZE
-
-         const pointNdx = Math.floor(x2 / WIDTH) * 3
-         const t = (x2 % WIDTH) / WIDTH
-
-         y2 = (1-t)*(1-t)*(1-t)*points[pointNdx] + 3*t*(1-t)*(1-t)*points[pointNdx + 1] + 3*t*t*(1-t)*points[pointNdx + 2] + t*t*t*points[pointNdx + 3]
-      
-
-         if (i > 0) {
-
-            // For now, just reference the same (full) segment in all applicable rows
-            const segment = new Segment(x1, y1, x2, y2)
-            const col = i - 1
-            const minRow = Math.floor(Math.min(y1, y2) / this.GRID_SIZE)
-            const maxRow = Math.floor(Math.max(y1, y2) / this.GRID_SIZE)
-
-            for (let row = minRow; row <= maxRow; row ++) {
-               this.grid[col][row].addSegment(segment)
+            if (t > 0) {
+               segments.push( new Segment(x1, y1, x2, y2) )
             }
-         }
 
-         x1 = x2
-         y1 = y2
+            x1 = x2
+            y1 = y2
+         }
       }
 
+      return segments
+   }
 
-      /*/ for now, just a sine wave of heights
-      let x1, y1, x2, y2
-      for (let i = 0; i <= this.GRID_COLS; i ++) {
-         x2 = i * this.GRID_SIZE
-         y2 = -Math.sin(Math.PI/2 + i / 5) * 100 + -Math.sin(Math.PI/2 + i / 10) * 100 + 500
-         
-         if (i > 0) {
+   addSegmentToGrid(s) {
+      const minCol = Math.floor(Math.min(s.x1, s.x2) / this.GRID_SIZE)
+      const maxCol = Math.floor(Math.max(s.x1, s.x2) / this.GRID_SIZE)
+      const minRow = Math.floor(Math.min(s.y1, s.y2) / this.GRID_SIZE)
+      const maxRow = Math.floor(Math.max(s.y1, s.y2) / this.GRID_SIZE)
 
-            // For now, just reference the same (full) segment in all applicable rows
-            const segment = new Segment(x1, y1, x2, y2)
-            const col = i - 1
-            const minRow = Math.floor(Math.min(y1, y2) / this.GRID_SIZE)
-            const maxRow = Math.floor(Math.max(y1, y2) / this.GRID_SIZE)
-
+      if (minCol < 0 || minRow < 0 || maxCol >= this.GRID_COLS || maxRow >= this.GRID_ROWS) {
+         console.log("WARNING: trying to add segment outside of grid, skipping")
+      }
+      else {
+         for (let col = minCol; col <= maxCol; col ++) {
             for (let row = minRow; row <= maxRow; row ++) {
-               this.grid[col][row].addSegment(segment)
+               this.grid[col][row].addSegment(s)
             }
          }
-
-         x1 = x2
-         y1 = y2
-      }*/
+      }
    }
 
    addHoleAt(col) {
@@ -268,20 +259,33 @@ export class Level {
       return nearSegments
    }
 
-   draw(ctx, scrollX, scrollY) {
-      for (let col = 0; col < this.GRID_COLS; col ++) {
-         for (let row = 0; row < this.GRID_ROWS; row ++) {
-            /*/ DEBUG grid
-            if (this.grid[col][row].isHole) {
-               ctx.strokeStyle = "yellow"
-            }
-            else {
-               ctx.strokeStyle = "gray"
-            }
-            ctx.strokeRect(col * this.GRID_SIZE - scrollX, row * this.GRID_SIZE - scrollY, this.GRID_SIZE, this.GRID_SIZE)
-            */
-            this.grid[col][row].draw(ctx, scrollX, scrollY)
-         }
+   // Expects complete, closed, fillable collection of segments 
+   drawSegments(segments, ctx, scrollX, scrollY, isGround) {
+      ctx.strokeStyle = "black"
+      ctx.fillStyle = "green"
+
+      ctx.beginPath()
+
+      const first = segments[0]
+      ctx.moveTo(first.x1 - scrollX, first.y1 - scrollY)
+      segments.forEach(s => ctx.lineTo(s.x2 - scrollX, s.y2 - scrollY))
+      
+      if (isGround) {
+         const last = segments[segments.length - 1]
+         ctx.lineTo(last.x2 - scrollX, this.MAX_Y - scrollY)
+         ctx.lineTo(first.x1 - scrollX, this.MAX_Y - scrollY)
+         ctx.lineTo(first.x1 - scrollX, first.y1 - scrollY)
       }
+
+      ctx.fill()
+      ctx.stroke()
+      ctx.closePath()
+   }
+
+   draw(ctx, scrollX, scrollY) {
+      this.drawSegments(this.segments, ctx, scrollX, scrollY, true /*isGround*/)
+
+      ctx.fillStyle = "yellow"
+      this.curvePoints.forEach(p => ctx.fillRect(p[0] - scrollX, p[1] - scrollY, 4, 4))
    }
 }
