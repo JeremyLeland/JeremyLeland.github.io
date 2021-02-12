@@ -1,90 +1,5 @@
+import { Segment } from "./segment.js"
 import { Player } from "./player.js"
-
-export class Segment {
-   constructor(x1, y1, x2, y2) {
-      this.x1 = x1
-      this.y1 = y1
-      this.x2 = x2
-      this.y2 = y2
-
-      const diffX = x2 - x1
-      const diffY = y2 - y1
-      const len = Math.sqrt(diffX * diffX + diffY * diffY)
-
-      this.normalX = diffY / len
-      this.normalY = -diffX / len
-
-      this.groundX = diffX / len
-      this.groundY = diffY / len
-   }
-
-   getDistanceFromInfiniteLine(x, y) {
-      return (this.x1 - x) * this.normalX + (this.y1 - y) * this.normalY
-   }
-
-   getDistanceFromSegmentBounds(x, y) {
-      // Use ground vector to determine whether we are within the bounds of the segment
-      const vectorLeft = (this.x1 - x) * this.groundX + (this.y1 - y) * this.groundY
-      const vectorRight = (this.x2 - x) * this.groundX + (this.y2 - y) * this.groundY
-
-      // Ball is in middle of segment
-      if (vectorLeft < 0 && 0 < vectorRight) {
-         return 0
-      }
-
-      // Ball is to left of segment
-      else if (0 < vectorLeft && 0 < vectorRight) {
-         return vectorLeft
-      }
-
-      // Ball is to right of segment
-      else if (vectorLeft < 0 && vectorRight < 0) {
-         return vectorRight
-      }
-   }
-}
-
-class Grid {
-   constructor() {
-      this.segments = []
-      this.isHole = false
-      this.isSolid = false
-   }
-
-   addSegment(s) {
-      this.segments.push(s)
-      this.isSolid = true
-   }
-
-   clearSegments() {
-      this.segments = []
-      this.isSolid = false
-   }
-
-   makeHole(holeY) {
-      if (this.isHole) {
-         console.log("WARNING: Grid is already a hole, skipping")
-         return
-      }
-
-      if (this.segments.length == 0) {
-         console.log("WARNING: Cannot make empty grid a hole, skipping")
-         return
-      }
-
-      const holeSegment = this.segments[0]
-
-      const left = new Segment(holeSegment.x1, holeSegment.y1, holeSegment.x1, holeY)
-      const bottom = new Segment(holeSegment.x1, holeY, holeSegment.x2, holeY)
-      const right = new Segment(holeSegment.x2, holeY, holeSegment.x2, holeSegment.y2)
-
-      this.segments = []
-      this.segments.push(left)
-      this.segments.push(bottom)
-      this.segments.push(right)
-      this.isHole = true
-   }
-}
 
 export class Level {
    constructor() {
@@ -99,27 +14,65 @@ export class Level {
       for (let col = 0; col < this.GRID_COLS; col ++) {
          this.grid[col] = []
          for (let row = 0; row < this.GRID_ROWS; row ++) {
-            this.grid[col][row] = new Grid()
+            this.grid[col][row] = []
          }
       }
 
       // Generate ground segments
-      this.curvePoints = this.generateCurvePoints(0, 500, this.GRID_COLS * this.GRID_SIZE, 500, 100, 200, Math.PI / 2)
-      this.segments = this.generateSegmentsFromCurvePoints(this.curvePoints)
-      this.segments.forEach(s => this.addSegmentToGrid(s))
+      
+      const ground = []
 
-      /*this.addHoleAt(31)
-      this.addHoleAt(45)
-      this.addHoleAt(70)
-      this.addHoleAt(90)*/
+      let startX = 0, startY = 500
+
+      for (let i = 0; i < 3; i ++) {
+         const holeX = startX + Math.random() * 1000 + 1000
+
+         const segments = this.generateGroundSegments(startX, startY, holeX)
+         ground.push.apply(ground, segments)
+         
+         const holeY = segments[segments.length - 1].y2
+         const hole = this.generateHoleSegments(holeX, holeY)
+         ground.push.apply(ground, hole)
+
+         const lastSegment = hole[hole.length - 1]
+         startX = lastSegment.x2
+         startY = lastSegment.y2
+      }
+
+      const lastBitOfGround = this.generateGroundSegments(startX, startY, startX + 1000)
+      ground.push.apply(ground, lastBitOfGround)
+
+      this.ground = ground
+      this.addSegmentsToGrid(this.ground)
 
       this.gravity = 0.001
    }
 
-   
+   generateGroundSegments(startX, startY, endX) {
+      const curvePoints = this.generateCurvePoints(startX, startY, endX)
+      return this.generateSegmentsFromCurvePoints(curvePoints)
+   }
+
+   generateHoleSegments(leftX, leftY) {
+      const HOLE_WIDTH = 20, HOLE_DEPTH = 20
+
+      const rightX = leftX + HOLE_WIDTH
+      const rightY = leftY
+      const holeY = leftY + HOLE_DEPTH
+
+      return [
+         new Segment(leftX, leftY, leftX, holeY),     // left
+         new Segment(leftX, holeY, rightX, holeY),    // bottom
+         new Segment(rightX, holeY, rightX, rightY)   // right
+      ]
+   }
 
    // Generate points going from left to right
-   generateCurvePoints(startX, startY, endX, endY, minStep, maxStep, spreadAngle) {
+   generateCurvePoints(startX, startY, endX) {
+      const minStep = 100
+      const maxStep = 200
+      const spreadAngle = Math.PI / 2
+
       const curvePoints = [ [startX, startY] ]
 
       let lastX = startX, lastY = startY
@@ -135,7 +88,8 @@ export class Level {
          lastY = y
       }
 
-      curvePoints.push( [endX, endY] )
+      // adjust the final point to match the endX
+      curvePoints[curvePoints.length - 1][0] = endX
 
       return curvePoints
    }
@@ -205,6 +159,10 @@ export class Level {
       return segments
    }
 
+   addSegmentsToGrid(ss) {
+      ss.forEach(s => this.addSegmentToGrid(s))
+   }
+
    addSegmentToGrid(s) {
       const minCol = Math.floor(Math.min(s.x1, s.x2) / this.GRID_SIZE)
       const maxCol = Math.floor(Math.max(s.x1, s.x2) / this.GRID_SIZE)
@@ -217,28 +175,8 @@ export class Level {
       else {
          for (let col = minCol; col <= maxCol; col ++) {
             for (let row = minRow; row <= maxRow; row ++) {
-               this.grid[col][row].addSegment(s)
+               this.grid[col][row].push(s)
             }
-         }
-      }
-   }
-
-   addHoleAt(col) {
-      if (col >= this.GRID_COLS) {
-         console.log("WARNING: Attempting out-of-bounds hole placement at column " + col + ", skipping")
-      }
-      else {
-         let holeRow = 0
-         while (!this.grid[col][holeRow].isSolid && holeRow < this.GRID_ROWS) {
-            holeRow ++
-         }
-
-         if (holeRow >= this.GRID_ROWS) {
-            console.log("WARNING: Could not find surface to dig hole at column " + col + ", skipping")
-         }
-         else {
-            const holeY = (holeRow + 1) * this.GRID_SIZE
-            this.grid[col][holeRow].makeHole(holeY)
          }
       }
    }
@@ -252,7 +190,7 @@ export class Level {
       const nearSegments = []
       for (let col = left; col >= 0 && col <= right && col < this.GRID_COLS; col ++) {
          for (let row = top; row >= 0 && row <= bottom && row < this.GRID_ROWS; row ++) {
-            nearSegments.push.apply(nearSegments, this.grid[col][row].segments)
+            nearSegments.push.apply(nearSegments, this.grid[col][row])
          }
       }
 
@@ -283,9 +221,9 @@ export class Level {
    }
 
    draw(ctx, scrollX, scrollY) {
-      this.drawSegments(this.segments, ctx, scrollX, scrollY, true /*isGround*/)
+      this.drawSegments(this.ground, ctx, scrollX, scrollY, true /*isGround*/)
 
-      ctx.fillStyle = "yellow"
-      this.curvePoints.forEach(p => ctx.fillRect(p[0] - scrollX, p[1] - scrollY, 4, 4))
+      //ctx.fillStyle = "yellow"
+      //this.curvePoints.forEach(p => ctx.fillRect(p[0] - scrollX, p[1] - scrollY, 4, 4))
    }
 }

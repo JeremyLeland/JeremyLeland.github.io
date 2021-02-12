@@ -1,4 +1,4 @@
-import { Segment } from "./level.js"
+import { Segment } from "./segment.js"
 
 export class Player {
 
