@@ -14,7 +14,7 @@ export class Golf extends Game {
       this.scrollY = 0
 
       this.level = new Level()
-      this.player = new Player(this.level)
+      this.player = new Player(5)
       this.player.spawn(450, 10)
 
       this.startGame()
@@ -35,7 +35,7 @@ export class Golf extends Game {
    }
 
    update(dt) {
-      //this.debugUI.textContent = "x = " + this.player.x + "\r\ny = " + this.player.y + "\r\ndx = " + this.player.dx + "\r\ndy = " + this.player.dy 
+      this.debugUI.textContent = "x = " + this.player.x + "\r\ny = " + this.player.y + "\r\ndx = " + this.player.dx + "\r\ndy = " + this.player.dy 
 
       if (this.mouseIsDown) {
          const IMPULSE = 0.001
@@ -44,7 +44,8 @@ export class Golf extends Game {
          this.player.addImpulse(impulseX, impulseY)
       }
 
-      this.player.update(dt)
+      const nearSegments = this.level.getSegmentsNear(this.player)
+      this.player.update(dt, nearSegments, this.level.gravity)
 
       this.scrollX = Math.min(this.level.MAX_X - this.canvas.width, 
                               Math.max(0, this.player.x - this.canvas.width / 2))

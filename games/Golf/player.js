@@ -2,9 +2,8 @@ import { Segment } from "./segment.js"
 
 export class Player {
 
-   constructor(level) {
-      this.level = level
-      this.radius = 5
+   constructor(radius) {
+      this.radius = radius
    }
 
    spawn(x, y) {
@@ -18,8 +17,19 @@ export class Player {
       return Math.abs(this.dx) > MIN_MOVE || Math.abs(this.dy) > MIN_MOVE
    }
 
-   updatePosition(dt) {
-      this.dy += this.level.gravity * dt
+   updatePosition(dt, gravity) {
+      this.dy += gravity * dt
+      this.x += this.dx * dt
+      this.y += this.dy * dt
+   }
+
+   updatePositionRoll(segment, dt, gravity) {
+
+      const forwardMagnitude = gravity * Math.sin(segment.angle)
+
+      this.dx += Math.cos(segment.angle) * forwardMagnitude * dt
+      this.dy += Math.sin(segment.angle) * forwardMagnitude * dt
+
       this.x += this.dx * dt
       this.y += this.dy * dt
    }
@@ -36,64 +46,76 @@ export class Player {
       this.dy -= 2 * vDotN * segment.normalY * DAMPING
 
       // TODO: Should friction be time based?
-      const FRICTION = 0.05
+      const FRICTION = 0.02
       const vDotF = this.dx * segment.groundX + this.dy * segment.groundY
       this.dx -= vDotF * segment.groundX * FRICTION
       this.dy -= vDotF * segment.groundY * FRICTION
    }
 
-   update(dt) {
-      const lastX = this.x
-      const lastY = this.y
-      this.updatePosition(dt)
+   doNudge(nearSegments) {
+      let closestSegment = null, closestDist = Number.NEGATIVE_INFINITY
+      nearSegments.forEach(s => {
+         // Negative is "outside" of segment, positive is "inside" of segment
+         // so this will seem backwards
+         const dist = s.getDistanceFrom(this.x, this.y, this.radius)
 
-      const segments = this.level.getSegmentsNear(this)
-      let closestSegment = null
-      let closestHitTime = 1.0
-
-      segments.forEach(s => {
-         // Ignore segment if we are outside of it
-         if (Math.abs(s.getDistanceFromSegmentBounds(this.x, this.y)) < this.radius) {
-
-            // Based on: https://www.gamasutra.com/view/feature/131790/simple_intersection_tests_for_games.php
-            const d0 = s.getDistanceFromInfiniteLine(lastX, lastY)
-            const d1 = s.getDistanceFromInfiniteLine(this.x, this.y)
-
-            // Negative is "outside" of segment, positive is "inside" of segment
-            if (d0 < d1) {
-               const hitTime = (d0 + this.radius) / ( d0 - d1 ) // normalized time
-
-               if (hitTime < closestHitTime) {
-                  closestSegment = s
-                  closestHitTime = hitTime
-               }
-            }
+         if (dist > closestDist) {
+            closestSegment = s
+            closestDist = dist
          }
       })
 
-      if (closestHitTime < 0.0) {
-         // If we were already hitting something, nudge out of it
-         let dist = this.radius + closestSegment.getDistanceFromInfiniteLine(this.x, this.y)
+      // If we are currently touching a segment, nudge out of it then roll along it
+      if (closestDist >= -this.radius) {
+         const nudgeDist = this.radius + closestSegment.getDistanceFromInfiniteLine(this.x, this.y)
+         const nudgeX = closestSegment.normalX * nudgeDist
+         const nudgeY = closestSegment.normalY * nudgeDist
 
-         if (dist > 0) {
-            let nudgeX = closestSegment.normalX * dist
-            let nudgeY = closestSegment.normalY * dist
-
-            this.x += nudgeX
-            this.y += nudgeY
-
-            this.applyBounce(closestSegment)
-
-            // update position for rest of time?
+         if (Math.abs(nudgeX) > 20 || Math.abs(nudgeY) > 20) {
+            // TODO: Remove this when done debugging
+            console.log("WARNING: Large nudge!")
          }
+
+         this.x += nudgeX
+         this.y += nudgeY
+
+         return closestSegment
       }
-      else if (closestHitTime < 1.0) {
+
+      return null
+   }
+
+   update(dt, nearSegments, gravity) {
+      const nudgeSegment = this.doNudge(nearSegments)
+
+      if (nudgeSegment != null) {
+         this.updatePositionRoll(nudgeSegment, dt, gravity)
+         this.applyBounce(nudgeSegment)
+      }
+
+      else {
+         // Otherwise, update as a flying body (and bounce if we hit something)
+         const lastX = this.x
+         const lastY = this.y
+
+         this.updatePosition(dt, gravity)
+
+         let closestSegment = null, closestHitTime = 1.0
+         nearSegments.forEach(s => {
+            const time = s.getTimeHitBy(lastX, lastY, this.x, this.y, this.radius)
+
+            if (time > 0 && time < closestHitTime) {
+               closestSegment = s
+               closestHitTime = time
+            }
+         })
+
          // If we hit something, rewind to point of collision, bounce, then update rest of way
-         this.updatePosition((closestHitTime - 1.0) * dt)
-
-         this.applyBounce(closestSegment)
-
-         this.updatePosition((1.0 - closestHitTime) * dt)
+         if (closestHitTime < 1.0) {
+            this.updatePosition((closestHitTime - 1.0) * dt, gravity)
+            this.applyBounce(closestSegment)
+            this.updatePosition((1.0 - closestHitTime) * dt, gravity)
+         }
       }
    }
 

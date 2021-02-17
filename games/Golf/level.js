@@ -5,7 +5,7 @@ export class Level {
    constructor() {
       this.GRID_COLS = 200
       this.GRID_ROWS = 50
-      this.GRID_SIZE = 20
+      this.GRID_SIZE = 50
 
       this.MAX_X = this.GRID_SIZE * this.GRID_COLS
       this.MAX_Y = this.GRID_SIZE * this.GRID_ROWS
@@ -22,6 +22,11 @@ export class Level {
       
       const ground = []
 
+      /*ground.push(new Segment(100, 100, 300, 300))
+      ground.push(new Segment(300, 300, 400, 300))
+      ground.push(new Segment(400, 300, 700, 100))*/
+
+      
       let startX = 0, startY = 500
 
       for (let i = 0; i < 3; i ++) {
@@ -41,6 +46,7 @@ export class Level {
 
       const lastBitOfGround = this.generateGroundSegments(startX, startY, startX + 1000)
       ground.push.apply(ground, lastBitOfGround)
+
 
       this.ground = ground
       this.addSegmentsToGrid(this.ground)
@@ -198,7 +204,7 @@ export class Level {
    }
 
    // Expects complete, closed, fillable collection of segments 
-   drawSegments(segments, ctx, scrollX, scrollY, isGround) {
+   static drawSegments(segments, ctx, scrollX, scrollY, groundY) {
       ctx.strokeStyle = "black"
       ctx.fillStyle = "green"
 
@@ -208,10 +214,10 @@ export class Level {
       ctx.moveTo(first.x1 - scrollX, first.y1 - scrollY)
       segments.forEach(s => ctx.lineTo(s.x2 - scrollX, s.y2 - scrollY))
       
-      if (isGround) {
+      if (groundY !== undefined) {
          const last = segments[segments.length - 1]
-         ctx.lineTo(last.x2 - scrollX, this.MAX_Y - scrollY)
-         ctx.lineTo(first.x1 - scrollX, this.MAX_Y - scrollY)
+         ctx.lineTo(last.x2 - scrollX, groundY - scrollY)
+         ctx.lineTo(first.x1 - scrollX, groundY - scrollY)
          ctx.lineTo(first.x1 - scrollX, first.y1 - scrollY)
       }
 
@@ -221,7 +227,15 @@ export class Level {
    }
 
    draw(ctx, scrollX, scrollY) {
-      this.drawSegments(this.ground, ctx, scrollX, scrollY, true /*isGround*/)
+      // debug grid
+      ctx.strokeStyle = "gray"
+      for (let col = 0; col < this.GRID_COLS; col ++) {
+         for (let row = 0; row < this.GRID_ROWS; row ++) {
+            ctx.strokeRect(col * this.GRID_SIZE - scrollX, row * this.GRID_SIZE - scrollY, this.GRID_SIZE, this.GRID_SIZE)
+         }
+      }
+      
+      Level.drawSegments(this.ground, ctx, scrollX, scrollY, this.MAX_Y)
 
       //ctx.fillStyle = "yellow"
       //this.curvePoints.forEach(p => ctx.fillRect(p[0] - scrollX, p[1] - scrollY, 4, 4))
