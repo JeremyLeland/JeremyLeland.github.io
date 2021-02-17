@@ -25,22 +25,23 @@ export class SectorC37 extends Game {
       document.body.appendChild(this.debugUI)
    }
 
-   getAimAngle() {
-      const diffX = this.mousex - (this.player.x - this.viewport.scrollX)
-      const diffY = this.mousey - (this.player.y - this.viewport.scrollY)
-      return Math.atan2(diffY, diffX)
+   updateDebugUI() {
+      const str = "x = " + this.player.x + "\r\ny = " + this.player.y +
+                  "\r\ndx = " + this.player.dx + "\r\ndy = " + this.player.dy +
+                  "\r\nangle = " + this.player.angle + "\r\ngoalAngle = " + this.player.goalAngle +
+                  "\r\ndistFromGoal = " + this.player.distanceFromGoal() +
+                  "\r\nspeed = " + this.player.speed
+      this.debugUI.textContent = str
    }
 
    update(dt) {
-      this.player.goalAngle = this.getAimAngle()
+      const goalX = this.mousex - this.viewport.scrollX
+      const goalY = this.mousey - this.viewport.scrollY
+      this.player.setGoal(goalX, goalY)
 
       this.player.update(dt)
 
-      const str = "x = " + this.player.x + "\r\ny = " + this.player.y +
-                  "\r\ndx = " + this.player.dx + "\r\ndy = " + this.player.dy +
-                  "\r\nangle = " + this.player.angle + "\r\ngoalAngle = " + this.player.goalAngle
-
-      this.debugUI.textContent = str
+      this.updateDebugUI()
    }
 
    draw() {
