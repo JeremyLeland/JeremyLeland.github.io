@@ -1,5 +1,6 @@
 import { Game } from "./game.js"
 import { Player } from "./player.js"
+import { Enemy } from "./enemy.js"
 
 export class SectorC37 extends Game {
    constructor() {
@@ -12,6 +13,13 @@ export class SectorC37 extends Game {
       this.player = new Player()
       this.player.spawn(100, 100)
 
+      this.enemies = []
+      for (let i = 0; i < 5; i ++) {
+         const enemy = new Enemy()
+         enemy.spawn(Math.random() * 1000, Math.random() * 1000)
+         this.enemies.push(enemy)
+      }
+      
       this.viewport.canvas.style.cursor = "crosshair"
 
       this.startGame()
@@ -38,8 +46,12 @@ export class SectorC37 extends Game {
       const goalX = this.mousex - this.viewport.scrollX
       const goalY = this.mousey - this.viewport.scrollY
       this.player.setGoal(goalX, goalY)
-
       this.player.update(dt)
+
+      this.enemies.forEach(e => {
+         e.setGoal(this.player.x, this.player.y)
+         e.update(dt)
+      })
 
       this.updateDebugUI()
    }
@@ -51,5 +63,6 @@ export class SectorC37 extends Game {
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
       this.player.draw(this.viewport)
+      this.enemies.forEach(e => e.draw(this.viewport))
    }
 }
