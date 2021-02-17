@@ -36,19 +36,26 @@ export class Player {
 
       const distFromGoal = this.distanceFromGoal()
 
-      if (distFromGoal > 200) {
-         this.speed = Math.min(this.maxSpeed, this.speed + this.accel * dt)
-      }
-      else if (distFromGoal < 100) {
-         this.speed = Math.max(this.minSpeed, this.speed - this.accel * dt)
-      }
+      if (distFromGoal > 0) {
 
-      // TODO: make this "slidey" like Asteroids? or is that too hard to use?
-      this.dx = Math.cos(this.angle) * this.speed
-      this.dy = Math.sin(this.angle) * this.speed
+         this.turnTowardsGoal(dt)
 
-      this.x += this.dx * dt
-      this.y += this.dy * dt
+         this.speed = Math.min(this.maxSpeed, distFromGoal / dt)
+
+         // if (distFromGoal > 200) {
+         //    this.speed = Math.min(this.maxSpeed, this.speed + this.accel * dt)
+         // }
+         // else if (distFromGoal < 100) {
+         //    this.speed = Math.max(this.minSpeed, this.speed - this.accel * dt)
+         // }
+
+         // TODO: make this "slidey" like Asteroids? or is that too hard to use?
+         this.dx = Math.cos(this.angle) * this.speed
+         this.dy = Math.sin(this.angle) * this.speed
+
+         this.x += this.dx * dt
+         this.y += this.dy * dt
+      }
    }
 
    turnTowardsGoal(dt) {
@@ -69,7 +76,6 @@ export class Player {
    }
 
    update(dt) {
-      this.turnTowardsGoal(dt)
       this.moveTowardsGoal(dt)
    }
 
@@ -77,12 +83,12 @@ export class Player {
       const WIDTH = 10, LENGTH = 20
 
       const sinAng = Math.sin(this.angle), cosAng = Math.cos(this.angle)
-      const leftX = this.x - sinAng * WIDTH
-      const leftY = this.y + cosAng * WIDTH
-      const rightX = this.x + sinAng * WIDTH
-      const rightY = this.y - cosAng * WIDTH
-      const frontX = this.x + cosAng * LENGTH
-      const frontY = this.y + sinAng * LENGTH
+      const leftX = this.x - sinAng * WIDTH - cosAng * LENGTH / 2
+      const leftY = this.y + cosAng * WIDTH - sinAng * LENGTH / 2
+      const rightX = this.x + sinAng * WIDTH - cosAng * LENGTH / 2
+      const rightY = this.y - cosAng * WIDTH - sinAng * LENGTH / 2
+      const frontX = this.x + cosAng * LENGTH / 2
+      const frontY = this.y + sinAng * LENGTH / 2
 
       const ctx = viewport.context
       const scrollX = viewport.scrollX
