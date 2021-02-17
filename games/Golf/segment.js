@@ -61,7 +61,16 @@ export class Segment {
 
       // Negative is "outside" of segment, positive is "inside" of segment
       if (d0 < d1) {
-         return (d0 + radius) / ( d0 - d1 ) // normalized time
+         const u = (d0 + radius) / ( d0 - d1 ) // normalized time
+         const hitX = (1 - u) * lastX + u * nowX
+         const hitY = (1 - u) * lastY + u * nowY
+
+         if (Math.abs(this.getDistanceFromSegmentBounds(hitX, hitY)) > radius) {
+            return Number.POSITIVE_INFINITY
+         }
+         else {
+            return u
+         }
       }
       else {
          return Number.POSITIVE_INFINITY

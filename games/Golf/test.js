@@ -12,9 +12,13 @@ export class GolfTest extends Game {
       this.keyBindings = { }
 
       this.ground = []
-      this.ground.push(new Segment(100, 100, 300, 300))
-      this.ground.push(new Segment(300, 300, 400, 300))
-      this.ground.push(new Segment(400, 300, 700, 100))
+      this.ground.push(new Segment(0, 50, 200, 100))
+      this.ground.push(new Segment(200, 100, 300, 100))
+      this.ground.push(new Segment(300, 100, 300, 150))
+      this.ground.push(new Segment(300, 150, 350, 150))
+      this.ground.push(new Segment(350, 150, 350, 100))
+      this.ground.push(new Segment(350, 100, 400, 100))
+      this.ground.push(new Segment(400, 100, 500, 50))
 
       this.player = new Player(10)
       this.player.spawn(100, 100)

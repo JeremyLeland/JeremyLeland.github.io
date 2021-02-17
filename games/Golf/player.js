@@ -59,7 +59,7 @@ export class Player {
          // so this will seem backwards
          const dist = s.getDistanceFrom(this.x, this.y, this.radius)
 
-         if (dist > closestDist) {
+         if (Math.abs(dist) < Math.abs(closestDist)) {
             closestSegment = s
             closestDist = dist
          }
