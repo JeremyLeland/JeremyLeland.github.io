@@ -106,7 +106,7 @@ export class Ship {
       this.bullets = this.bullets.filter(b => b.life > 0)
    }
 
-   drawTriangle(viewport) {
+   drawTriangle(ctx) {
       const sinAng = Math.sin(this.angle), cosAng = Math.cos(this.angle), halfLength = this.length / 2
       const leftX = this.x - sinAng * this.width - cosAng * halfLength
       const leftY = this.y + cosAng * this.width - sinAng * halfLength
@@ -115,23 +115,19 @@ export class Ship {
       const frontX = this.x + cosAng * halfLength
       const frontY = this.y + sinAng * halfLength
 
-      const ctx = viewport.context
-      const scrollX = viewport.scrollX
-      const scrollY = viewport.scrollY
-
       ctx.strokeStyle = this.color
       ctx.beginPath()
-      ctx.moveTo(leftX - scrollX, leftY - scrollY)
-      ctx.lineTo(frontX - scrollX, frontY - scrollY)
-      ctx.lineTo(rightX - scrollX, rightY - scrollY)
-      ctx.lineTo(leftX - scrollX, leftY - scrollY)
+      ctx.moveTo(leftX, leftY)
+      ctx.lineTo(frontX, frontY)
+      ctx.lineTo(rightX, rightY)
+      ctx.lineTo(leftX, leftY)
       ctx.stroke()
       ctx.closePath()
    }
 
-   draw(viewport) {
-      this.drawTriangle(viewport)
+   draw(ctx) {
+      this.drawTriangle(ctx)
 
-      this.bullets.forEach(b => b.draw(viewport))
+      this.bullets.forEach(b => b.draw(ctx))
    }
 }

@@ -12,6 +12,7 @@ export class SectorC37 extends Game {
 
       this.player = new Player()
       this.player.spawn(100, 100)
+      this.updateScroll()
 
       this.enemies = []
       for (let i = 0; i < 5; i ++) {
@@ -22,7 +23,7 @@ export class SectorC37 extends Game {
 
       this.bullets = []
       
-      this.viewport.canvas.style.cursor = "crosshair"
+      this.canvas.style.cursor = "crosshair"
 
       this.startGame()
    }
@@ -44,11 +45,17 @@ export class SectorC37 extends Game {
       this.debugUI.textContent = str
    }
 
+   updateScroll() {
+      this.scrollX = this.context.canvas.width / 2 - this.player.x
+      this.scrollY = this.context.canvas.height / 2 - this.player.y
+   }
+
    update(dt) {
-      const goalX = this.mousex - this.viewport.scrollX
-      const goalY = this.mousey - this.viewport.scrollY
+      const goalX = this.mousex - this.scrollX
+      const goalY = this.mousey - this.scrollY
       this.player.setGoal(goalX, goalY)
       this.player.update(dt)
+      this.updateScroll()
 
       if (this.mouseIsDown) {
          this.player.startShooting()
@@ -66,12 +73,16 @@ export class SectorC37 extends Game {
    }
 
    draw() {
-      const ctx = this.viewport.context
+      const ctx = this.context
 
       ctx.fillStyle = "black"
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
-      this.player.draw(this.viewport)
-      this.enemies.forEach(e => e.draw(this.viewport))
+      ctx.translate(this.scrollX, this.scrollY)
+
+      this.player.draw(ctx)
+      this.enemies.forEach(e => e.draw(ctx))
+
+      ctx.translate(-this.scrollX, -this.scrollY)
    }
 }

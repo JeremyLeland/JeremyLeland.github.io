@@ -1,5 +1,8 @@
-class Viewport {
+export class Game {
+   static VERSION = 0
+
    constructor() {
+      // Canvas
       this.canvas = document.createElement("canvas")
       this.canvas.style = "display: block"
       this.canvas.width = window.innerWidth
@@ -12,34 +15,29 @@ class Viewport {
 
       this.scrollX = 0
       this.scrollY = 0
-   }
 
-   resize() {
-      this.canvas.width = window.innerWidth
-      this.canvas.height = window.innerHeight
-   }
-}
-
-export class Game {
-   static VERSION = 0
-
-   constructor() {
-      this.viewport = new Viewport()
-
+      // UI
       this.prepareUI()
 
+      // Keyboard
       this.keyBindings = {}
       this.keyDown = {}
       document.onkeydown = (e) => this.keyDownCallback(e)
       document.onkeyup = (e) => this.keyUpCallback(e)
 
+      // Mouse
       this.mousex = 0
       this.mousey = 0
       this.mouseIsDown = false
       this.mouseButton = -1
-      this.viewport.canvas.onmousedown = (e) => this.mouseDownCallback(e)
-      this.viewport.canvas.onmouseup = (e) => this.mouseUpCallback(e)
-      this.viewport.canvas.onmousemove = (e) => this.mouseMovedCallback(e)
+      this.canvas.onmousedown = (e) => this.mouseDownCallback(e)
+      this.canvas.onmouseup = (e) => this.mouseUpCallback(e)
+      this.canvas.onmousemove = (e) => this.mouseMovedCallback(e)
+   }
+
+   resize() {
+      this.canvas.width = window.innerWidth
+      this.canvas.height = window.innerHeight
    }
 
    prepareUI() {

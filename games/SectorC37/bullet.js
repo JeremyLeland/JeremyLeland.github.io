@@ -16,12 +16,8 @@ export class Bullet {
       this.life -= dt
    }
 
-   draw(viewport) {
-      const ctx = viewport.context
-      const scrollX = viewport.scrollX
-      const scrollY = viewport.scrollY
-
+   draw(ctx) {
       ctx.fillStyle = this.color
-      ctx.fillRect(this.x - scrollX, this.y - scrollY, 2, 2)
+      ctx.fillRect(this.x, this.y, 2, 2)
    }
 }
