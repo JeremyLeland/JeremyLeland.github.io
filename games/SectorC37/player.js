@@ -2,14 +2,18 @@ import { Ship } from "./ship.js"
 
 export class Player extends Ship {
 	constructor() {
-      super(0.0001 /*accel*/, 0 /*minSpeed*/, 0.2 /*maxSpeed*/, 0.005 /*turnSpeed*/)
-   }
+      super()
 
-   update(dt) {
-      this.moveTowardsGoal(dt)
-   }
+      this.accel = 0.0001
+      this.minSpeed = 0
+      this.maxSpeed = 0.2
+      this.turnSpeed = 0.005
 
-   draw(viewport) {
-      this.drawTriangle(viewport, 10, 20, "green")
+      this.timeBetweenShots = 100
+      this.bulletSpeed = 0.3
+
+      this.width = 10
+      this.length = 20
+      this.color = "green"
    }
 }

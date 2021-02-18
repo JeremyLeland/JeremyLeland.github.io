@@ -1,9 +1,8 @@
+import { Bullet } from "./bullet.js"
+
 export class Ship {
-   constructor(accel, minSpeed, maxSpeed, turnSpeed) {
-      this.accel = accel
-      this.minSpeed = minSpeed
-      this.maxSpeed = maxSpeed
-      this.turnSpeed = turnSpeed
+   constructor() {
+      this.bullets = []
    }
 
    spawn(x, y) {
@@ -18,6 +17,8 @@ export class Ship {
       this.goalX = x
       this.goalY = y
       this.goalAngle = 0
+
+      this.shootDelay = this.timeBetweenShots
    }
 
    setGoal(goalX, goalY) {
@@ -74,24 +75,51 @@ export class Ship {
       }
    }
 
-   update(dt) {
-      this.moveTowardsGoal(dt)
+   startShooting() {
+      this.isShooting = true
    }
 
-   drawTriangle(viewport, width, length, color) {
-      const sinAng = Math.sin(this.angle), cosAng = Math.cos(this.angle)
-      const leftX = this.x - sinAng * width - cosAng * length / 2
-      const leftY = this.y + cosAng * width - sinAng * length / 2
-      const rightX = this.x + sinAng * width - cosAng * length / 2
-      const rightY = this.y - cosAng * width - sinAng * length / 2
-      const frontX = this.x + cosAng * length / 2
-      const frontY = this.y + sinAng * length / 2
+   stopShooting() {
+      this.isShooting = false
+   }
+
+   shoot() {
+      const sinAng = Math.sin(this.angle), cosAng = Math.cos(this.angle), halfLength = this.length / 2
+      const frontX = this.x + cosAng * halfLength
+      const frontY = this.y + sinAng * halfLength
+
+      this.bullets.push(new Bullet(frontX, frontY, 
+                                   cosAng * this.bulletSpeed, sinAng * this.bulletSpeed,
+                                   this.color))
+   }
+
+   update(dt) {
+      this.moveTowardsGoal(dt)
+
+      this.shootDelay = Math.max(0, this.shootDelay - dt)
+      if (this.shootDelay == 0 && this.isShooting) {
+         this.shoot()
+         this.shootDelay = this.timeBetweenShots
+      }
+
+      this.bullets.forEach(b => b.update(dt))
+      this.bullets = this.bullets.filter(b => b.life > 0)
+   }
+
+   drawTriangle(viewport) {
+      const sinAng = Math.sin(this.angle), cosAng = Math.cos(this.angle), halfLength = this.length / 2
+      const leftX = this.x - sinAng * this.width - cosAng * halfLength
+      const leftY = this.y + cosAng * this.width - sinAng * halfLength
+      const rightX = this.x + sinAng * this.width - cosAng * halfLength
+      const rightY = this.y - cosAng * this.width - sinAng * halfLength
+      const frontX = this.x + cosAng * halfLength
+      const frontY = this.y + sinAng * halfLength
 
       const ctx = viewport.context
       const scrollX = viewport.scrollX
       const scrollY = viewport.scrollY
 
-      ctx.strokeStyle = color
+      ctx.strokeStyle = this.color
       ctx.beginPath()
       ctx.moveTo(leftX - scrollX, leftY - scrollY)
       ctx.lineTo(frontX - scrollX, frontY - scrollY)
@@ -99,5 +127,11 @@ export class Ship {
       ctx.lineTo(leftX - scrollX, leftY - scrollY)
       ctx.stroke()
       ctx.closePath()
+   }
+
+   draw(viewport) {
+      this.drawTriangle(viewport)
+
+      this.bullets.forEach(b => b.draw(viewport))
    }
 }

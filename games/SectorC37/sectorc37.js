@@ -19,6 +19,8 @@ export class SectorC37 extends Game {
          enemy.spawn(Math.random() * 1000, Math.random() * 1000)
          this.enemies.push(enemy)
       }
+
+      this.bullets = []
       
       this.viewport.canvas.style.cursor = "crosshair"
 
@@ -47,6 +49,13 @@ export class SectorC37 extends Game {
       const goalY = this.mousey - this.viewport.scrollY
       this.player.setGoal(goalX, goalY)
       this.player.update(dt)
+
+      if (this.mouseIsDown) {
+         this.player.startShooting()
+      }
+      else {
+         this.player.stopShooting()
+      }
 
       this.enemies.forEach(e => {
          e.setGoal(this.player.x, this.player.y)
