@@ -4,7 +4,7 @@ import { Enemy } from "./enemy.js"
 
 export class SectorC37 extends Game {
    constructor() {
-      Game.VERSION = 0.01
+      Game.VERSION = 0.02
 
       super()
 
@@ -78,11 +78,13 @@ export class SectorC37 extends Game {
       ctx.fillStyle = "black"
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
+      ctx.save()
+
       ctx.translate(this.scrollX, this.scrollY)
 
       this.player.draw(ctx)
       this.enemies.forEach(e => e.draw(ctx))
 
-      ctx.translate(-this.scrollX, -this.scrollY)
+      ctx.restore()
    }
 }

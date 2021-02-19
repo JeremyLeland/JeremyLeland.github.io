@@ -107,22 +107,23 @@ export class Ship {
    }
 
    drawTriangle(ctx) {
-      const sinAng = Math.sin(this.angle), cosAng = Math.cos(this.angle), halfLength = this.length / 2
-      const leftX = this.x - sinAng * this.width - cosAng * halfLength
-      const leftY = this.y + cosAng * this.width - sinAng * halfLength
-      const rightX = this.x + sinAng * this.width - cosAng * halfLength
-      const rightY = this.y - cosAng * this.width - sinAng * halfLength
-      const frontX = this.x + cosAng * halfLength
-      const frontY = this.y + sinAng * halfLength
+      ctx.save()
+      
+      ctx.translate(this.x, this.y)
+      ctx.rotate(this.angle)
+      ctx.scale(this.length, this.width)  // at angle 0, "forward" is in x axis
 
-      ctx.strokeStyle = this.color
+      // Unit triangle centered at 0,0
       ctx.beginPath()
-      ctx.moveTo(leftX, leftY)
-      ctx.lineTo(frontX, frontY)
-      ctx.lineTo(rightX, rightY)
-      ctx.lineTo(leftX, leftY)
-      ctx.stroke()
+      ctx.moveTo(-0.5, -0.5)
+      ctx.lineTo( 0.5,  0)
+      ctx.lineTo(-0.5,  0.5)
       ctx.closePath()
+
+      ctx.fillStyle = this.color
+      ctx.fill()
+      
+      ctx.restore()
    }
 
    draw(ctx) {

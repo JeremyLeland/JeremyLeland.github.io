@@ -17,7 +17,13 @@ export class Bullet {
    }
 
    draw(ctx) {
+      ctx.save()
+
+      ctx.translate(this.x, this.y)
+
       ctx.fillStyle = this.color
-      ctx.fillRect(this.x, this.y, 2, 2)
+      ctx.fillRect(-1, -1, 3, 3)
+
+      ctx.restore()
    }
 }

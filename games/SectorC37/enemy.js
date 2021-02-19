@@ -12,7 +12,7 @@ export class Enemy extends Ship {
       this.timeBetweenShots = 100
       this.bulletSpeed = 0.3
 
-      this.width = 15
+      this.width = 30
       this.length = 15
       this.color = "blue"
    }

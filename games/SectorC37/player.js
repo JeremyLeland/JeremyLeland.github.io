@@ -10,9 +10,9 @@ export class Player extends Ship {
       this.turnSpeed = 0.005
 
       this.timeBetweenShots = 100
-      this.bulletSpeed = 0.3
+      this.bulletSpeed = 0.4
 
-      this.width = 10
+      this.width = 20
       this.length = 20
       this.color = "green"
    }
