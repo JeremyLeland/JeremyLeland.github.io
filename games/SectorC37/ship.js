@@ -24,7 +24,7 @@ export class Ship {
    setGoal(goalX, goalY) {
       this.goalX = goalX
       this.goalY = goalY
-      this.goalAngle = Math.atan2(goalY - this.y, goalX - this.x)
+      
    }
 
    distanceFrom(x, y) {
@@ -105,6 +105,8 @@ export class Ship {
    }
 
    turnTowardsGoal(dt) {
+      this.goalAngle = Math.atan2(this.goalY - this.y, this.goalX - this.x)
+
       // Adjust our angle so we can use goalAngle
       if (this.goalAngle - this.angle > Math.PI) {
          this.angle += Math.PI * 2
@@ -179,9 +181,10 @@ export class Ship {
 
       // DEBUG
       ctx.beginPath()
-      ctx.moveTo(this.x, this.y)
-      ctx.lineTo(this.goalX, this.goalY)
+      ctx.moveTo(this.goalX, this.goalY)
+      ctx.lineTo(this.x, this.y)
 
+      ctx.setLineDash([1, 8])
       ctx.strokeStyle = "yellow"
       ctx.stroke()
    }

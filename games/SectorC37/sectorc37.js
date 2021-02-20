@@ -10,7 +10,7 @@ export class SectorC37 extends Game {
 
       this.keyBindings = { "pause": 32 }
 
-      this.player = new Player(100, 100)
+      this.player = new Player(500, 500)
       this.updateScroll()
 
       this.enemies = []
@@ -27,24 +27,26 @@ export class SectorC37 extends Game {
 
    addRandomEnemy() {
       const enemy = new Enemy(Math.random() * 1000, Math.random() * 1000)
-      enemy.setTargetShip(this.player)
+      //enemy.setTargetShip(this.player)
+
+      enemy.setGoal(Math.random() * 1000, Math.random() * 1000)
 
       this.enemies.push(enemy)
    }
 
-   prepareUI() {
-      super.prepareUI()
+   // prepareUI() {
+   //    super.prepareUI()
 
-      this.debugUI = document.createElement('div')
-      this.debugUI.style = "position: absolute; white-space: pre; left: 2px; top: 2px; font: 10px sans-serif"
-      document.body.appendChild(this.debugUI)
-   }
+   //    this.debugUI = document.createElement('div')
+   //    this.debugUI.style = "position: absolute; white-space: pre; left: 2px; top: 2px; font: 10px sans-serif"
+   //    document.body.appendChild(this.debugUI)
+   // }
 
-   updateDebugUI() {
-      const str = "e0->e1 = " + this.enemies[0].timeUntilHitShip(this.enemies[1]) +
-                  "\r\ne1->e0 = " + this.enemies[1].timeUntilHitShip(this.enemies[0])
-      this.debugUI.textContent = str
-   }
+   // updateDebugUI() {
+   //    const str = "e0->e1 = " + this.enemies[0].timeUntilHitShip(this.enemies[1]) +
+   //                "\r\ne1->e0 = " + this.enemies[1].timeUntilHitShip(this.enemies[0])
+   //    this.debugUI.textContent = str
+   // }
 
    checkForShipToAvoid(ship) {
       let closestEnemy = null, closestTime = Number.POSITIVE_INFINITY
@@ -79,11 +81,7 @@ export class SectorC37 extends Game {
       this.scrollY = this.context.canvas.height / 2 - this.player.y
    }
 
-   update(dt) {
-      if (this.keyDown["pause"]) {
-         return
-      }
-
+   updatePlayer(dt) {
       const goalX = this.mousex - this.scrollX
       const goalY = this.mousey - this.scrollY
       this.player.setGoal(goalX, goalY)
@@ -96,13 +94,26 @@ export class SectorC37 extends Game {
       else {
          this.player.stopShooting()
       }
+   }
+
+   update(dt) {
+      if (this.keyDown["pause"]) {
+         return
+      }
+
+      this.updatePlayer(dt)
 
       this.enemies.forEach(e => {
-         this.checkForShipToAvoid(e)
+
+         if (e.distanceFrom(e.goalX, e.goalY) < e.width * 2) {
+            e.setGoal(Math.random() * 1000, Math.random() * 1000)
+         }
+
+         //this.checkForShipToAvoid(e)
          e.update(dt)
       })
 
-      this.updateDebugUI()
+      // this.updateDebugUI()
    }
 
    draw() {
