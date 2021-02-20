@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+   <head>
+      <title>Sector C37 Tests</title>
+      <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+      <style>
+         html, body { margin: 0; padding: 0; }
+      </style>
+   </head>
+   <body bgcolor="black" text="white">
+      <script type="module">
+         import { Ship } from "./ship.js"
+         const ship1 = new Ship()
+         const ship2 = new Ship()
+
+         ship1.spawn(100, 100)
+         ship2.spawn(200, 200)
+
+         ship1.angle = Math.PI / 4
+         ship1.speed = 1
+
+         ship2.angle = -Math.PI * (3/4)
+         ship2.speed = 1
+
+         const t = ship1.timeUntilHitShip(ship2)
+
+         const output = document.createElement('div')
+         output.textContent = "Time until ship1 hits ship2: " + t
+         document.body.appendChild(output)
+
+      </script>
+   </body>
+   </body>
+</html>

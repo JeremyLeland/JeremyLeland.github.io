@@ -10,15 +10,12 @@ export class SectorC37 extends Game {
 
       this.keyBindings = { }
 
-      this.player = new Player()
-      this.player.spawn(100, 100)
+      this.player = new Player(100, 100)
       this.updateScroll()
 
       this.enemies = []
       for (let i = 0; i < 5; i ++) {
-         const enemy = new Enemy()
-         enemy.spawn(Math.random() * 1000, Math.random() * 1000)
-         this.enemies.push(enemy)
+         this.addRandomEnemy()
       }
 
       this.bullets = []
@@ -28,21 +25,49 @@ export class SectorC37 extends Game {
       this.startGame()
    }
 
-   prepareUI() {
-      super.prepareUI()
+   addRandomEnemy() {
+      const enemy = new Enemy(Math.random() * 1000, Math.random() * 1000)
+      enemy.setTargetShip(this.player)
 
-      this.debugUI = document.createElement('div')
-      this.debugUI.style = "position: absolute; white-space: pre; left: 2px; top: 2px; font: 10px sans-serif"
-      document.body.appendChild(this.debugUI)
+      this.enemies.push(enemy)
    }
 
-   updateDebugUI() {
-      const str = "x = " + this.player.x + "\r\ny = " + this.player.y +
-                  "\r\ndx = " + this.player.dx + "\r\ndy = " + this.player.dy +
-                  "\r\nangle = " + this.player.angle + "\r\ngoalAngle = " + this.player.goalAngle +
-                  "\r\ndistFromGoal = " + this.player.distanceFromGoal() +
-                  "\r\nspeed = " + this.player.speed
-      this.debugUI.textContent = str
+   // prepareUI() {
+   //    super.prepareUI()
+
+   //    this.debugUI = document.createElement('div')
+   //    this.debugUI.style = "position: absolute; white-space: pre; left: 2px; top: 2px; font: 10px sans-serif"
+   //    document.body.appendChild(this.debugUI)
+   // }
+
+   // updateDebugUI() {
+   //    const str = "x = " + this.player.x + "\r\ny = " + this.player.y +
+   //                "\r\ndx = " + this.player.dx + "\r\ndy = " + this.player.dy +
+   //                "\r\nangle = " + this.player.angle + "\r\ngoalAngle = " + this.player.goalAngle +
+   //                "\r\ndistFromGoal = " + this.player.distanceFromGoal() +
+   //                "\r\nspeed = " + this.player.speed
+   //    this.debugUI.textContent = str
+   // }
+
+   checkForShipToAvoid(ship) {
+      let closestEnemy = null, closestTime = Number.POSITIVE_INFINITY
+      this.enemies.forEach(e => {
+         if (e != ship) {
+            const time = ship.timeUntilHitShip(e)
+
+            if (time > 0 && time < closestTime) {
+               closestEnemy = e
+               closestTime = time
+            }
+         }
+      })
+
+      if (closestTime < 1000) {
+         ship.setAvoidShip(closestEnemy)
+      }
+      else {
+         ship.setAvoidShip(null)
+      }
    }
 
    updateScroll() {
@@ -54,7 +79,7 @@ export class SectorC37 extends Game {
       const goalX = this.mousex - this.scrollX
       const goalY = this.mousey - this.scrollY
       this.player.setGoal(goalX, goalY)
-      this.player.update(dt)
+      this.player.update(dt)      
       this.updateScroll()
 
       if (this.mouseIsDown) {
@@ -65,11 +90,11 @@ export class SectorC37 extends Game {
       }
 
       this.enemies.forEach(e => {
-         e.setGoal(this.player.x, this.player.y)
+         this.checkForShipToAvoid(e)
          e.update(dt)
       })
 
-      this.updateDebugUI()
+      //this.updateDebugUI()
    }
 
    draw() {

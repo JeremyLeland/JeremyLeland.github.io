@@ -1,7 +1,7 @@
 import { Ship } from "./ship.js"
 
 export class Player extends Ship {
-	constructor() {
+   constructor(x, y) {
       super()
 
       this.accel = 0.0001
@@ -15,5 +15,7 @@ export class Player extends Ship {
       this.width = 20
       this.length = 20
       this.color = "green"
+
+      this.spawn(x, y)
    }
 }

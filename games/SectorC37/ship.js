@@ -27,14 +27,54 @@ export class Ship {
       this.goalAngle = Math.atan2(goalY - this.y, goalX - this.x)
    }
 
-   distanceFromGoal() {
-      const cx = this.goalX - this.x
-      const cy = this.goalY - this.y
+   distanceFrom(x, y) {
+      const cx = x - this.x
+      const cy = y - this.y
       return Math.sqrt(cx*cx + cy*cy)
    }
 
+   angleTo(x, y) {
+      return Math.atan2(y - this.y, x - this.x) - this.angle
+   }
+
+   timeUntilHitShip(other) {
+      // See when ships would collide if continuing at their current direction and rate of speed
+      // NOTE: Does not take into account radius, just checks the centers
+      // TODO: try instead? https://stackoverflow.com/questions/33140999/at-what-delta-time-will-two-objects-collide
+      const x1 = this.x
+      const y1 = this.y
+      const x2 = this.x + Math.cos(this.angle) * this.speed
+      const y2 = this.y + Math.sin(this.angle) * this.speed
+
+      const x3 = other.x
+      const y3 = other.y
+      const x4 = other.x + Math.cos(other.angle) * other.speed
+      const y4 = other.y + Math.sin(other.angle) * other.speed
+
+      // See: http://www.jeffreythompson.org/collision-detection/line-line.php
+      const n = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3))
+      const d = ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1))
+
+      if (n == 0 && d == 0) {
+         // Lines are coincident -- ships will hit eventually if different speeds in same dir
+         // if (this.angle == other.angle) {
+
+         // }
+         // else {
+            return Number.POSITIVE_INFINITY
+         // }
+      }
+      else if (d == 0) {
+         // Lines are parallel -- ships will never hit (TODO: take into account radius?)
+         return Number.POSITIVE_INFINITY
+      }
+      else {
+         return n / d
+      }
+   }
+
    moveTowardsGoal(dt) {
-      const distFromGoal = this.distanceFromGoal()
+      const distFromGoal = this.distanceFrom(this.goalX, this.goalY)
 
       if (distFromGoal > 0) {
 
@@ -108,7 +148,7 @@ export class Ship {
 
    drawTriangle(ctx) {
       ctx.save()
-      
+
       ctx.translate(this.x, this.y)
       ctx.rotate(this.angle)
       ctx.scale(this.length, this.width)  // at angle 0, "forward" is in x axis
@@ -130,5 +170,13 @@ export class Ship {
       this.drawTriangle(ctx)
 
       this.bullets.forEach(b => b.draw(ctx))
+
+      // DEBUG
+      ctx.beginPath()
+      ctx.moveTo(this.x, this.y)
+      ctx.lineTo(this.goalX, this.goalY)
+
+      ctx.strokeStyle = "yellow"
+      ctx.stroke()
    }
 }
