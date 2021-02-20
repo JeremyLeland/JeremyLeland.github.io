@@ -20,7 +20,7 @@ export class Enemy extends Ship {
       this.followShip = null
       this.avoidShip = null
 
-      this.SHOOT_DISTANCE = 100
+      this.SHOOT_DISTANCE = 300
       this.SHOOT_ANGLE = 0.5
 
       this.spawn(x, y)
@@ -28,6 +28,10 @@ export class Enemy extends Ship {
 
    setTargetShip(ship) {
       this.targetShip = ship
+   }
+
+   distanceFromTargetShip() {
+      return this.distanceFrom(this.targetShip.x, this.targetShip.y)
    }
 
    setFollowShip(ship) {
@@ -40,17 +44,13 @@ export class Enemy extends Ship {
 
    update(dt) {
       if (this.avoidShip != null) {
-         const cx = this.avoidShip.x - this.x
-         const cy = this.avoidShip.y - this.y
-         const dist = Math.sqrt(cx*cx + cy*cy)
-
-         const normX = -cy / dist
-         const normY =  cx / dist
-
+         const offsetAngle = this.avoidShip.angle + Math.PI / 2
+         
          // TODO: Radius instead of width?
-         const offset = this.width + this.avoidShip.width
+         const offsetDist = this.width + this.avoidShip.width
 
-         this.setGoal(this.avoidShip.x + normX * offset, this.avoidShip.y + normY * offset)
+         this.setGoal(this.avoidShip.x + Math.cos(offsetAngle) * offsetDist, 
+                      this.avoidShip.y + Math.sin(offsetAngle) * offsetDist)
       }
 
       else if (this.targetShip != null) {
@@ -58,7 +58,7 @@ export class Enemy extends Ship {
 
          // For now, shoot if we are close to target and it is in front of us
          if (this.distanceFrom(this.targetShip.x, this.targetShip.y) < this.SHOOT_DISTANCE && 
-             this.angleTo(this.targetShip.x, this.targetShip.y) < this.SHOOT_ANGLE) {
+             Math.abs(this.angleTo(this.targetShip.x, this.targetShip.y)) < this.SHOOT_ANGLE) {
             this.startShooting()
          }
          else {

@@ -8,7 +8,7 @@ export class SectorC37 extends Game {
 
       super()
 
-      this.keyBindings = { }
+      this.keyBindings = { "pause": 32 }
 
       this.player = new Player(100, 100)
       this.updateScroll()
@@ -32,22 +32,19 @@ export class SectorC37 extends Game {
       this.enemies.push(enemy)
    }
 
-   // prepareUI() {
-   //    super.prepareUI()
+   prepareUI() {
+      super.prepareUI()
 
-   //    this.debugUI = document.createElement('div')
-   //    this.debugUI.style = "position: absolute; white-space: pre; left: 2px; top: 2px; font: 10px sans-serif"
-   //    document.body.appendChild(this.debugUI)
-   // }
+      this.debugUI = document.createElement('div')
+      this.debugUI.style = "position: absolute; white-space: pre; left: 2px; top: 2px; font: 10px sans-serif"
+      document.body.appendChild(this.debugUI)
+   }
 
-   // updateDebugUI() {
-   //    const str = "x = " + this.player.x + "\r\ny = " + this.player.y +
-   //                "\r\ndx = " + this.player.dx + "\r\ndy = " + this.player.dy +
-   //                "\r\nangle = " + this.player.angle + "\r\ngoalAngle = " + this.player.goalAngle +
-   //                "\r\ndistFromGoal = " + this.player.distanceFromGoal() +
-   //                "\r\nspeed = " + this.player.speed
-   //    this.debugUI.textContent = str
-   // }
+   updateDebugUI() {
+      const str = "e0->e1 = " + this.enemies[0].timeUntilHitShip(this.enemies[1]) +
+                  "\r\ne1->e0 = " + this.enemies[1].timeUntilHitShip(this.enemies[0])
+      this.debugUI.textContent = str
+   }
 
    checkForShipToAvoid(ship) {
       let closestEnemy = null, closestTime = Number.POSITIVE_INFINITY
@@ -55,7 +52,7 @@ export class SectorC37 extends Game {
          if (e != ship) {
             const time = ship.timeUntilHitShip(e)
 
-            if (time > 0 && time < closestTime) {
+            if (time < closestTime) {
                closestEnemy = e
                closestTime = time
             }
@@ -63,7 +60,14 @@ export class SectorC37 extends Game {
       })
 
       if (closestTime < 1000) {
-         ship.setAvoidShip(closestEnemy)
+
+         // Ship further from target takes evasive action
+         if (ship.distanceFromTargetShip() > closestEnemy.distanceFromTargetShip()) {
+            ship.setAvoidShip(closestEnemy)
+         }
+         else {
+            ship.setAvoidShip(null)
+         }
       }
       else {
          ship.setAvoidShip(null)
@@ -76,6 +80,10 @@ export class SectorC37 extends Game {
    }
 
    update(dt) {
+      if (this.keyDown["pause"]) {
+         return
+      }
+
       const goalX = this.mousex - this.scrollX
       const goalY = this.mousey - this.scrollY
       this.player.setGoal(goalX, goalY)
@@ -94,7 +102,7 @@ export class SectorC37 extends Game {
          e.update(dt)
       })
 
-      //this.updateDebugUI()
+      this.updateDebugUI()
    }
 
    draw() {

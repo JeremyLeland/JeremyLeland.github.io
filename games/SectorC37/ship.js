@@ -12,7 +12,7 @@ export class Ship {
       this.dy = 0
       this.angle = 0
 
-      this.speed = 0
+      this.speed = this.maxSpeed
 
       this.goalX = x
       this.goalY = y
@@ -39,37 +39,43 @@ export class Ship {
 
    timeUntilHitShip(other) {
       // See when ships would collide if continuing at their current direction and rate of speed
-      // NOTE: Does not take into account radius, just checks the centers
-      // TODO: try instead? https://stackoverflow.com/questions/33140999/at-what-delta-time-will-two-objects-collide
-      const x1 = this.x
-      const y1 = this.y
-      const x2 = this.x + Math.cos(this.angle) * this.speed
-      const y2 = this.y + Math.sin(this.angle) * this.speed
+      // See https://stackoverflow.com/questions/33140999/at-what-delta-time-will-two-objects-collide
+      const cx = this.x - other.x
+      const cy = this.y - other.y
 
-      const x3 = other.x
-      const y3 = other.y
-      const x4 = other.x + Math.cos(other.angle) * other.speed
-      const y4 = other.y + Math.sin(other.angle) * other.speed
+      const dx1 = Math.cos(this.angle) * this.speed
+      const dy1 = Math.sin(this.angle) * this.speed
+      const dx2 = Math.cos(other.angle) * other.speed
+      const dy2 = Math.sin(other.angle) * other.speed
+      const vx = dx1 - dx2
+      const vy = dy1 - dy2
 
-      // See: http://www.jeffreythompson.org/collision-detection/line-line.php
-      const n = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3))
-      const d = ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1))
+      // TODO: radius instead of width
+      const rr = this.width + other.width
 
-      if (n == 0 && d == 0) {
-         // Lines are coincident -- ships will hit eventually if different speeds in same dir
-         // if (this.angle == other.angle) {
+      const a = vx*vx + vy*vy
+      const b = 2 * (cx * vx + cy * vy)
+      const c = cx*cx + cy*cy - rr*rr
 
-         // }
-         // else {
-            return Number.POSITIVE_INFINITY
-         // }
-      }
-      else if (d == 0) {
-         // Lines are parallel -- ships will never hit (TODO: take into account radius?)
+      const disc = b*b - 4*a*c
+
+      // If the objects don't collide, the discriminant will be negative
+      if (disc < 0) {
          return Number.POSITIVE_INFINITY
       }
       else {
-         return n / d
+         const t0 = (-b - Math.sqrt(disc)) / (2*a)
+         const t1 = (-b + Math.sqrt(disc)) / (2*a)
+
+         // if (t0 < 0 && t1 < 0) {
+         //    return Number.POSITIVE_INFINITY
+         // }
+         // else if (t0 < 0) {
+         //    return t1
+         // }
+         // else {
+            return Math.min(t0, t1)
+         // }
       }
    }
 
@@ -80,7 +86,7 @@ export class Ship {
 
          this.turnTowardsGoal(dt)
 
-         this.speed = Math.min(this.maxSpeed, distFromGoal / dt)
+         //this.speed = Math.min(this.maxSpeed, distFromGoal / dt)
 
          // if (distFromGoal > 200) {
          //    this.speed = Math.min(this.maxSpeed, this.speed + this.accel * dt)

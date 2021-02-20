@@ -10,23 +10,45 @@
    <body bgcolor="black" text="white">
       <script type="module">
          import { Ship } from "./ship.js"
+
+         function result(str) {
+            const output = document.createElement('div')
+            output.textContent = str
+            document.body.appendChild(output)
+         }
+
          const ship1 = new Ship()
-         const ship2 = new Ship()
-
-         ship1.spawn(100, 100)
-         ship2.spawn(200, 200)
-
-         ship1.angle = Math.PI / 4
          ship1.speed = 1
+         ship1.width = 10
 
-         ship2.angle = -Math.PI * (3/4)
+         const ship2 = new Ship()
          ship2.speed = 1
+         ship2.width = 10
 
-         const t = ship1.timeUntilHitShip(ship2)
+         ship1.x = 100
+         ship1.y = 100
+         ship1.angle = 0
+         ship2.x = 200
+         ship2.y = 100
+         ship2.angle = Math.PI
+         result("Time until ship1 hits ship2: " + ship1.timeUntilHitShip(ship2))
 
-         const output = document.createElement('div')
-         output.textContent = "Time until ship1 hits ship2: " + t
-         document.body.appendChild(output)
+         ship1.x = 100
+         ship1.y = 100
+         ship1.angle = 0
+         ship2.x = 100 
+         ship2.y = 200
+         ship2.angle = -Math.PI / 8
+         result("Time until ship1 hits ship2: " + ship1.timeUntilHitShip(ship2))
+
+         ship1.x = 100
+         ship1.y = 100
+         ship1.angle = Math.PI / 4
+         ship2.x = 200
+         ship2.y = 200
+         ship2.angle = -Math.PI * (3/4)
+         result("Time until ship1 hits ship2: " + ship1.timeUntilHitShip(ship2))
+         
 
       </script>
    </body>
