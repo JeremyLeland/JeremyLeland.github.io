@@ -1,16 +1,22 @@
 import { Game } from "./game.js"
+import { Starfield } from "./starfield.js"
 import { Player } from "./player.js"
 import { Enemy } from "./enemy.js"
 
 export class SectorC37 extends Game {
    constructor() {
-      Game.VERSION = 0.02
+      Game.VERSION = 0.021
 
       super()
 
+      this.LEVEL_WIDTH = 2000
+      this.LEVEL_HEIGHT = 2000
+
+      this.starfield = new Starfield(this.LEVEL_WIDTH, this.LEVEL_HEIGHT, 1000)
+
       this.keyBindings = { "pause": 32 }
 
-      this.player = new Player(500, 500)
+      this.player = new Player(this.LEVEL_WIDTH / 2, this.LEVEL_HEIGHT / 2)
       this.updateScroll()
 
       this.enemies = []
@@ -26,10 +32,10 @@ export class SectorC37 extends Game {
    }
 
    addRandomEnemy() {
-      const enemy = new Enemy(Math.random() * 1000, Math.random() * 1000)
+      const enemy = new Enemy(Math.random() * this.LEVEL_WIDTH, Math.random() * this.LEVEL_HEIGHT)
       //enemy.setTargetShip(this.player)
 
-      enemy.setGoal(Math.random() * 1000, Math.random() * 1000)
+      enemy.setGoal(Math.random() * this.LEVEL_WIDTH, Math.random() * this.LEVEL_HEIGHT)
 
       this.enemies.push(enemy)
    }
@@ -77,13 +83,16 @@ export class SectorC37 extends Game {
    }
 
    updateScroll() {
-      this.scrollX = this.context.canvas.width / 2 - this.player.x
-      this.scrollY = this.context.canvas.height / 2 - this.player.y
+      const w = this.context.canvas.width
+      const h = this.context.canvas.height
+
+      this.scrollX = Math.max(0, Math.min(this.LEVEL_WIDTH - w, this.player.x - w/2))
+      this.scrollY = Math.max(0, Math.min(this.LEVEL_HEIGHT - h, this.player.y - h/2))
    }
 
    updatePlayer(dt) {
-      const goalX = this.mousex - this.scrollX
-      const goalY = this.mousey - this.scrollY
+      const goalX = this.mousex + this.scrollX
+      const goalY = this.mousey + this.scrollY
       this.player.setGoal(goalX, goalY)
       this.player.update(dt)      
       this.updateScroll()
@@ -106,7 +115,7 @@ export class SectorC37 extends Game {
       this.enemies.forEach(e => {
 
          if (e.distanceFrom(e.goalX, e.goalY) < e.width * 2) {
-            e.setGoal(Math.random() * 1000, Math.random() * 1000)
+            e.setGoal(Math.random() * this.LEVEL_WIDTH, Math.random() * this.LEVEL_HEIGHT)
          }
 
          //this.checkForShipToAvoid(e)
@@ -119,13 +128,13 @@ export class SectorC37 extends Game {
    draw() {
       const ctx = this.context
 
-      ctx.fillStyle = "black"
-      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
       ctx.save()
 
-      ctx.translate(this.scrollX, this.scrollY)
+      ctx.translate(-this.scrollX, -this.scrollY)
 
+      this.starfield.draw(ctx)
       this.player.draw(ctx)
       this.enemies.forEach(e => e.draw(ctx))
 
