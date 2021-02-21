@@ -23,8 +23,6 @@ export class SectorC37 extends Game {
       for (let i = 0; i < 5; i ++) {
          this.addRandomEnemy()
       }
-
-      this.bullets = []
       
       this.canvas.style.cursor = "crosshair"
 
@@ -120,7 +118,16 @@ export class SectorC37 extends Game {
 
          //this.checkForShipToAvoid(e)
          e.update(dt)
+
+         this.player.bullets.forEach(b => {
+            if (e.isCollidingWith(b)) {
+               e.hitWith(b)
+               b.life = 0
+            }
+         })
+         this.player.bullets = this.player.bullets.filter(b => b.isAlive())
       })
+      this.enemies = this.enemies.filter(e => e.isAlive())
 
       // this.updateDebugUI()
    }

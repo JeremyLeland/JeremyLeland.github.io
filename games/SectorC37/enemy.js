@@ -9,11 +9,15 @@ export class Enemy extends Ship {
       this.maxSpeed = 0.15
       this.turnSpeed = 0.003
 
-      this.timeBetweenShots = 100
-      this.bulletSpeed = 0.3
+      this.TIME_BETWEEN_SHOTS = 100
+      this.BULLET_SPEED = 0.3
+      this.BULLET_DAMAGE = 5
+
+      this.damage = 50  // ramming damage
 
       this.width = 30
       this.length = 15
+      this.radius = 30
       this.color = "blue"
 
       this.targetShip = null
@@ -22,6 +26,8 @@ export class Enemy extends Ship {
 
       this.SHOOT_DISTANCE = 300
       this.SHOOT_ANGLE = 0.5
+
+      this.MAX_HEALTH = 50
 
       this.spawn(x, y)
    }

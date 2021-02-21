@@ -18,13 +18,18 @@ export class Ship {
       this.goalY = y
       this.goalAngle = 0
 
-      this.shootDelay = this.timeBetweenShots
+      this.shootDelay = this.TIME_BETWEEN_SHOTS
+
+      this.health = this.MAX_HEALTH
+   }
+
+   isAlive() {
+      return this.health > 0
    }
 
    setGoal(goalX, goalY) {
       this.goalX = goalX
       this.goalY = goalY
-      
    }
 
    distanceFrom(x, y) {
@@ -137,8 +142,16 @@ export class Ship {
       const frontY = this.y + sinAng * halfLength
 
       this.bullets.push(new Bullet(frontX, frontY, 
-                                   cosAng * this.bulletSpeed, sinAng * this.bulletSpeed,
-                                   this.color))
+                                   cosAng * this.BULLET_SPEED, sinAng * this.BULLET_SPEED,
+                                   this.BULLET_DAMAGE, this.color))
+   }
+
+   isCollidingWith(entity) {
+      return this.distanceFrom(entity.x, entity.y) < this.radius + entity.radius
+   }
+
+   hitWith(entity) {
+      this.health -= entity.damage
    }
 
    update(dt) {
@@ -147,11 +160,11 @@ export class Ship {
       this.shootDelay = Math.max(0, this.shootDelay - dt)
       if (this.shootDelay == 0 && this.isShooting) {
          this.shoot()
-         this.shootDelay = this.timeBetweenShots
+         this.shootDelay = this.TIME_BETWEEN_SHOTS
       }
 
       this.bullets.forEach(b => b.update(dt))
-      this.bullets = this.bullets.filter(b => b.life > 0)
+      this.bullets = this.bullets.filter(b => b.isAlive())
    }
 
    drawTriangle(ctx) {

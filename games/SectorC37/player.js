@@ -9,12 +9,18 @@ export class Player extends Ship {
       this.maxSpeed = 0.2
       this.turnSpeed = 0.005
 
-      this.timeBetweenShots = 100
-      this.bulletSpeed = 0.4
+      this.TIME_BETWEEN_SHOTS = 100
+      this.BULLET_SPEED = 0.4
+      this.BULLET_DAMAGE = 10
+
+      this.damage = 50  // ramming damage
 
       this.width = 20
       this.length = 20
+      this.radius = 20
       this.color = "green"
+
+      this.MAX_HEALTH = 100
 
       this.spawn(x, y)
    }
