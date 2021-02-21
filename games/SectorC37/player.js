@@ -24,4 +24,10 @@ export class Player extends Ship {
 
       this.spawn(x, y)
    }
+
+   update(dt) {
+      this.turnToward(this.goalX, this.goalY, dt)
+
+      super.update(dt)
+   }
 }

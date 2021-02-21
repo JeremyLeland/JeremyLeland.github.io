@@ -16,7 +16,6 @@ export class Ship {
 
       this.goalX = x
       this.goalY = y
-      this.goalAngle = 0
 
       this.shootDelay = this.TIME_BETWEEN_SHOTS
 
@@ -42,21 +41,38 @@ export class Ship {
       return Math.atan2(y - this.y, x - this.x) - this.angle
    }
 
-   timeUntilHitShip(other) {
+   // timeUntilHit(entity) {
+   //    const diffX = entity.x - this.x
+   //    const diffY = entity.y - this.y
+   //    const len = Math.sqrt(diffX * diffX + diffY * diffY)
+
+   //    // does this need to be normalized?
+   //    const lineX = diffX / len
+   //    const lineY = diffY / len
+
+   //    const dx = Math.cos(this.angle) * this.speed
+   //    const dy = Math.sin(this.angle) * this.speed
+
+   //    const vector = dx * lineX + dy * lineY
+
+   //    return vector
+   // }
+
+   timeUntilHit(other) {
       // See when ships would collide if continuing at their current direction and rate of speed
       // See https://stackoverflow.com/questions/33140999/at-what-delta-time-will-two-objects-collide
+      // (Line-Line was http://www.jeffreythompson.org/collision-detection/line-line.php)
       const cx = this.x - other.x
       const cy = this.y - other.y
 
-      const dx1 = Math.cos(this.angle) * this.speed
-      const dy1 = Math.sin(this.angle) * this.speed
-      const dx2 = Math.cos(other.angle) * other.speed
-      const dy2 = Math.sin(other.angle) * other.speed
+      const dx1 = this.dx
+      const dy1 = this.dy
+      const dx2 = other.dx
+      const dy2 = other.dy
       const vx = dx1 - dx2
       const vy = dy1 - dy2
 
-      // TODO: radius instead of width
-      const rr = this.width + other.width
+      const rr = this.radius + other.radius
 
       const a = vx*vx + vy*vy
       const b = 2 * (cx * vx + cy * vy)
@@ -72,60 +88,60 @@ export class Ship {
          const t0 = (-b - Math.sqrt(disc)) / (2*a)
          const t1 = (-b + Math.sqrt(disc)) / (2*a)
 
-         // if (t0 < 0 && t1 < 0) {
-         //    return Number.POSITIVE_INFINITY
-         // }
-         // else if (t0 < 0) {
-         //    return t1
-         // }
-         // else {
+         if (t0 < 0 && t1 < 0) {
+            return Number.POSITIVE_INFINITY
+         }
+         else if (t0 < 0) {
+            return t1
+         }
+         else {
             return Math.min(t0, t1)
-         // }
+         }
       }
    }
 
-   moveTowardsGoal(dt) {
-      const distFromGoal = this.distanceFrom(this.goalX, this.goalY)
+   turnToward(towardX, towardY, dt) {
+      const towardAngle = Math.atan2(towardY - this.y, towardX - this.x)
 
-      if (distFromGoal > 0) {
-
-         this.turnTowardsGoal(dt)
-
-         //this.speed = Math.min(this.maxSpeed, distFromGoal / dt)
-
-         // if (distFromGoal > 200) {
-         //    this.speed = Math.min(this.maxSpeed, this.speed + this.accel * dt)
-         // }
-         // else if (distFromGoal < 100) {
-         //    this.speed = Math.max(this.minSpeed, this.speed - this.accel * dt)
-         // }
-
-         // TODO: make this "slidey" like Asteroids? or is that too hard to use?
-         this.dx = Math.cos(this.angle) * this.speed
-         this.dy = Math.sin(this.angle) * this.speed
-
-         this.x += this.dx * dt
-         this.y += this.dy * dt
-      }
-   }
-
-   turnTowardsGoal(dt) {
-      this.goalAngle = Math.atan2(this.goalY - this.y, this.goalX - this.x)
-
-      // Adjust our angle so we can use goalAngle
-      if (this.goalAngle - this.angle > Math.PI) {
+      // Adjust our angle so we can use towardAngle
+      if (towardAngle - this.angle > Math.PI) {
          this.angle += Math.PI * 2
       }
-      else if (this.angle - this.goalAngle > Math.PI) {
+      else if (this.angle - towardAngle > Math.PI) {
          this.angle -= Math.PI * 2
       }
 
-      if (this.goalAngle < this.angle) {
-         this.angle = Math.max(this.goalAngle, this.angle - this.turnSpeed * dt)
+      if (towardAngle < this.angle) {
+         this.angle = Math.max(towardAngle, this.angle - this.turnSpeed * dt)
       }
-      else if (this.goalAngle > this.angle) {
-         this.angle = Math.min(this.goalAngle, this.angle + this.turnSpeed * dt)
+      else if (towardAngle > this.angle) {
+         this.angle = Math.min(towardAngle, this.angle + this.turnSpeed * dt)
       }
+
+      this.dx = Math.cos(this.angle) * this.speed
+      this.dy = Math.sin(this.angle) * this.speed
+   }
+
+   turnAwayFrom(avoidX, avoidY, dt) {
+      const avoidAngle = Math.atan2(avoidY - this.y, avoidX - this.x)
+
+      // Adjust our angle so we can use goalAngle
+      if (avoidAngle - this.angle > Math.PI) {
+         this.angle += Math.PI * 2
+      }
+      else if (this.angle - avoidAngle > Math.PI) {
+         this.angle -= Math.PI * 2
+      }
+
+      if (avoidAngle <= this.angle) {
+         this.angle += this.turnSpeed * dt
+      }
+      else if (avoidAngle > this.angle) {
+         this.angle -= this.turnSpeed * dt
+      }
+
+      this.dx = Math.cos(this.angle) * this.speed
+      this.dy = Math.sin(this.angle) * this.speed
    }
 
    startShooting() {
@@ -155,7 +171,8 @@ export class Ship {
    }
 
    update(dt) {
-      this.moveTowardsGoal(dt)
+      this.x += this.dx * dt
+      this.y += this.dy * dt
 
       this.shootDelay = Math.max(0, this.shootDelay - dt)
       if (this.shootDelay == 0 && this.isShooting) {

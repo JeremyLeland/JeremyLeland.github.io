@@ -49,15 +49,12 @@ export class Enemy extends Ship {
    }
 
    update(dt) {
-      // if (this.avoidShip != null) {
-      //    const offsetAngle = this.avoidShip.angle + Math.PI / 2
-         
-      //    // TODO: Radius instead of width?
-      //    const offsetDist = this.width + this.avoidShip.width
-
-      //    this.setGoal(this.avoidShip.x + Math.cos(offsetAngle) * offsetDist, 
-      //                 this.avoidShip.y + Math.sin(offsetAngle) * offsetDist)
-      // }
+      if (this.avoidShip != null) {
+         this.turnAwayFrom(this.avoidShip.x, this.avoidShip.y, dt)
+      }
+      else {
+         this.turnToward(this.goalX, this.goalY, dt)
+      }
 
       // else if (this.targetShip != null) {
       //    this.setGoal(this.targetShip.x, this.targetShip.y)
@@ -73,5 +70,20 @@ export class Enemy extends Ship {
       // }
 
       super.update(dt)
+   }
+
+   draw(ctx) {
+      super.draw(ctx)
+
+      // DEBUG
+      if (this.avoidShip != null) {
+         ctx.beginPath()
+         ctx.moveTo(this.avoidShip.x, this.avoidShip.y)
+         ctx.lineTo(this.x, this.y)
+
+         ctx.setLineDash([1, 8])
+         ctx.strokeStyle = "red"
+         ctx.stroke()
+      }
    }
 }

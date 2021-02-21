@@ -109,7 +109,7 @@ export class Game {
 
       this.lastTime = now
 
-      this.draw()
+      this.draw(this.context)
       this.frames ++
    }
 
@@ -119,5 +119,5 @@ export class Game {
    }
 
    update(dt) {}
-   draw() {}
+   draw(ctx) {}
 }
