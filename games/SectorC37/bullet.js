@@ -1,9 +1,9 @@
-export class Bullet {
+import { Entity } from "./entity.js"
+
+export class Bullet extends Entity {
    constructor(x, y, dx, dy, damage, color) {
-      this.x = x
-      this.y = y
-      this.dx = dx
-      this.dy = dy
+      super(x, y, dx, dy)
+
       this.damage = damage
       this.color = color
 
@@ -16,10 +16,11 @@ export class Bullet {
       return this.life > 0
    }
 
-   update(dt) {
-      this.x += this.dx * dt
-      this.y += this.dy * dt
+   hitWith(entity) {
+      this.life = 0
+   }
 
+   think(dt) {
       this.life -= dt
    }
 

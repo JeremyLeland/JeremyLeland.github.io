@@ -1,8 +1,8 @@
 import { Ship } from "./ship.js"
 
 export class Enemy extends Ship {
-   constructor(x, y) {
-      super()
+   constructor(x, y, level) {
+      super(x, y, level)
 
       this.accel = 0.0001
       this.minSpeed = 0
@@ -15,14 +15,11 @@ export class Enemy extends Ship {
 
       this.damage = 50  // ramming damage
 
-      this.width = 30
-      this.length = 15
-      this.radius = 30
+      this.radius = 10
       this.color = "blue"
 
-      this.targetShip = null
-      this.followShip = null
-      this.avoidShip = null
+      this.targetEntity = null
+      this.avoidEntity = null
 
       this.SHOOT_DISTANCE = 300
       this.SHOOT_ANGLE = 0.5
@@ -32,25 +29,34 @@ export class Enemy extends Ship {
       this.spawn(x, y)
    }
 
-   setTargetShip(ship) {
-      this.targetShip = ship
-   }
+   think(dt) {
+      // Pursue our goals
+      if (this.distanceFrom(this.goalX, this.goalY) < this.radius * 2) {
+         this.setGoal(Math.random() * this.level.width, Math.random() * this.level.height)
+      }
 
-   distanceFromTargetShip() {
-      return this.distanceFrom(this.targetShip.x, this.targetShip.y)
-   }
+      //
+      // Avoid nearby entities
+      //
+      const nearby = this.level.getEntitiesNear(this)
+      let closestEntity = null, closestTime = Number.POSITIVE_INFINITY
+      nearby.forEach(n => {
+         const time = this.timeUntilHit(n)
 
-   setFollowShip(ship) {
-      this.followShip = ship
-   }
+         if (time < closestTime) {
+            closestEntity = n
+            closestTime = time
+         }
+      })
 
-   setAvoidShip(ship) {
-      this.avoidShip = ship
-   }
+      this.avoidEntity = closestTime < 2000 ? closestEntity : null
 
-   update(dt) {
-      if (this.avoidShip != null) {
-         this.turnAwayFrom(this.avoidShip.x, this.avoidShip.y, dt)
+      // TODO: Flocking?
+      // - https://www.red3d.com/cwr/boids/
+      // - https://gamedevelopment.tutsplus.com/tutorials/3-simple-rules-of-flocking-behaviors-alignment-cohesion-and-separation--gamedev-3444
+
+      if (this.avoidEntity != null) {
+         this.turnAwayFrom(this.avoidEntity.x, this.avoidEntity.y, dt)
       }
       else {
          this.turnToward(this.goalX, this.goalY, dt)
@@ -69,21 +75,21 @@ export class Enemy extends Ship {
       //    }
       // }
 
-      super.update(dt)
+      super.think(dt)
    }
 
    draw(ctx) {
       super.draw(ctx)
 
-      // DEBUG
-      if (this.avoidShip != null) {
-         ctx.beginPath()
-         ctx.moveTo(this.avoidShip.x, this.avoidShip.y)
-         ctx.lineTo(this.x, this.y)
+      // // DEBUG
+      // if (this.avoidEntity != null) {
+      //    ctx.beginPath()
+      //    ctx.moveTo(this.avoidEntity.x, this.avoidEntity.y)
+      //    ctx.lineTo(this.x, this.y)
 
-         ctx.setLineDash([1, 8])
-         ctx.strokeStyle = "red"
-         ctx.stroke()
-      }
+      //    ctx.setLineDash([1, 8])
+      //    ctx.strokeStyle = "red"
+      //    ctx.stroke()
+      // }
    }
 }

@@ -1,9 +1,9 @@
-export class Asteroid {
+import { Entity } from "./entity.js"
+
+export class Asteroid extends Entity {
    constructor(x, y, dx, dy, damage, health, radius, color) {
-      this.x = x
-      this.y = y
-      this.dx = dx
-      this.dy = dy
+      super(x, y, dx, dy)
+
       this.damage = damage
       this.health = health
       this.radius = radius
@@ -12,11 +12,6 @@ export class Asteroid {
 
    isAlive() {
       return this.health > 0
-   }
-
-   update(dt) {
-      this.x += this.dx * dt
-      this.y += this.dy * dt
    }
 
    draw(ctx) {

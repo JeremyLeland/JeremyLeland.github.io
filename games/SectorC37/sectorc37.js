@@ -1,58 +1,26 @@
 import { Game } from "./game.js"
-import { Starfield } from "./starfield.js"
-import { Asteroid } from "./asteroid.js"
+import { Level } from "./level.js"
 import { Player } from "./player.js"
-import { Enemy } from "./enemy.js"
 
 export class SectorC37 extends Game {
    constructor() {
-      Game.VERSION = 0.021
+      Game.VERSION = 0.03
 
       super()
 
-      this.LEVEL_WIDTH = 2000
-      this.LEVEL_HEIGHT = 2000
-
-      this.starfield = new Starfield(this.LEVEL_WIDTH, this.LEVEL_HEIGHT, 1000)
-
+      this.level = new Level(2000, 2000)
+      this.player = this.level.player
+      
       this.keyBindings = { "pause": 32 }
 
-      this.player = new Player(this.LEVEL_WIDTH / 2, this.LEVEL_HEIGHT / 2)
       this.updateScroll()
-
-      this.enemies = []
-      for (let i = 0; i < 5; i ++) {
-         this.addRandomEnemy()
-      }
-
-      this.asteroids = []
-      for (let i = 0; i < 10; i ++) {
-         this.addRandomAsteroid()
-      }
       
       this.canvas.style.cursor = "crosshair"
 
       this.startGame()
    }
 
-   addRandomEnemy() {
-      const enemy = new Enemy(Math.random() * this.LEVEL_WIDTH, Math.random() * this.LEVEL_HEIGHT)
-      //enemy.setTargetShip(this.player)
-
-      enemy.setGoal(Math.random() * this.LEVEL_WIDTH, Math.random() * this.LEVEL_HEIGHT)
-
-      this.enemies.push(enemy)
-   }
-
-   addRandomAsteroid() {
-      const x = Math.random() * this.LEVEL_WIDTH
-      const y = Math.random() * this.LEVEL_HEIGHT
-      const r = Math.random() * 50 + 20
-      const c = Math.random() * 100 + 100
-      const col = "rgb(" + c + ", " + c/2 + ", " + 0 + ")"
-
-      this.asteroids.push(new Asteroid(x, y, 0, 0, r, r, r, col))
-   }
+   
 
    // prepareUI() {
    //    super.prepareUI()
@@ -128,17 +96,15 @@ export class SectorC37 extends Game {
       const w = this.context.canvas.width
       const h = this.context.canvas.height
 
-      this.scrollX = Math.max(0, Math.min(this.LEVEL_WIDTH - w, this.player.x - w/2))
-      this.scrollY = Math.max(0, Math.min(this.LEVEL_HEIGHT - h, this.player.y - h/2))
+      this.scrollX = Math.max(0, Math.min(this.level.width - w, this.player.x - w/2))
+      this.scrollY = Math.max(0, Math.min(this.level.height - h, this.player.y - h/2))
    }
 
-   updatePlayer(dt) {
+   controlPlayer(dt) {
       const goalX = this.mousex + this.scrollX
       const goalY = this.mousey + this.scrollY
       this.player.setGoal(goalX, goalY)
-      this.player.update(dt)      
-      this.updateScroll()
-
+ 
       if (this.mouseIsDown) {
          this.player.startShooting()
       }
@@ -152,46 +118,23 @@ export class SectorC37 extends Game {
          return
       }
 
-      this.updatePlayer(dt)
+      this.controlPlayer(dt)
 
-      this.enemies.forEach(e => {
-
-         if (e.distanceFrom(e.goalX, e.goalY) < e.width * 2) {
-            e.setGoal(Math.random() * this.LEVEL_WIDTH, Math.random() * this.LEVEL_HEIGHT)
-         }
-
-         // TODO: Flocking?
-         // - https://www.red3d.com/cwr/boids/
-         // - https://gamedevelopment.tutsplus.com/tutorials/3-simple-rules-of-flocking-behaviors-alignment-cohesion-and-separation--gamedev-3444
-
-         this.checkForShipToAvoid(e)
-         e.update(dt)
-
-         this.player.bullets.forEach(b => {
-            if (e.isCollidingWith(b)) {
-               e.hitWith(b)
-               b.life = 0
-            }
-         })
-         this.player.bullets = this.player.bullets.filter(b => b.isAlive())
-      })
-      this.enemies = this.enemies.filter(e => e.isAlive())
+      this.level.update(dt)
 
       // this.updateDebugUI()
    }
 
    draw(ctx) {
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+      // ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
       ctx.save()
 
+      this.updateScroll()
       ctx.translate(-this.scrollX, -this.scrollY)
 
-      this.starfield.draw(ctx)
-      this.asteroids.forEach(a => a.draw(ctx))
-      this.player.draw(ctx)
-      this.enemies.forEach(e => e.draw(ctx))
-
+      this.level.draw(ctx)
+      
       ctx.restore()
    }
 }

@@ -1,7 +1,12 @@
+import { Entity } from "./entity.js"
 import { Bullet } from "./bullet.js"
 
-export class Ship {
-   constructor() {
+export class Ship extends Entity {
+   constructor(x, y, level) {
+      super(x, y, 0, 0)
+
+      this.level = level
+
       this.bullets = []
    }
 
@@ -18,6 +23,7 @@ export class Ship {
       this.goalY = y
 
       this.shootDelay = this.TIME_BETWEEN_SHOTS
+      this.isShooting = false
 
       this.health = this.MAX_HEALTH
    }
@@ -30,33 +36,6 @@ export class Ship {
       this.goalX = goalX
       this.goalY = goalY
    }
-
-   distanceFrom(x, y) {
-      const cx = x - this.x
-      const cy = y - this.y
-      return Math.sqrt(cx*cx + cy*cy)
-   }
-
-   angleTo(x, y) {
-      return Math.atan2(y - this.y, x - this.x) - this.angle
-   }
-
-   // timeUntilHit(entity) {
-   //    const diffX = entity.x - this.x
-   //    const diffY = entity.y - this.y
-   //    const len = Math.sqrt(diffX * diffX + diffY * diffY)
-
-   //    // does this need to be normalized?
-   //    const lineX = diffX / len
-   //    const lineY = diffY / len
-
-   //    const dx = Math.cos(this.angle) * this.speed
-   //    const dy = Math.sin(this.angle) * this.speed
-
-   //    const vector = dx * lineX + dy * lineY
-
-   //    return vector
-   // }
 
    timeUntilHit(other) {
       // See when ships would collide if continuing at their current direction and rate of speed
@@ -86,17 +65,32 @@ export class Ship {
       }
       else {
          const t0 = (-b - Math.sqrt(disc)) / (2*a)
-         const t1 = (-b + Math.sqrt(disc)) / (2*a)
 
-         if (t0 < 0 && t1 < 0) {
-            return Number.POSITIVE_INFINITY
-         }
-         else if (t0 < 0) {
-            return t1
+         if (t0 < 0) {
+            const t1 = (-b + Math.sqrt(disc)) / (2*a)
+
+            if (t1 < 0) {
+               return Number.POSITIVE_INFINITY
+            }
+            else {
+               return t1
+            }
          }
          else {
-            return Math.min(t0, t1)
+            return t0
          }
+
+         
+
+         // if (t0 < 0 && t1 < 0) {
+         //    return Number.POSITIVE_INFINITY
+         // }
+         // else if (t0 < 0) {
+         //    return t1
+         // }
+         // else {
+         //    return Math.min(t0, t1)
+         // }
       }
    }
 
@@ -153,35 +147,23 @@ export class Ship {
    }
 
    shoot() {
-      const sinAng = Math.sin(this.angle), cosAng = Math.cos(this.angle), halfLength = this.length / 2
-      const frontX = this.x + cosAng * halfLength
-      const frontY = this.y + sinAng * halfLength
+      const sinAng = Math.sin(this.angle), cosAng = Math.cos(this.angle)
+      const frontDist = this.radius * 2
+      const frontX = this.x + cosAng * frontDist
+      const frontY = this.y + sinAng * frontDist
+      const dx = cosAng * this.BULLET_SPEED
+      const dy = sinAng * this.BULLET_SPEED
 
-      this.bullets.push(new Bullet(frontX, frontY, 
-                                   cosAng * this.BULLET_SPEED, sinAng * this.BULLET_SPEED,
-                                   this.BULLET_DAMAGE, this.color))
+      const bullet = new Bullet(frontX, frontY, dx, dy, this.BULLET_DAMAGE, this.color)
+      this.level.addBullet(bullet)
    }
 
-   isCollidingWith(entity) {
-      return this.distanceFrom(entity.x, entity.y) < this.radius + entity.radius
-   }
-
-   hitWith(entity) {
-      this.health -= entity.damage
-   }
-
-   update(dt) {
-      this.x += this.dx * dt
-      this.y += this.dy * dt
-
+   think(dt) {
       this.shootDelay = Math.max(0, this.shootDelay - dt)
       if (this.shootDelay == 0 && this.isShooting) {
          this.shoot()
          this.shootDelay = this.TIME_BETWEEN_SHOTS
       }
-
-      this.bullets.forEach(b => b.update(dt))
-      this.bullets = this.bullets.filter(b => b.isAlive())
    }
 
    drawTriangle(ctx) {
@@ -189,13 +171,13 @@ export class Ship {
 
       ctx.translate(this.x, this.y)
       ctx.rotate(this.angle)
-      ctx.scale(this.length, this.width)  // at angle 0, "forward" is in x axis
+      ctx.scale(this.radius, this.radius)  // at angle 0, "forward" is in x axis
 
       // Unit triangle centered at 0,0
       ctx.beginPath()
-      ctx.moveTo(-0.5, -0.5)
-      ctx.lineTo( 0.5,  0)
-      ctx.lineTo(-0.5,  0.5)
+      ctx.moveTo(-1, -1)
+      ctx.lineTo( 1,  0)
+      ctx.lineTo(-1,  1)
       ctx.closePath()
 
       ctx.fillStyle = this.color
@@ -209,13 +191,17 @@ export class Ship {
 
       this.bullets.forEach(b => b.draw(ctx))
 
-      // DEBUG
-      ctx.beginPath()
-      ctx.moveTo(this.goalX, this.goalY)
-      ctx.lineTo(this.x, this.y)
+      // // DEBUG
+      // ctx.beginPath()
+      // ctx.moveTo(this.goalX, this.goalY)
+      // ctx.lineTo(this.x, this.y)
 
-      ctx.setLineDash([1, 8])
-      ctx.strokeStyle = "yellow"
-      ctx.stroke()
+      // ctx.setLineDash([1, 8])
+      // ctx.strokeStyle = "yellow"
+      // ctx.stroke()
+
+      // ctx.beginPath()
+      // ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2)
+      // ctx.stroke()
    }
 }
