@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+   <head>
+      <title>Fireballs Demo</title>
+      <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+   </head>
+   <body bgcolor="black" text="white">
+      <canvas id="demo" width="640" height="480" style="border:1px dotted"></canvas>
+      <h3>Fireballs</h3>
+      Trying to use globalCompositeOperation for interesting effects
+      <script type="module">
+         import { Demo } from "./demo.js"
+
+         class Ball {
+            constructor(x, y, dx, dy, radius) {
+               this.x = x
+               this.y = y
+               this.dx = dx
+               this.dy = dy
+               this.radius = radius
+            }
+
+            update(dt, width, height) {
+               this.x += this.dx * dt
+               this.y += this.dy * dt
+
+               if (this.x - this.radius < 0 || this.x + this.radius > width) {
+                  this.dx = -this.dx
+               }
+               if (this.y - this.radius < 0 || this.y + this.radius > height) {
+                  this.dy = -this.dy
+               }
+            }
+
+            draw(ctx) {
+               ctx.fillStyle = "white"
+
+               ctx.beginPath()
+               ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2)
+               ctx.fill()
+            }
+         }
+
+         class FireballDemo extends Demo {
+            constructor(canvas, fpsUI) {
+               super(canvas, fpsUI)
+
+               const MAX_SPEED = 0.2
+               const MIN_SPEED = 0.1
+
+               this.balls = []
+               for (let i = 0; i < 50; i ++) {
+                  const x = Math.random() * this.canvas.width
+                  const y = Math.random() * this.canvas.height
+                  const rad = Math.random() * 5
+                  const ang = Math.random() * Math.PI * 2
+                  const speed = Math.random() * MAX_SPEED + MIN_SPEED
+                  const dx = Math.cos(ang) * speed
+                  const dy = Math.sin(ang) * speed
+
+                  this.balls.push(new Ball(x, y, dx, dy, rad))
+               }
+
+               this.startDemo()
+            }
+            update(dt) {
+               this.balls.forEach(p => p.update(dt, this.canvas.width, this.canvas.height))
+            }
+
+            draw(ctx) {
+               this.context.filter = 'blur(4px)'
+
+               this.context.globalCompositeOperation = 'difference'
+               this.context.fillStyle = `rgb(${8}, ${16}, ${32})`
+               this.context.fillRect(0, 0, this.canvas.width, this.canvas.height)
+
+                //this.context.clearRect(0, 0, this.image.width, this.image.height);
+
+                this.context.globalCompositeOperation = 'lighter'
+                this.balls.forEach(p => p.draw(this.context))
+            }
+         }
+
+         new FireballDemo(document.getElementById("demo"))
+      </script>
+   </body>
+   </body>
+</html>
