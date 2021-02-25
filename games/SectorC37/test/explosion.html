@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+   <head>
+      <title>Sector C37 Tests: Explosion</title>
+      <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+      <style>
+         html, body { margin: 0; padding: 0; }
+      </style>
+   </head>
+   <body bgcolor="black" text="white">
+      <script type="module">
+         import { Game } from "../game.js"
+         import { FireParticle } from "../particles.js"
+
+         class Test extends Game {
+            constructor() {
+               super()
+
+               this.particles = []
+
+               this.canvas.style.cursor = "crosshair"
+
+               this.startGame()
+            }
+
+            explode(centerX, centerY) {
+               const MAX_SPEED = 0.04
+
+               for (let i = 0; i < 50; i ++) {
+                  const x = centerX //+ Math.random() * 5 - 10
+                  const y = centerY //+ Math.random() * 5 - 10
+                  const rad = Math.random() * 16
+                  const ang = Math.random() * Math.PI * 2
+                  const speed = Math.random() * MAX_SPEED
+                  const dx = Math.cos(ang) * speed
+                  const dy = Math.sin(ang) * speed
+
+                  this.particles.push(new FireParticle(x, y, dx, dy, rad))
+               }
+            }
+
+            update(dt) {
+               if (this.mouseIsDown) {
+                  this.explode(this.mousex, this.mousey)
+               }
+
+               this.particles.forEach(p => p.update(dt))
+               this.particles = this.particles.filter(p => p.isAlive())
+            }
+
+            draw(ctx) {
+               ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+               this.particles.forEach(p => p.draw(ctx))
+            }
+         }
+
+         new Test()
+
+      </script>
+   </body>
+   </body>
+</html>
