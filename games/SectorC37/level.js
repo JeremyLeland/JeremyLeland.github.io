@@ -11,6 +11,7 @@ export class Level {
       this.starfield = new Starfield(this.width, this.height, 1000)
 
       this.entities = []
+      this.particles = []
 
       this.player = new Player(this.width / 2, this.height / 2, this)
       this.entities.push(this.player)
@@ -49,6 +50,10 @@ export class Level {
       this.entities.push(bullet)
    }
 
+   addParticle(part) {
+      this.particles.push(part)
+   }
+
    getEntitiesNear(entity) {
       // TODO: only return entities near the location
       return this.entities.filter(e => e != entity)
@@ -67,10 +72,14 @@ export class Level {
          })
       })
       this.entities = this.entities.filter(e => e.isAlive())
+
+      this.particles.forEach(p => p.update(dt))
+      this.particles = this.particles.filter(p => p.isAlive())
    }
 
    draw(ctx) {
       this.starfield.draw(ctx)
       this.entities.forEach(e => e.draw(ctx))
+      this.particles.forEach(p => p.draw(ctx))
    }
 }

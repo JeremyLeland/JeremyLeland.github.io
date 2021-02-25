@@ -13,9 +13,6 @@ export class Game {
 
       this.context = this.canvas.getContext("2d")
 
-      this.scrollX = 0
-      this.scrollY = 0
-
       // UI
       this.prepareUI()
 

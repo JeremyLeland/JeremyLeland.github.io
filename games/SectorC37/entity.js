@@ -28,9 +28,6 @@ export class Entity {
       this.health -= entity.damage
    }
 
-   hitWith(entity) {
-   }
-
    think(dt) {
    }
 

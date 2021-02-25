@@ -1,5 +1,7 @@
 import { Entity } from "./entity.js"
 import { Bullet } from "./bullet.js"
+import { FireParticle } from "./particles.js"
+import { DebrisParticle } from "./particles.js"
 
 export class Ship extends Entity {
    constructor(x, y, level) {
@@ -156,6 +158,26 @@ export class Ship extends Entity {
 
       const bullet = new Bullet(frontX, frontY, dx, dy, this.BULLET_DAMAGE, this.color)
       this.level.addBullet(bullet)
+   }
+
+   hitWith(entity) {
+      super.hitWith(entity)
+
+      // TODO: Sparks when hit
+
+      if (this.health <= 0) {
+         this.explode()
+      }
+   }
+
+   explode() {
+      for (let i = 0; i < 50; i ++) {
+         this.level.addParticle(FireParticle.fromExplosionAt(this.x, this.y))
+      }
+
+      for (let i = 0; i < 50; i ++) {
+         this.level.addParticle(DebrisParticle.fromExplosionAt(this.x, this.y, this.radius, this.color))
+      }
    }
 
    think(dt) {

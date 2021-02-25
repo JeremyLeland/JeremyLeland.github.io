@@ -103,11 +103,8 @@ export class DebrisParticle extends Entity {
       ctx.translate(this.x, this.y)
       ctx.rotate(this.angle)
 
-      // TODO: Fade more slowly?
-      const alpha = (Math.floor(Math.sin(this.life * Math.PI/2) * 255)).toString(16).padStart(2, '0')    // alpha fade based on particle life
       ctx.fillStyle = this.color
-      ctx.fillStyle = ctx.fillStyle + alpha           // let fillStyle convert the color to #rrggbb first
-      ctx.strokeStyle = "#000000" + alpha
+      ctx.strokeStyle = "black"
 
       ctx.beginPath()
       ctx.moveTo(-this.radius, -this.radius)
