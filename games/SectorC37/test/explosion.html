@@ -11,6 +11,7 @@
       <script type="module">
          import { Game } from "../game.js"
          import { FireParticle } from "../particles.js"
+         import { DebrisParticle } from "../particles.js"
 
          class Test extends Game {
             constructor() {
@@ -23,19 +24,13 @@
                this.startGame()
             }
 
-            explode(centerX, centerY) {
-               const MAX_SPEED = 0.04
-
+            explode(x, y) {
                for (let i = 0; i < 50; i ++) {
-                  const x = centerX //+ Math.random() * 5 - 10
-                  const y = centerY //+ Math.random() * 5 - 10
-                  const rad = Math.random() * 16
-                  const ang = Math.random() * Math.PI * 2
-                  const speed = Math.random() * MAX_SPEED
-                  const dx = Math.cos(ang) * speed
-                  const dy = Math.sin(ang) * speed
+                  this.particles.push(FireParticle.fromExplosionAt(x, y))
+               }
 
-                  this.particles.push(new FireParticle(x, y, dx, dy, rad))
+               for (let i = 0; i < 20; i ++) {
+                  this.particles.push(DebrisParticle.fromExplosionAt(x, y, 10, "blue"))
                }
             }
 

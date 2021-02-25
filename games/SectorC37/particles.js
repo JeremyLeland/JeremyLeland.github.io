@@ -1,6 +1,21 @@
 import { Entity } from "./entity.js"
 
 export class FireParticle extends Entity {
+
+   static fromExplosionAt(explodeX, explodeY) {
+      const MAX_SPEED = 0.04
+
+      const x = explodeX //+ Math.random() * 5 - 10
+      const y = explodeY //+ Math.random() * 5 - 10
+      const rad = Math.random() * 16
+      const ang = Math.random() * Math.PI * 2
+      const speed = Math.random() * MAX_SPEED
+      const dx = Math.cos(ang) * speed
+      const dy = Math.sin(ang) * speed
+
+      return new FireParticle(x, y, dx, dy, rad)
+   }
+
    constructor(x, y, dx, dy, radius) {
       super(x, y, dx, dy)
 
@@ -42,10 +57,32 @@ export class FireParticle extends Entity {
 }
 
 export class DebrisParticle extends Entity {
-   constructor(x, y, dx, dy, radius, color) {
+   static fromExplosionAt(explodeX, explodeY, shipRadius, shipColor) {
+      const MAX_SPEED = 0.1, MAX_SPIN = 0.01
+
+      const ang = Math.random() * Math.PI * 2
+
+      const dist = Math.random() * shipRadius
+      const x = explodeX + Math.cos(ang) * dist
+      const y = explodeY + Math.sin(ang) * dist
+
+      const speed = Math.random() * MAX_SPEED
+      const dx = Math.cos(ang) * speed
+      const dy = Math.sin(ang) * speed
+
+      const rad = Math.random() * 3
+      
+      const spinAng = Math.random() * Math.PI * 2
+      const spinSpeed = Math.random() * (MAX_SPIN / 2) - MAX_SPIN
+
+      return new DebrisParticle(x, y, dx, dy, spinAng, spinSpeed, rad, shipColor)
+   }
+
+   constructor(x, y, dx, dy, angle, dAngle, radius, color) {
       super(x, y, dx, dy)
 
-
+      this.angle = angle
+      this.dAngle = dAngle
       this.radius = radius
       this.color = color
       this.life = 1.0
@@ -56,6 +93,7 @@ export class DebrisParticle extends Entity {
    }
 
    think(dt) {
+      this.angle += this.dAngle * dt
       this.life -= dt / 1000
    }
 
@@ -63,15 +101,21 @@ export class DebrisParticle extends Entity {
       ctx.save()
 
       ctx.translate(this.x, this.y)
+      ctx.rotate(this.angle)
 
-      const size = Math.sin(Math.PI * this.life) * this.radius
-      ctx.scale(size, size)
-
+      // TODO: Fade more slowly?
+      const alpha = (Math.floor(Math.sin(this.life * Math.PI/2) * 255)).toString(16).padStart(2, '0')    // alpha fade based on particle life
       ctx.fillStyle = this.color
+      ctx.fillStyle = ctx.fillStyle + alpha           // let fillStyle convert the color to #rrggbb first
+      ctx.strokeStyle = "#000000" + alpha
 
       ctx.beginPath()
-      ctx.arc(0, 0, 1, 0, Math.PI * 2)
+      ctx.moveTo(-this.radius, -this.radius)
+      ctx.lineTo( this.radius,  0)
+      ctx.lineTo(-this.radius,  this.radius)
+      ctx.closePath()
       ctx.fill()
+      ctx.stroke()
 
       ctx.restore()
    }
