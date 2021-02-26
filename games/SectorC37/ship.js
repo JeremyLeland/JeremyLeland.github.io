@@ -3,8 +3,17 @@ import { Bullet } from "./bullet.js"
 import { FireParticle, DebrisParticle } from "./particles.js"
 
 export class Ship extends Actor {
-   constructor(x, y, radius, health, damage, color, level) {
-      super(x, y, 0, 0, 0, 0, radius, health, damage)
+   constructor({radius, health, damage, speed, turnSpeed, 
+                timeBetweenShots, bulletSpeed, bulletDamage, 
+                color, level}) {
+      super(0, 0, 0, 0, 0, 0, radius, health, damage)
+
+      this.speed = speed
+      this.turnSpeed = turnSpeed
+
+      this.timeBetweenShots = timeBetweenShots
+      this.bulletSpeed = bulletSpeed
+      this.bulletDamage = bulletDamage
 
       this.color = color
       this.level = level
@@ -16,16 +25,13 @@ export class Ship extends Actor {
       this.dx = 0
       this.dy = 0
       this.angle = 0
-
-      this.speed = this.maxSpeed
+      this.dAngle = 0
 
       this.goalX = x
       this.goalY = y
 
-      this.shootDelay = this.TIME_BETWEEN_SHOTS
+      this.shootDelay = this.timeBetweenShots
       this.isShooting = false
-
-      //this.health = this.MAX_HEALTH
    }
 
    isAlive() {
@@ -94,24 +100,18 @@ export class Ship extends Actor {
       const frontDist = this.radius * 2
       const frontX = this.x + cosAng * frontDist
       const frontY = this.y + sinAng * frontDist
-      const dx = cosAng * this.BULLET_SPEED
-      const dy = sinAng * this.BULLET_SPEED
+      const dx = cosAng * this.bulletSpeed
+      const dy = sinAng * this.bulletSpeed
 
-      const bullet = new Bullet(frontX, frontY, dx, dy, this.BULLET_DAMAGE, this.color)
+      const bullet = new Bullet(frontX, frontY, dx, dy, this.bulletDamage, this.color)
       this.level.addBullet(bullet)
    }
 
    hitWith(entity) {
       super.hitWith(entity)
-
-      // TODO: Sparks when hit
-
-      if (this.health <= 0) {
-         this.explode()
-      }
    }
 
-   explode() {
+   die() {
       for (let i = 0; i < 50; i ++) {
          this.level.addParticle(FireParticle.fromExplosionAt(this.x, this.y))
       }
@@ -125,7 +125,7 @@ export class Ship extends Actor {
       this.shootDelay = Math.max(0, this.shootDelay - dt)
       if (this.shootDelay == 0 && this.isShooting) {
          this.shoot()
-         this.shootDelay = this.TIME_BETWEEN_SHOTS
+         this.shootDelay = this.timeBetweenShots
       }
 
       super.update(dt)

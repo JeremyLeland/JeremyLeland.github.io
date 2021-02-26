@@ -2,23 +2,16 @@ import { Ship } from "./ship.js"
 
 export class Player extends Ship {
    constructor(x, y, level) {
-      super(x, y, 10, 100, 50, "green", level)
-
-      this.accel = 0.0001
-      this.minSpeed = 0
-      this.maxSpeed = 0.2
-      this.turnSpeed = 0.005
-
-      this.TIME_BETWEEN_SHOTS = 100
-      this.BULLET_SPEED = 0.4
-      this.BULLET_DAMAGE = 10
-
-      // this.damage = 50  // ramming damage
-
-      // this.radius = 10
-      // this.color = "green"
-
-      // this.MAX_HEALTH = 100
+      super({radius: 10, 
+             health: 100, 
+             damage: 50, 
+             speed: 0.2, 
+             turnSpeed: 0.005,
+             timeBetweenShots: 100,
+             bulletSpeed: 0.4,
+             bulletDamage: 10,
+             color: "green",
+             level: level})
 
       this.spawn(x, y)
    }

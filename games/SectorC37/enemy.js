@@ -2,29 +2,22 @@ import { Ship } from "./ship.js"
 
 export class Enemy extends Ship {
    constructor(x, y, level) {
-      super(x, y, 10, 50, 50, "blue", level)
-
-      this.accel = 0.0001
-      this.minSpeed = 0
-      this.maxSpeed = 0.15
-      this.turnSpeed = 0.003
-
-      this.TIME_BETWEEN_SHOTS = 100
-      this.BULLET_SPEED = 0.3
-      this.BULLET_DAMAGE = 5
-
-      // this.damage = 50  // ramming damage
-
-      // this.radius = 10
-      // this.color = "blue"
+      super({radius: 10, 
+             health: 50, 
+             damage: 50, 
+             speed: 0.15, 
+             turnSpeed: 0.003,
+             timeBetweenShots: 100,
+             bulletSpeed: 0.3,
+             bulletDamage: 5,
+             color: "blue",
+             level: level})
 
       this.targetEntity = null
       this.avoidEntity = null
 
       this.SHOOT_DISTANCE = 300
       this.SHOOT_ANGLE = 0.5
-
-      // this.MAX_HEALTH = 50
 
       this.spawn(x, y)
    }

@@ -13,6 +13,13 @@ export class Actor extends Entity {
 
    hitWith(actor) {
       this.health -= actor.damage
+
+      if (this.health <= 0) {
+         this.die()
+      }
+   }
+
+   die() {
    }
 
    isCollidingWith(actor) {
