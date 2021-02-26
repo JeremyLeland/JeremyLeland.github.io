@@ -45,9 +45,13 @@ export class Game {
       setInterval(() => this.updateFPS(), 1000)
 
       this.versionUI = document.createElement('div')
-      this.versionUI.textContent = "Version: " + Game.VERSION
+      this.versionUI.textContent = Game.VERSION
       this.versionUI.style = "position: absolute; left: 2px; top: 100%; transform: translate(0, -14px); font: 10px sans-serif"
       document.body.appendChild(this.versionUI)
+
+      this.debugUI = document.createElement('div')
+      this.debugUI.style = "position: absolute; white-space: pre; left: 2px; top: 2px; font: 10px sans-serif"
+      document.body.appendChild(this.debugUI)
    }
 
    startGame() {
