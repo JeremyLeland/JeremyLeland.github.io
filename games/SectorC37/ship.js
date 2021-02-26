@@ -3,10 +3,13 @@ import { Bullet } from "./bullet.js"
 import { FireParticle, DebrisParticle } from "./particles.js"
 
 export class Ship extends Actor {
-   constructor({radius, health, damage, speed, turnSpeed, 
+   constructor({x, y, radius, health, damage, speed, turnSpeed, 
                 timeBetweenShots, bulletSpeed, bulletDamage, 
                 color, level}) {
-      super(0, 0, 0, 0, 0, 0, radius, health, damage)
+      super(x, y, 0, 0, 0, 0, radius, health, damage)
+
+      this.goalX = x
+      this.goalY = y
 
       this.speed = speed
       this.turnSpeed = turnSpeed
@@ -15,23 +18,11 @@ export class Ship extends Actor {
       this.bulletSpeed = bulletSpeed
       this.bulletDamage = bulletDamage
 
-      this.color = color
-      this.level = level
-   }
-
-   spawn(x, y) {
-      this.x = x
-      this.y = y
-      this.dx = 0
-      this.dy = 0
-      this.angle = 0
-      this.dAngle = 0
-
-      this.goalX = x
-      this.goalY = y
-
       this.shootDelay = this.timeBetweenShots
       this.isShooting = false
+
+      this.color = color
+      this.level = level
    }
 
    isAlive() {

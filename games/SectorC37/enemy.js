@@ -2,7 +2,8 @@ import { Ship } from "./ship.js"
 
 export class Enemy extends Ship {
    constructor(x, y, level) {
-      super({radius: 10, 
+      super({x: x, y: y, 
+             radius: 10, 
              health: 50, 
              damage: 50, 
              speed: 0.15, 
@@ -18,8 +19,6 @@ export class Enemy extends Ship {
 
       this.SHOOT_DISTANCE = 300
       this.SHOOT_ANGLE = 0.5
-
-      this.spawn(x, y)
    }
 
    update(dt) {

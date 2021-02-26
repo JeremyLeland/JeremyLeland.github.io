@@ -2,7 +2,8 @@ import { Ship } from "./ship.js"
 
 export class Player extends Ship {
    constructor(x, y, level) {
-      super({radius: 10, 
+      super({x: x, y: y, 
+             radius: 10, 
              health: 100, 
              damage: 50, 
              speed: 0.2, 
@@ -12,8 +13,6 @@ export class Player extends Ship {
              bulletDamage: 10,
              color: "green",
              level: level})
-
-      this.spawn(x, y)
    }
 
    update(dt) {
