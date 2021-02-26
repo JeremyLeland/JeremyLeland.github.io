@@ -24,6 +24,13 @@ export class Enemy extends Ship {
 
    update(dt) {
       // Pursue our goals
+      if (this.distanceFrom(this.level.player.x, this.level.player.y) < 1000) {
+         this.targetEntity = this.level.player
+      }
+      else {
+         this.targetEntity = null
+      }
+
       if (this.distanceFrom(this.goalX, this.goalY) < this.radius * 2) {
          this.setGoal(Math.random() * this.level.width, Math.random() * this.level.height)
       }
@@ -55,18 +62,18 @@ export class Enemy extends Ship {
          this.turnToward(this.goalX, this.goalY, dt)
       }
 
-      // else if (this.targetShip != null) {
-      //    this.setGoal(this.targetShip.x, this.targetShip.y)
+      if (this.targetEntity != null) {
+         // this.setGoal(this.targetEntity.x, this.targetEntity.y)
 
-      //    // For now, shoot if we are close to target and it is in front of us
-      //    if (this.distanceFrom(this.targetShip.x, this.targetShip.y) < this.SHOOT_DISTANCE && 
-      //        Math.abs(this.angleTo(this.targetShip.x, this.targetShip.y)) < this.SHOOT_ANGLE) {
-      //       this.startShooting()
-      //    }
-      //    else {
-      //       this.stopShooting()
-      //    }
-      // }
+         // For now, shoot if we are close to target and it is in front of us
+         if (this.distanceFrom(this.targetEntity.x, this.targetEntity.y) < this.SHOOT_DISTANCE && 
+             Math.abs(this.angleTo(this.targetEntity.x, this.targetEntity.y)) < this.SHOOT_ANGLE) {
+            this.startShooting()
+         }
+         else {
+            this.stopShooting()
+         }
+      }
 
       super.update(dt)
    }
