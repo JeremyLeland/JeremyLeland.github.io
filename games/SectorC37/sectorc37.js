@@ -4,7 +4,7 @@ import { Player } from "./player.js"
 
 export class SectorC37 extends Game {
    constructor() {
-      Game.VERSION = "Sector C37 v0.04"
+      Game.VERSION = "Sector C37 v0.05"
 
       super()
 
