@@ -22,13 +22,19 @@ export class Enemy extends Ship {
    }
 
    checkForGoal() {
+      // TODO: also change this after time, in case the goal is somewhere we must avoid?
       if (this.distanceFromPoint(this.goalX, this.goalY) < this.radius * 2) {
          this.setGoal(Math.random() * this.level.width, Math.random() * this.level.height)
       }
    }
 
    checkForTarget() {
-      this.targetEntity = this.distanceFrom(this.level.player) < 1000 ? this.level.player : null
+      if (this.player.isAlive() && this.distanceFrom(this.level.player) < 1000) {
+         this.targetEntity = this.level.player
+      }
+      else {
+         this.targetEntity = null
+      }
    }
 
    checkForAvoid() {
@@ -36,7 +42,7 @@ export class Enemy extends Ship {
 
       let closestEntity = null, closestTime = Number.POSITIVE_INFINITY
       nearby.forEach(n => {
-         const time = this.timeUntilHit(n)
+         const time = this.timeUntilHit(n, 10)
 
          if (time < closestTime) {
             closestEntity = n

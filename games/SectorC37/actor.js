@@ -44,7 +44,7 @@ export class Actor extends Entity {
       return Math.atan2(y - this.y, x - this.x) - this.angle
    }
 
-   timeUntilHit(other) {
+   timeUntilHit(other, buffer = 0) {
       // See when ships would collide if continuing at their current direction and rate of speed
       // See https://stackoverflow.com/questions/33140999/at-what-delta-time-will-two-objects-collide
       // (Line-Line was http://www.jeffreythompson.org/collision-detection/line-line.php)
@@ -58,7 +58,7 @@ export class Actor extends Entity {
       const vx = dx1 - dx2
       const vy = dy1 - dy2
 
-      const rr = this.radius + other.radius
+      const rr = this.radius + other.radius + buffer
 
       const a = vx*vx + vy*vy
       const b = 2 * (cx * vx + cy * vy)
