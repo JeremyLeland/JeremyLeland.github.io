@@ -56,6 +56,51 @@ export class FireParticle extends Particle {
    }
 }
 
+export class SparkParticle extends Particle {
+   static LENGTH = 100
+
+   static fromHitAt(hitX, hitY, hitAng) {
+      const MAX_SPEED = 0.1, SPREAD_ANG = Math.PI / 8
+
+      const ang = hitAng + Math.random() * SPREAD_ANG - SPREAD_ANG/2
+
+      const x = hitX
+      const y = hitY
+
+      const speed = MAX_SPEED
+      const dx = Math.cos(ang) * speed
+      const dy = Math.sin(ang) * speed
+
+      return new SparkParticle(x, y, dx, dy, 500)
+   }
+
+   constructor(x, y, dx, dy, life) {
+      super(x, y, dx, dy, 0, 0, 0, life)
+
+      this.startX = x
+      this.startY = y
+   }
+
+   draw(ctx) {
+      ctx.save()
+
+      const lifePerc = this.life / this.MAX_LIFE
+
+      const grd = ctx.createLinearGradient(this.x - this.dx * SparkParticle.LENGTH, this.y - this.dy * SparkParticle.LENGTH, this.x, this.y)
+      grd.addColorStop(0.0, "rgba(0, 0, 0, 0)")
+      grd.addColorStop(0.5, `rgba(255, 255, 0, ${lifePerc * 0.5})`)
+      grd.addColorStop(1.0, `rgba(255, 255, 255, ${lifePerc})`)
+      ctx.strokeStyle = grd
+
+      ctx.beginPath()
+      ctx.moveTo(this.startX, this.startY)
+      ctx.lineTo(this.x, this.y)
+      ctx.stroke()
+
+      ctx.restore()
+   }
+}
+
 export class DebrisParticle extends Particle {
    static fromExplosionAt(explodeX, explodeY, shipRadius, shipColor) {
       const MAX_SPEED = 0.1, MAX_SPIN = 0.01

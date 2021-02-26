@@ -10,8 +10,7 @@
    <body bgcolor="black" text="white">
       <script type="module">
          import { Game } from "../game.js"
-         import { FireParticle } from "../particles.js"
-         import { DebrisParticle } from "../particles.js"
+         import { FireParticle, DebrisParticle, SparkParticle } from "../particles.js"
 
          class Test extends Game {
             constructor() {
@@ -34,9 +33,20 @@
                }
             }
 
+            hit(x, y) {
+               for (let i = 0; i < 5; i++) {
+                  this.particles.push(SparkParticle.fromHitAt(x, y, 0))
+               }
+            }
+
             update(dt) {
                if (this.mouseIsDown) {
-                  this.explode(this.mousex, this.mousey)
+                  if (this.mouseButton == 0) {
+                     this.explode(this.mousex, this.mousey)
+                  }
+                  else {
+                     this.hit(this.mousex, this.mousey)
+                  }
                }
 
                this.particles.forEach(p => p.update(dt))
