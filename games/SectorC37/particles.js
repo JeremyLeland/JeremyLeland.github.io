@@ -1,6 +1,24 @@
 import { Entity } from "./entity.js"
 
-export class FireParticle extends Entity {
+class Particle extends Entity {
+   constructor(x, y, dx, dy, angle, dAngle, radius, life) {
+      super(x, y, dx, dy, angle, dAngle, radius)
+      this.life = this.MAX_LIFE = life
+   }
+
+   isAlive() {
+      return this.life > 0
+   }
+
+   update(dt) {
+      this.life -= dt
+
+      super.update(dt)
+   }
+
+}
+
+export class FireParticle extends Particle {
 
    static fromExplosionAt(explodeX, explodeY) {
       const MAX_SPEED = 0.04
@@ -13,39 +31,21 @@ export class FireParticle extends Entity {
       const dx = Math.cos(ang) * speed
       const dy = Math.sin(ang) * speed
 
-      return new FireParticle(x, y, dx, dy, rad)
-   }
-
-   constructor(x, y, dx, dy, radius) {
-      super(x, y, dx, dy)
-
-      this.radius = radius
-      this.life = 1.0
-   }
-
-   isAlive() {
-      return this.life > 0
-   }
-
-   think(dt) {
-      this.life -= dt / 1000
-   }
-
-   getColor() {
-      // Inspired by http://codepen.io/davepvm/pen/Hhstl
-      const r = 140 + 120 * this.life
-      const g = 170 - 120 * this.life
-      const b = 120 - 120 * this.life
-      const a = 0.4 * this.life
-      return `rgba(${r}, ${g}, ${b}, ${a})`
+      return new FireParticle(x, y, dx, dy, 0, 0, rad, 1000)
    }
 
    draw(ctx) {
       ctx.save()
 
-      const size = Math.sin(Math.PI * this.life) * this.radius
+      const lifePerc = this.life / this.MAX_LIFE
+      const size = Math.sin(Math.PI * lifePerc) * this.radius
 
-      ctx.fillStyle = this.getColor()
+      // Inspired by http://codepen.io/davepvm/pen/Hhstl
+      const r = 140 + 120 * lifePerc
+      const g = 170 - 120 * lifePerc
+      const b = 120 - 120 * lifePerc
+      const a = 0.4 * lifePerc
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a})`
       ctx.globalCompositeOperation = 'lighter'
 
       ctx.beginPath()
@@ -56,7 +56,7 @@ export class FireParticle extends Entity {
    }
 }
 
-export class DebrisParticle extends Entity {
+export class DebrisParticle extends Particle {
    static fromExplosionAt(explodeX, explodeY, shipRadius, shipColor) {
       const MAX_SPEED = 0.1, MAX_SPIN = 0.01
 
@@ -75,26 +75,12 @@ export class DebrisParticle extends Entity {
       const spinAng = Math.random() * Math.PI * 2
       const spinSpeed = Math.random() * (MAX_SPIN / 2) - MAX_SPIN
 
-      return new DebrisParticle(x, y, dx, dy, spinAng, spinSpeed, rad, shipColor)
+      return new DebrisParticle(x, y, dx, dy, spinAng, spinSpeed, rad, 1000, shipColor)
    }
 
-   constructor(x, y, dx, dy, angle, dAngle, radius, color) {
-      super(x, y, dx, dy)
-
-      this.angle = angle
-      this.dAngle = dAngle
-      this.radius = radius
+   constructor(x, y, dx, dy, angle, dAngle, radius, life, color) {
+      super(x, y, dx, dy, angle, dAngle, radius, life)
       this.color = color
-      this.life = 1.0
-   }
-
-   isAlive() {
-      return this.life > 0
-   }
-
-   think(dt) {
-      this.angle += this.dAngle * dt
-      this.life -= dt / 1000
    }
 
    draw(ctx) {

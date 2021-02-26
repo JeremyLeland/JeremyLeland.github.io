@@ -1,13 +1,10 @@
-import { Entity } from "./entity.js"
+import { Actor } from "./actor.js"
 
-export class Bullet extends Entity {
+export class Bullet extends Actor {
    constructor(x, y, dx, dy, damage, color) {
-      super(x, y, dx, dy)
+      super(x, y, dx, dy, 0, 0, 1, 1, damage)
 
-      this.damage = damage
       this.color = color
-
-      this.radius = 1
 
       this.life = 10000    // so we go away after time
    }
@@ -16,12 +13,14 @@ export class Bullet extends Entity {
       return this.life > 0
    }
 
-   hitWith(entity) {
+   hitWith(actor) {
       this.life = 0
    }
 
-   think(dt) {
+   update(dt) {
       this.life -= dt
+
+      super.update(dt)
    }
 
    draw(ctx) {

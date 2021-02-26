@@ -2,7 +2,7 @@ import { Ship } from "./ship.js"
 
 export class Player extends Ship {
    constructor(x, y, level) {
-      super(x, y, level)
+      super(x, y, 10, 100, 50, "green", level)
 
       this.accel = 0.0001
       this.minSpeed = 0
@@ -13,19 +13,19 @@ export class Player extends Ship {
       this.BULLET_SPEED = 0.4
       this.BULLET_DAMAGE = 10
 
-      this.damage = 50  // ramming damage
+      // this.damage = 50  // ramming damage
 
-      this.radius = 10
-      this.color = "green"
+      // this.radius = 10
+      // this.color = "green"
 
-      this.MAX_HEALTH = 100
+      // this.MAX_HEALTH = 100
 
       this.spawn(x, y)
    }
 
-   think(dt) {
+   update(dt) {
       this.turnToward(this.goalX, this.goalY, dt)
 
-      super.think(dt)
+      super.update(dt)
    }
 }

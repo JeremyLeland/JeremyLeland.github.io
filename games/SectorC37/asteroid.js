@@ -1,17 +1,10 @@
-import { Entity } from "./entity.js"
+import { Actor } from "./actor.js"
 
-export class Asteroid extends Entity {
-   constructor(x, y, dx, dy, damage, health, radius, color) {
-      super(x, y, dx, dy)
+export class Asteroid extends Actor {
+   constructor(x, y, dx, dy, health, damage, radius, color) {
+      super(x, y, dx, dy, 0, 0, radius, health, damage)
 
-      this.damage = damage
-      this.health = health
-      this.radius = radius
       this.color = color
-   }
-
-   isAlive() {
-      return this.health > 0
    }
 
    draw(ctx) {

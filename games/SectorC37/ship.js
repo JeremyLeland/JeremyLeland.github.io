@@ -1,15 +1,13 @@
-import { Entity } from "./entity.js"
+import { Actor } from "./actor.js"
 import { Bullet } from "./bullet.js"
-import { FireParticle } from "./particles.js"
-import { DebrisParticle } from "./particles.js"
+import { FireParticle, DebrisParticle } from "./particles.js"
 
-export class Ship extends Entity {
-   constructor(x, y, level) {
-      super(x, y, 0, 0)
+export class Ship extends Actor {
+   constructor(x, y, radius, health, damage, color, level) {
+      super(x, y, 0, 0, 0, 0, radius, health, damage)
 
+      this.color = color
       this.level = level
-
-      this.bullets = []
    }
 
    spawn(x, y) {
@@ -27,7 +25,7 @@ export class Ship extends Entity {
       this.shootDelay = this.TIME_BETWEEN_SHOTS
       this.isShooting = false
 
-      this.health = this.MAX_HEALTH
+      //this.health = this.MAX_HEALTH
    }
 
    isAlive() {
@@ -37,63 +35,6 @@ export class Ship extends Entity {
    setGoal(goalX, goalY) {
       this.goalX = goalX
       this.goalY = goalY
-   }
-
-   timeUntilHit(other) {
-      // See when ships would collide if continuing at their current direction and rate of speed
-      // See https://stackoverflow.com/questions/33140999/at-what-delta-time-will-two-objects-collide
-      // (Line-Line was http://www.jeffreythompson.org/collision-detection/line-line.php)
-      const cx = this.x - other.x
-      const cy = this.y - other.y
-
-      const dx1 = this.dx
-      const dy1 = this.dy
-      const dx2 = other.dx
-      const dy2 = other.dy
-      const vx = dx1 - dx2
-      const vy = dy1 - dy2
-
-      const rr = this.radius + other.radius
-
-      const a = vx*vx + vy*vy
-      const b = 2 * (cx * vx + cy * vy)
-      const c = cx*cx + cy*cy - rr*rr
-
-      const disc = b*b - 4*a*c
-
-      // If the objects don't collide, the discriminant will be negative
-      if (disc < 0) {
-         return Number.POSITIVE_INFINITY
-      }
-      else {
-         const t0 = (-b - Math.sqrt(disc)) / (2*a)
-
-         if (t0 < 0) {
-            const t1 = (-b + Math.sqrt(disc)) / (2*a)
-
-            if (t1 < 0) {
-               return Number.POSITIVE_INFINITY
-            }
-            else {
-               return t1
-            }
-         }
-         else {
-            return t0
-         }
-
-         
-
-         // if (t0 < 0 && t1 < 0) {
-         //    return Number.POSITIVE_INFINITY
-         // }
-         // else if (t0 < 0) {
-         //    return t1
-         // }
-         // else {
-         //    return Math.min(t0, t1)
-         // }
-      }
    }
 
    turnToward(towardX, towardY, dt) {
@@ -180,12 +121,14 @@ export class Ship extends Entity {
       }
    }
 
-   think(dt) {
+   update(dt) {
       this.shootDelay = Math.max(0, this.shootDelay - dt)
       if (this.shootDelay == 0 && this.isShooting) {
          this.shoot()
          this.shootDelay = this.TIME_BETWEEN_SHOTS
       }
+
+      super.update(dt)
    }
 
    drawTriangle(ctx) {
@@ -210,8 +153,6 @@ export class Ship extends Entity {
 
    draw(ctx) {
       this.drawTriangle(ctx)
-
-      this.bullets.forEach(b => b.draw(ctx))
 
       // // DEBUG
       // ctx.beginPath()

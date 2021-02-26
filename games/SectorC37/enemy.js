@@ -2,7 +2,7 @@ import { Ship } from "./ship.js"
 
 export class Enemy extends Ship {
    constructor(x, y, level) {
-      super(x, y, level)
+      super(x, y, 10, 50, 50, "blue", level)
 
       this.accel = 0.0001
       this.minSpeed = 0
@@ -13,10 +13,10 @@ export class Enemy extends Ship {
       this.BULLET_SPEED = 0.3
       this.BULLET_DAMAGE = 5
 
-      this.damage = 50  // ramming damage
+      // this.damage = 50  // ramming damage
 
-      this.radius = 10
-      this.color = "blue"
+      // this.radius = 10
+      // this.color = "blue"
 
       this.targetEntity = null
       this.avoidEntity = null
@@ -24,12 +24,12 @@ export class Enemy extends Ship {
       this.SHOOT_DISTANCE = 300
       this.SHOOT_ANGLE = 0.5
 
-      this.MAX_HEALTH = 50
+      // this.MAX_HEALTH = 50
 
       this.spawn(x, y)
    }
 
-   think(dt) {
+   update(dt) {
       // Pursue our goals
       if (this.distanceFrom(this.goalX, this.goalY) < this.radius * 2) {
          this.setGoal(Math.random() * this.level.width, Math.random() * this.level.height)
@@ -75,7 +75,7 @@ export class Enemy extends Ship {
       //    }
       // }
 
-      super.think(dt)
+      super.update(dt)
    }
 
    draw(ctx) {
