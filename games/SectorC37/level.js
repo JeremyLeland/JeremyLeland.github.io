@@ -16,17 +16,22 @@ export class Level {
       this.player = new Player(this.width / 2, this.height / 2, this)
       this.entities.push(this.player)
 
+      this.spawnEnemyDelay = this.timeBetweenEnemies = 12000
+
+      // Initial spawns are inside of level, future spawns will be outside level
       for (let i = 0; i < 5; i ++) {
-         this.addRandomEnemy()
+         this.addRandomEnemy(Math.random() * this.width / 2 + this.width / 4)
       }
 
       for (let i = 0; i < 10; i ++) {
-         this.addRandomAsteroid()
+         this.addRandomAsteroid(Math.random() * this.width / 2 + this.width / 4)
       }
    }
 
-   addRandomEnemy() {
-      const enemy = new Enemy(Math.random() * this.width, Math.random() * this.height, this)
+   addRandomEnemy(distFromCenter) {
+      const [x, y] = this.getRandomSpawnLocation(distFromCenter)
+      const enemy = new Enemy(x, y, this)
+
       //enemy.setTargetShip(this.player)
 
       enemy.setGoal(Math.random() * this.width, Math.random() * this.height)
@@ -34,9 +39,8 @@ export class Level {
       this.entities.push(enemy)
    }
 
-   addRandomAsteroid() {
-      const x = Math.random() * this.width
-      const y = Math.random() * this.height
+   addRandomAsteroid(distFromCenter) {
+      const [x, y] = this.getRandomSpawnLocation(distFromCenter)
       const dx = Math.random() * 0.01 - 0.02
       const dy = Math.random() * 0.01 - 0.02
       const r = Math.random() * 50 + 20
@@ -44,6 +48,14 @@ export class Level {
       const col = "rgb(" + c + ", " + c/2 + ", " + 0 + ")"
 
       this.entities.push(new Asteroid(x, y, dx, dy, r, r, r, col, this))
+   }
+
+   getRandomSpawnLocation(distFromCenter) {
+      const ang = Math.random() * Math.PI * 2
+      const x = Math.random() * Math.cos(ang) * distFromCenter
+      const y = Math.random() * Math.sin(ang) * distFromCenter
+
+      return [x + this.width / 2, y + this.height / 2]
    }
 
    addBullet(bullet) {
@@ -60,6 +72,12 @@ export class Level {
    }
 
    update(dt) {
+      this.spawnEnemyDelay -= dt
+      if (this.spawnEnemyDelay < 0) {
+         this.addRandomEnemy(this.width * 1.5)
+         this.spawnEnemyDelay = this.timeBetweenEnemies
+      }
+   
       this.entities.forEach(e => {
          e.update(dt)
 
