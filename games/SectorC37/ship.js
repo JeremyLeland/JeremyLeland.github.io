@@ -34,7 +34,11 @@ export class Ship extends Actor {
       this.goalY = goalY
    }
 
-   turnToward(towardX, towardY, dt) {
+   turnToward(actor, dt) {
+      this.turnTowardPoint(actor.x, actor.y, dt)
+   }
+
+   turnTowardPoint(towardX, towardY, dt) {
       const towardAngle = Math.atan2(towardY - this.y, towardX - this.x)
 
       // Adjust our angle so we can use towardAngle
@@ -56,7 +60,11 @@ export class Ship extends Actor {
       this.dy = Math.sin(this.angle) * this.speed
    }
 
-   turnAwayFrom(avoidX, avoidY, dt) {
+   turnAwayFrom(actor, dt) {
+      this.turnAwayFromPoint(actor.x, actor.y, dt)
+   }
+
+   turnAwayFromPoint(avoidX, avoidY, dt) {
       const avoidAngle = Math.atan2(avoidY - this.y, avoidX - this.x)
 
       // Adjust our angle so we can use goalAngle

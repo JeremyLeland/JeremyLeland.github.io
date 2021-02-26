@@ -16,7 +16,7 @@ export class Player extends Ship {
    }
 
    update(dt) {
-      this.turnToward(this.goalX, this.goalY, dt)
+      this.turnTowardPoint(this.goalX, this.goalY, dt)
 
       super.update(dt)
    }

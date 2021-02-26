@@ -23,16 +23,24 @@ export class Actor extends Entity {
    }
 
    isCollidingWith(actor) {
-      return this.distanceFrom(actor.x, actor.y) < this.radius + actor.radius
+      return this.distanceFrom(actor) < this.radius + actor.radius
    }
 
-   distanceFrom(x, y) {
+   distanceFrom(actor) {
+      return this.distanceFromPoint(actor.x, actor.y)
+   }
+
+   distanceFromPoint(x, y) {
       const cx = x - this.x
       const cy = y - this.y
       return Math.sqrt(cx*cx + cy*cy)
    }
 
-   angleTo(x, y) {
+   angleTo(actor) {
+      return this.angleToPoint(actor.x, actor.y)
+   }
+
+   angleToPoint(x, y) {
       return Math.atan2(y - this.y, x - this.x) - this.angle
    }
 
