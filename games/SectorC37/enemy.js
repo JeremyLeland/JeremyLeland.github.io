@@ -1,18 +1,30 @@
 import { Ship } from "./ship.js"
+import { Gun } from "./gun.js"
 
 export class Enemy extends Ship {
    constructor(x, y, level) {
-      super({x: x, y: y, 
-             radius: 10, 
-             health: 50, 
-             damage: 50, 
-             speed: 0.15, 
-             turnSpeed: 0.003,
-             timeBetweenShots: 100,
-             bulletSpeed: 0.3,
-             bulletDamage: 5,
-             color: "blue",
-             level: level})
+      super({
+         x: x, y: y, 
+         radius: 10, 
+         health: 50, 
+         damage: 50, 
+         speed: 0.15, 
+         turnSpeed: 0.003,
+         color: "blue",
+         level: level
+      })
+
+      const gun = new Gun({
+         frontOffset: this.radius * 2,
+         sideOffset: 0,
+         timeBetweenShots: 100,
+         bulletSpeed: 0.3,
+         bulletDamage: 5,
+         bulletColor: this.color,
+         level: level
+      })
+
+      this.setGuns(gun)
 
       this.targetEntity = null
       this.avoidEntity = null
@@ -29,7 +41,7 @@ export class Enemy extends Ship {
    }
 
    checkForTarget() {
-      if (this.player.isAlive() && this.distanceFrom(this.level.player) < 1000) {
+      if (this.level.player.isAlive() && this.distanceFrom(this.level.player) < 1000) {
          this.targetEntity = this.level.player
       }
       else {

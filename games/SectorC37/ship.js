@@ -1,10 +1,8 @@
 import { Actor } from "./actor.js"
-import { Bullet } from "./bullet.js"
 import { FireParticle, DebrisParticle, SparkParticle } from "./particles.js"
 
 export class Ship extends Actor {
    constructor({x, y, radius, health, damage, speed, turnSpeed, 
-                timeBetweenShots, bulletSpeed, bulletDamage, 
                 color, level}) {
       super(x, y, 0, 0, 0, 0, radius, health, damage)
 
@@ -14,15 +12,15 @@ export class Ship extends Actor {
       this.speed = speed
       this.turnSpeed = turnSpeed
 
-      this.timeBetweenShots = timeBetweenShots
-      this.bulletSpeed = bulletSpeed
-      this.bulletDamage = bulletDamage
-
-      this.shootDelay = this.timeBetweenShots
+      this.guns = []
       this.isShooting = false
 
       this.color = color
       this.level = level
+   }
+
+   setGuns(...guns) {
+      this.guns = guns
    }
 
    isAlive() {
@@ -94,18 +92,6 @@ export class Ship extends Actor {
       this.isShooting = false
    }
 
-   shoot() {
-      const sinAng = Math.sin(this.angle), cosAng = Math.cos(this.angle)
-      const frontDist = this.radius * 2
-      const frontX = this.x + cosAng * frontDist
-      const frontY = this.y + sinAng * frontDist
-      const dx = cosAng * this.bulletSpeed
-      const dy = sinAng * this.bulletSpeed
-
-      const bullet = new Bullet(frontX, frontY, dx, dy, this.bulletDamage, this.color)
-      this.level.addBullet(bullet)
-   }
-
    hitWith(entity) {
       super.hitWith(entity)
 
@@ -127,11 +113,13 @@ export class Ship extends Actor {
    }
 
    update(dt) {
-      this.shootDelay = Math.max(0, this.shootDelay - dt)
-      if (this.shootDelay == 0 && this.isShooting) {
-         this.shoot()
-         this.shootDelay = this.timeBetweenShots
-      }
+      this.guns.forEach(g => {
+         g.update(dt)
+
+         if (this.isShooting && g.isReadyToShoot()) {
+            g.shoot(this.x, this.y, this.angle)
+         }
+      })
 
       super.update(dt)
    }
