@@ -21,11 +21,11 @@ export class Level {
 
       // Initial spawns are inside of level, future spawns will be outside level
       for (let i = 0; i < 5; i ++) {
-         this.addRandomEnemy(Math.random() * this.width / 2 + this.width / 4)
+         this.addRandomEnemy(this.width/4 + this.width*i/5)
       }
 
       for (let i = 0; i < 10; i ++) {
-         this.addRandomAsteroid(Math.random() * this.width / 2 + this.width / 4)
+         this.addRandomAsteroid(this.width/4 + this.width*i/10)
       }
    }
 
@@ -42,8 +42,8 @@ export class Level {
 
    addRandomAsteroid(distFromCenter) {
       const [x, y] = this.getRandomSpawnLocation(distFromCenter)
-      const dx = Math.random() * 0.01 - 0.02
-      const dy = Math.random() * 0.01 - 0.02
+      const dx = Math.random() * 0.02 - 0.01
+      const dy = Math.random() * 0.02 - 0.01
       const radius = Math.random() * 50 + 20
       const c = Math.random() * 100 + 100
       const col = "rgb(" + c + ", " + c/2 + ", " + 0 + ")"
@@ -53,8 +53,8 @@ export class Level {
 
    getRandomSpawnLocation(distFromCenter) {
       const ang = Math.random() * Math.PI * 2
-      const x = Math.random() * Math.cos(ang) * distFromCenter
-      const y = Math.random() * Math.sin(ang) * distFromCenter
+      const x = Math.cos(ang) * distFromCenter
+      const y = Math.sin(ang) * distFromCenter
 
       return [x + this.width / 2, y + this.height / 2]
    }
@@ -88,6 +88,38 @@ export class Level {
       }
    }
 
+   handleAsteroidCollision(a1, a2) {
+      const diffX = a2.x - a1.x
+      const diffY = a2.y - a1.y
+
+      const distBetween = Math.sqrt(diffX * diffX + diffY * diffY)
+      if (distBetween < a1.radius + a2.radius) {
+
+         // Nudge ourselves out of the collision
+         const distToMove = a1.radius + a2.radius - distBetween
+         const angle = Math.atan2(diffY, diffX)
+         a1.x -= Math.cos(angle) * distToMove
+         a1.y -= Math.sin(angle) * distToMove
+
+         //
+         // Determine bounce
+         // See https://ericleong.me/research/circle-circle/#dynamic-circle-circle-collision
+         //
+
+         const normX = diffX / distBetween
+         const normY = diffY / distBetween
+
+         // Use radius for mass
+         const m1 = a1.radius, m2 = a2.radius
+         const p = a1.dx * normX + a1.dy * normY - a2.dx * normX - a2.dy * normY / (m1 + m2)
+
+         a1.dx -= p * m1 * normX
+         a1.dy -= p * m1 * normY
+         a2.dx += p * m2 * normX
+         a2.dy += p * m2 * normY
+      }
+   }
+
    update(dt) {
       this.spawnEnemies(dt)
       this.spawnAsteroids(dt)
@@ -97,9 +129,23 @@ export class Level {
 
          const nearby = this.getActorsNear(a)
          nearby.forEach(n => {
-            if (a.isCollidingWith(n)) {
-               a.hitWith(n)
-               n.hitWith(a)
+            // Handle asteroid collisions differently
+            if (a instanceof Asteroid && n instanceof Asteroid) {
+               // this.handleAsteroidCollision(a, n)
+            }
+            else {
+               const hitTime = a.timeUntilHit(n)
+               if (-dt < hitTime && hitTime < 0) {
+                  // Roll back actors to time of collision
+                  a.x += a.dx * hitTime
+                  a.y += a.dy * hitTime
+                  n.x += n.dx * hitTime
+                  n.y += n.dy * hitTime
+
+                  // Collision response
+                  a.hitWith(n)
+                  n.hitWith(a)
+               }
             }
          })
       })

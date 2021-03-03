@@ -62,7 +62,8 @@ export class Enemy extends Ship {
       nearby.forEach(n => {
          const time = this.timeUntilHit(n, 10)
 
-         if (time < closestTime) {
+         // Include hits in the near "past", since we may be in our buffer zone
+         if (time > -100 && time < closestTime) {
             closestActor = n
             closestTime = time
          }
@@ -106,9 +107,9 @@ export class Enemy extends Ship {
       super.draw(ctx)
 
       // // DEBUG
-      // if (this.avoidEntity != null) {
+      // if (this.avoidActor != null) {
       //    ctx.beginPath()
-      //    ctx.moveTo(this.avoidEntity.x, this.avoidEntity.y)
+      //    ctx.moveTo(this.avoidActor.x, this.avoidActor.y)
       //    ctx.lineTo(this.x, this.y)
 
       //    ctx.setLineDash([1, 8])

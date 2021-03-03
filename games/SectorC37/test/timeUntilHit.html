@@ -18,7 +18,7 @@
                super()
 
                this.player = new Player(100, 100)
-               this.asteroid = new Asteroid(400, 100, 0, 0, 0, 0, 30, "brown")
+               this.asteroid = new Asteroid(400, 100, 0, 0, 30, "brown", null)
                this.canvas.style.cursor = "crosshair"
 
                this.startGame()
@@ -33,7 +33,12 @@
             }
 
             update(dt) {
-               this.player.turnToward(this.mousex, this.mousey, dt)
+               if (this.mouseIsDown) {
+                  this.player.x = this.mousex
+                  this.player.y = this.mousey
+               }
+
+               this.player.turnTowardPoint(this.mousex, this.mousey, dt)
             }
 
             draw(ctx) {
@@ -41,7 +46,7 @@
                this.player.draw(ctx)
                this.asteroid.draw(ctx)
 
-               const time = this.player.timeUntilHit(this.asteroid)
+               const time = this.player.timeUntilHit(this.asteroid, 10)
                this.debugUI.textContent = "Time to hit: " + time
 
                if (time != Number.POSITIVE_INFINITY) {
@@ -56,7 +61,7 @@
             }
          }
 
-         new Test()
+         globalThis.test = new Test()
 
       </script>
    </body>

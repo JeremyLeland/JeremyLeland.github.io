@@ -46,6 +46,7 @@ export class Actor extends Entity {
 
    timeUntilHit(other, buffer = 0) {
       // See when ships would collide if continuing at their current direction and rate of speed
+      // This will return a negative value if the collision would have occurred in the past
       // See https://stackoverflow.com/questions/33140999/at-what-delta-time-will-two-objects-collide
       // (Line-Line was http://www.jeffreythompson.org/collision-detection/line-line.php)
       const cx = this.x - other.x
@@ -73,13 +74,20 @@ export class Actor extends Entity {
       else {
          const t0 = (-b - Math.sqrt(disc)) / (2*a)
 
-         if (t0 >= 0) {
-            return t0
-         }
-         else {
-            const t1 = (-b + Math.sqrt(disc)) / (2*a)
-            return t1 < 0 ? Number.POSITIVE_INFINITY : t1
-         }
+         return t0
+
+         // if (t0 >= 0) {
+         //    return t0
+         // }
+         // else {
+         //    const t1 = (-b + Math.sqrt(disc)) / (2*a)
+
+         //    console.log("t0 = " + t0)
+         //    console.log("t1 = " + t1)
+         //    console.log("\n")
+
+         //    return t1 < 0 ? Number.POSITIVE_INFINITY : t1
+         // }
       }
    }
 }
