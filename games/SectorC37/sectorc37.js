@@ -9,6 +9,7 @@ export class SectorC37 extends Game {
       super()
 
       this.level = new Level(2000, 2000)
+      this.level.initGameLevel()
       this.player = this.level.player
       
       this.canvas.style.cursor = "crosshair"

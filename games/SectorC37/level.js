@@ -12,7 +12,9 @@ export class Level {
 
       this.actors = []
       this.particles = []
+   }
 
+   initGameLevel() {
       this.player = new Player(this.width / 2, this.height / 2, this)
       this.actors.push(this.player)
 
@@ -24,8 +26,8 @@ export class Level {
          this.addRandomEnemy(this.width/4 + this.width*i/5)
       }
 
-      for (let i = 0; i < 10; i ++) {
-         this.addRandomAsteroid(this.width/4 + this.width*i/10)
+      for (let i = 0; i < 40; i ++) {
+         this.addRandomAsteroid(this.width/4 + this.width*i/40)
       }
    }
 
@@ -89,35 +91,20 @@ export class Level {
    }
 
    handleAsteroidCollision(a1, a2) {
+      // See https://ericleong.me/research/circle-circle/#dynamic-circle-circle-collision
       const diffX = a2.x - a1.x
       const diffY = a2.y - a1.y
-
       const distBetween = Math.sqrt(diffX * diffX + diffY * diffY)
-      if (distBetween < a1.radius + a2.radius) {
+      const normX = diffX / distBetween
+      const normY = diffY / distBetween
+      const m1 = a1.radius, m2 = a2.radius   // Use radius for mass
 
-         // Nudge ourselves out of the collision
-         const distToMove = a1.radius + a2.radius - distBetween
-         const angle = Math.atan2(diffY, diffX)
-         a1.x -= Math.cos(angle) * distToMove
-         a1.y -= Math.sin(angle) * distToMove
+      const p = 2 * (a1.dx * normX + a1.dy * normY - a2.dx * normX - a2.dy * normY) / (m1 + m2)
 
-         //
-         // Determine bounce
-         // See https://ericleong.me/research/circle-circle/#dynamic-circle-circle-collision
-         //
-
-         const normX = diffX / distBetween
-         const normY = diffY / distBetween
-
-         // Use radius for mass
-         const m1 = a1.radius, m2 = a2.radius
-         const p = a1.dx * normX + a1.dy * normY - a2.dx * normX - a2.dy * normY / (m1 + m2)
-
-         a1.dx -= p * m1 * normX
-         a1.dy -= p * m1 * normY
-         a2.dx += p * m2 * normX
-         a2.dy += p * m2 * normY
-      }
+      a1.dx -= p * m1 * normX
+      a1.dy -= p * m1 * normY
+      a2.dx += p * m2 * normX
+      a2.dy += p * m2 * normY
    }
 
    update(dt) {
@@ -129,20 +116,19 @@ export class Level {
 
          const nearby = this.getActorsNear(a)
          nearby.forEach(n => {
-            // Handle asteroid collisions differently
-            if (a instanceof Asteroid && n instanceof Asteroid) {
-               // this.handleAsteroidCollision(a, n)
-            }
-            else {
-               const hitTime = a.timeUntilHit(n)
-               if (-dt < hitTime && hitTime < 0) {
-                  // Roll back actors to time of collision
-                  a.x += a.dx * hitTime
-                  a.y += a.dy * hitTime
-                  n.x += n.dx * hitTime
-                  n.y += n.dy * hitTime
+            const hitTime = a.timeUntilHit(n)
+            if (-dt < hitTime && hitTime < 0) {
+               // Roll back actors to time of collision
+               a.x += a.dx * hitTime
+               a.y += a.dy * hitTime
+               n.x += n.dx * hitTime
+               n.y += n.dy * hitTime
 
-                  // Collision response
+               // Collision response
+               if (a instanceof Asteroid && n instanceof Asteroid) {
+                  this.handleAsteroidCollision(a, n)
+               }
+               else {
                   a.hitWith(n)
                   n.hitWith(a)
                }
