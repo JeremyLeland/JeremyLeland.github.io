@@ -1,7 +1,23 @@
 import { Ship } from "./ship.js"
 import { Gun } from "./gun.js"
 
+class EnemyGun extends Gun {
+   constructor(frontOffset, sideOffset, level) {
+      super({
+         frontOffset: frontOffset,
+         sideOffset: sideOffset,
+         timeBetweenShots: 100,
+         bulletSpeed: 0.3,
+         bulletDamage: 5,
+         bulletColor: Enemy.COLOR,
+         level: level
+      })
+   }
+}
+
 export class Enemy extends Ship {
+   static COLOR = "blue"
+
    constructor(x, y, level) {
       super({
          x: x, y: y, 
@@ -10,21 +26,11 @@ export class Enemy extends Ship {
          damage: 50, 
          speed: 0.15, 
          turnSpeed: 0.003,
-         color: "blue",
+         color: Enemy.COLOR,
          level: level
       })
 
-      const gun = new Gun({
-         frontOffset: this.radius * 2,
-         sideOffset: 0,
-         timeBetweenShots: 100,
-         bulletSpeed: 0.3,
-         bulletDamage: 5,
-         bulletColor: this.color,
-         level: level
-      })
-
-      this.setGuns(gun)
+      this.setGuns(new EnemyGun(this.radius * 2, 0, level))
 
       this.targetEntity = null
       this.avoidEntity = null

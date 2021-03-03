@@ -1,7 +1,23 @@
 import { Ship } from "./ship.js"
 import { Gun } from "./gun.js"
 
+class PlayerGun extends Gun {
+   constructor(frontOffset, sideOffset, level) {
+      super({
+         frontOffset: frontOffset,
+         sideOffset: sideOffset,
+         timeBetweenShots: 100,
+         bulletSpeed: 0.4,
+         bulletDamage: 10,
+         bulletColor: Player.COLOR,
+         level: level
+      })
+   }
+}
+
 export class Player extends Ship {
+   static COLOR = "green"
+
    constructor(x, y, level) {
       super({
          x: x, y: y, 
@@ -10,26 +26,14 @@ export class Player extends Ship {
          damage: 50, 
          speed: 0.2, 
          turnSpeed: 0.005,
-         color: "green",
+         color: Player.COLOR,
          level: level
       })
 
-      const guns = []
-      for (let i = 0; i < 2; i ++) {
-         guns.push(new Gun({
-            timeBetweenShots: 100,
-            bulletSpeed: 0.4,
-            bulletDamage: 10,
-            bulletColor: this.color,
-            level: level
-         }))
-      }
+      const leftGun = new PlayerGun(this.radius * 2, -this.radius / 2, level)
+      const rightGun = new PlayerGun(this.radius * 2, this.radius / 2, level)
 
-      guns[0].frontOffset = guns[1].frontOffset = this.radius * 2
-      guns[0].sideOffset = -this.radius / 2
-      guns[1].sideOffset =  this.radius / 2
-
-      this.setGuns(guns[0], guns[1])
+      this.setGuns(leftGun, rightGun)
    }
 
    update(dt) {
