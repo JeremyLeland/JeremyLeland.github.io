@@ -32,8 +32,8 @@ export class Enemy extends Ship {
 
       this.setGuns(new EnemyGun(this.radius * 2, 0, level))
 
-      this.targetEntity = null
-      this.avoidEntity = null
+      this.targetActor = null
+      this.avoidActor = null
 
       this.SHOOT_DISTANCE = 300
       this.SHOOT_ANGLE = 0.5
@@ -48,27 +48,27 @@ export class Enemy extends Ship {
 
    checkForTarget() {
       if (this.level.player.isAlive() && this.distanceFrom(this.level.player) < 1000) {
-         this.targetEntity = this.level.player
+         this.targetActor = this.level.player
       }
       else {
-         this.targetEntity = null
+         this.targetActor = null
       }
    }
 
    checkForAvoid() {
-      const nearby = this.level.getEntitiesNear(this)
+      const nearby = this.level.getActorsNear(this)
 
-      let closestEntity = null, closestTime = Number.POSITIVE_INFINITY
+      let closestActor = null, closestTime = Number.POSITIVE_INFINITY
       nearby.forEach(n => {
          const time = this.timeUntilHit(n, 10)
 
          if (time < closestTime) {
-            closestEntity = n
+            closestActor = n
             closestTime = time
          }
       })
 
-      this.avoidEntity = closestTime < 2000 ? closestEntity : null
+      this.avoidActor = closestTime < 2000 ? closestActor : null
    }
 
    update(dt) {
@@ -80,19 +80,19 @@ export class Enemy extends Ship {
       // - https://www.red3d.com/cwr/boids/
       // - https://gamedevelopment.tutsplus.com/tutorials/3-simple-rules-of-flocking-behaviors-alignment-cohesion-and-separation--gamedev-3444
 
-      if (this.avoidEntity != null) {
-         this.turnAwayFrom(this.avoidEntity, dt)
+      if (this.avoidActor != null) {
+         this.turnAwayFrom(this.avoidActor, dt)
       }
-      else if (this.targetEntity != null) {
-         this.turnToward(this.targetEntity, dt)
+      else if (this.targetActor != null) {
+         this.turnToward(this.targetActor, dt)
       }
       else {
          this.turnTowardPoint(this.goalX, this.goalY, dt)
       }
 
-      if (this.targetEntity != null && 
-          this.distanceFrom(this.targetEntity) < this.SHOOT_DISTANCE && 
-          Math.abs(this.angleTo(this.targetEntity)) < this.SHOOT_ANGLE) {
+      if (this.targetActor != null && 
+          this.distanceFrom(this.targetActor) < this.SHOOT_DISTANCE && 
+          Math.abs(this.angleTo(this.targetActor)) < this.SHOOT_ANGLE) {
          this.startShooting()
       }
       else {

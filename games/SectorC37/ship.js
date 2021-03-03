@@ -23,10 +23,6 @@ export class Ship extends Actor {
       this.guns = guns
    }
 
-   isAlive() {
-      return this.health > 0
-   }
-
    setGoal(goalX, goalY) {
       this.goalX = goalX
       this.goalY = goalY
@@ -92,13 +88,13 @@ export class Ship extends Actor {
       this.isShooting = false
    }
 
-   hitWith(entity) {
-      super.hitWith(entity)
+   hitWith(actor) {
+      super.hitWith(actor)
 
-      const hitAng = Math.atan2(-entity.dy, -entity.dx)
+      const hitAng = Math.atan2(-actor.dy, -actor.dx)
 
       for (let i = 0; i < 20; i ++) {
-         this.level.addParticle(new Particles.Spark(entity.x, entity.y, hitAng))
+         this.level.addParticle(new Particles.Spark(actor.x, actor.y, hitAng))
       }
    }
 

@@ -10,13 +10,14 @@ export class Level {
 
       this.starfield = new Starfield(this.width, this.height, 1000)
 
-      this.entities = []
+      this.actors = []
       this.particles = []
 
       this.player = new Player(this.width / 2, this.height / 2, this)
-      this.entities.push(this.player)
+      this.actors.push(this.player)
 
       this.spawnEnemyDelay = this.timeBetweenEnemies = 12000
+      this.spawnEnemyDelay = this.timeBetweenEnemies = 14000
 
       // Initial spawns are inside of level, future spawns will be outside level
       for (let i = 0; i < 5; i ++) {
@@ -36,18 +37,18 @@ export class Level {
 
       enemy.setGoal(Math.random() * this.width, Math.random() * this.height)
 
-      this.entities.push(enemy)
+      this.actors.push(enemy)
    }
 
    addRandomAsteroid(distFromCenter) {
       const [x, y] = this.getRandomSpawnLocation(distFromCenter)
       const dx = Math.random() * 0.01 - 0.02
       const dy = Math.random() * 0.01 - 0.02
-      const r = Math.random() * 50 + 20
+      const radius = Math.random() * 50 + 20
       const c = Math.random() * 100 + 100
       const col = "rgb(" + c + ", " + c/2 + ", " + 0 + ")"
 
-      this.entities.push(new Asteroid(x, y, dx, dy, r, r, r, col, this))
+      this.actors.push(new Asteroid(x, y, dx, dy, radius, col, this))
    }
 
    getRandomSpawnLocation(distFromCenter) {
@@ -58,38 +59,51 @@ export class Level {
       return [x + this.width / 2, y + this.height / 2]
    }
 
-   addBullet(bullet) {
-      this.entities.push(bullet)
+   addActor(actor) {
+      this.actors.push(actor)
    }
 
    addParticle(part) {
       this.particles.push(part)
    }
 
-   getEntitiesNear(entity) {
-      // TODO: only return entities near the location
-      return this.entities.filter(e => e != entity)
+   getActorsNear(actor) {
+      // TODO: only return actors close to given actor
+      return this.actors.filter(a => a != actor)
    }
 
-   update(dt) {
+   spawnEnemies(dt) {
       this.spawnEnemyDelay -= dt
       if (this.spawnEnemyDelay < 0) {
          this.addRandomEnemy(this.width * 1.5)
          this.spawnEnemyDelay = this.timeBetweenEnemies
       }
-   
-      this.entities.forEach(e => {
-         e.update(dt)
+   }
 
-         const nearby = this.getEntitiesNear(e)
+   spawnAsteroids(dt) {
+      this.spawnAsteroidDelay -= dt
+      if (this.spawnAsteroidDelay < 0) {
+         this.addRandomAsteroid(this.width * 1.5)
+         this.spawnAsteroidDelay = this.timeBetweenAsteroids
+      }
+   }
+
+   update(dt) {
+      this.spawnEnemies(dt)
+      this.spawnAsteroids(dt)
+   
+      this.actors.forEach(a => {
+         a.update(dt)
+
+         const nearby = this.getActorsNear(a)
          nearby.forEach(n => {
-            if (e.isCollidingWith(n)) {
-               e.hitWith(n)
-               n.hitWith(e)
+            if (a.isCollidingWith(n)) {
+               a.hitWith(n)
+               n.hitWith(a)
             }
          })
       })
-      this.entities = this.entities.filter(e => e.isAlive())
+      this.actors = this.actors.filter(a => a.isAlive())
 
       this.particles.forEach(p => p.update(dt))
       this.particles = this.particles.filter(p => p.isAlive())
@@ -97,7 +111,7 @@ export class Level {
 
    draw(ctx) {
       this.starfield.draw(ctx)
-      this.entities.forEach(e => e.draw(ctx))
+      this.actors.forEach(e => e.draw(ctx))
       this.particles.forEach(p => p.draw(ctx))
    }
 }
