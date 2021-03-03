@@ -1,7 +1,23 @@
 import { Entity } from "./entity.js"
 
 class Particle extends Entity {
-   constructor(x, y, dx, dy, angle, dAngle, radius, life) {
+   constructor({startX, startY, startSpread = 0, 
+                dirAngle = 0, dirSpread = Math.PI * 2, 
+                minSpeed = 0, maxSpeed, maxSpin = 0,
+                minRadius = 0, maxRadius, life}) {
+      const angle = dirAngle + Math.random() * dirSpread - dirSpread/2
+      const dAngle = Math.random() * (maxSpin / 2) - maxSpin
+
+      const dist = Math.random() * startSpread
+      const x = startX + Math.cos(angle) * dist
+      const y = startY + Math.sin(angle) * dist
+
+      const speed = minSpeed + Math.random() * (maxSpeed - minSpeed)
+      const dx = Math.cos(angle) * speed
+      const dy = Math.sin(angle) * speed
+
+      const radius = minRadius + Math.random() * (maxRadius - minRadius)
+      
       super(x, y, dx, dy, angle, dAngle, radius)
       this.life = this.MAX_LIFE = life
    }
@@ -18,20 +34,9 @@ class Particle extends Entity {
 
 }
 
-export class FireParticle extends Particle {
-
-   static fromExplosionAt(explodeX, explodeY) {
-      const MAX_SPEED = 0.04
-
-      const x = explodeX //+ Math.random() * 5 - 10
-      const y = explodeY //+ Math.random() * 5 - 10
-      const rad = Math.random() * 16
-      const ang = Math.random() * Math.PI * 2
-      const speed = Math.random() * MAX_SPEED
-      const dx = Math.cos(ang) * speed
-      const dy = Math.sin(ang) * speed
-
-      return new FireParticle(x, y, dx, dy, 0, 0, rad, 1000)
+export class Fire extends Particle {
+   constructor(x, y) {
+      super({startX: x, startY: y, maxSpeed: 0.04, maxRadius: 16, life: 1000})
    }
 
    draw(ctx) {
@@ -56,26 +61,11 @@ export class FireParticle extends Particle {
    }
 }
 
-export class SparkParticle extends Particle {
-   static LENGTH = 100
-
-   static fromHitAt(hitX, hitY, hitAng) {
-      const MAX_SPEED = 0.1, SPREAD_ANG = Math.PI / 8
-
-      const ang = hitAng + Math.random() * SPREAD_ANG - SPREAD_ANG/2
-
-      const x = hitX
-      const y = hitY
-
-      const speed = MAX_SPEED
-      const dx = Math.cos(ang) * speed
-      const dy = Math.sin(ang) * speed
-
-      return new SparkParticle(x, y, dx, dy, 500)
-   }
-
-   constructor(x, y, dx, dy, life) {
-      super(x, y, dx, dy, 0, 0, 0, life)
+export class Spark extends Particle {
+   constructor(x, y, hitAng) {
+      super({startX: x, startY: y, 
+             dirAngle: hitAng, dirSpread: Math.PI / 8, 
+             minSpeed: 0.1, maxSpeed: 0.1, maxRadius: 1, life: 500})
 
       this.startX = x
       this.startY = y
@@ -86,7 +76,10 @@ export class SparkParticle extends Particle {
 
       const lifePerc = this.life / this.MAX_LIFE
 
-      const grd = ctx.createLinearGradient(this.x - this.dx * SparkParticle.LENGTH, this.y - this.dy * SparkParticle.LENGTH, this.x, this.y)
+      const LENGTH = 100
+      const grd = ctx.createLinearGradient(this.x - this.dx * LENGTH, 
+                                           this.y - this.dy * LENGTH,
+                                           this.x, this.y)
       grd.addColorStop(0.0, "rgba(0, 0, 0, 0)")
       grd.addColorStop(0.5, `rgba(255, 255, 0, ${lifePerc * 0.5})`)
       grd.addColorStop(1.0, `rgba(255, 255, 255, ${lifePerc})`)
@@ -101,31 +94,37 @@ export class SparkParticle extends Particle {
    }
 }
 
-export class DebrisParticle extends Particle {
-   static fromExplosionAt(explodeX, explodeY, shipRadius, shipColor) {
-      const MAX_SPEED = 0.1, MAX_SPIN = 0.01
+export class RockDebris extends Particle {
+   constructor(x, y, asteroidRadius, asteroidColor) {
+      super({startX: x, startY: y, startSpread: asteroidRadius,
+             maxSpeed: 0.1, maxSpin: 0.01, maxRadius: 5, life: 1000})
 
-      const ang = Math.random() * Math.PI * 2
-
-      const dist = Math.random() * shipRadius
-      const x = explodeX + Math.cos(ang) * dist
-      const y = explodeY + Math.sin(ang) * dist
-
-      const speed = Math.random() * MAX_SPEED
-      const dx = Math.cos(ang) * speed
-      const dy = Math.sin(ang) * speed
-
-      const rad = Math.random() * 3
-      
-      const spinAng = Math.random() * Math.PI * 2
-      const spinSpeed = Math.random() * (MAX_SPIN / 2) - MAX_SPIN
-
-      return new DebrisParticle(x, y, dx, dy, spinAng, spinSpeed, rad, 1000, shipColor)
+      this.color = asteroidColor
    }
 
-   constructor(x, y, dx, dy, angle, dAngle, radius, life, color) {
-      super(x, y, dx, dy, angle, dAngle, radius, life)
-      this.color = color
+   draw(ctx) {
+      ctx.save()
+
+      ctx.translate(this.x, this.y)
+
+      ctx.fillStyle = this.color
+      ctx.strokeStyle = "black"
+
+      ctx.beginPath()
+      ctx.arc(0, 0, this.radius, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.stroke()
+
+      ctx.restore()
+   }
+}
+
+export class ShipDebris extends Particle {
+   constructor(x, y, shipRadius, shipColor) {
+      super({startX: x, startY: y, startSpread: shipRadius,
+             maxSpeed: 0.1, maxSpin: 0.01, maxRadius: 3, life: 1000})
+
+      this.color = shipColor
    }
 
    draw(ctx) {

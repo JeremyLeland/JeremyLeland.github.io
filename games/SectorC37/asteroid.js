@@ -13,10 +13,12 @@ export class Asteroid extends Actor {
       ctx.translate(this.x, this.y)
 
       ctx.fillStyle = this.color
+      ctx.strokeStyle = "black"
 
       ctx.beginPath()
       ctx.arc(0, 0, this.radius, 0, Math.PI * 2)
       ctx.fill()
+      ctx.stroke()
 
       ctx.restore()
    }

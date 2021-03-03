@@ -1,5 +1,5 @@
 import { Actor } from "./actor.js"
-import { FireParticle, DebrisParticle, SparkParticle } from "./particles.js"
+import * as Particles from "./particles.js"
 
 export class Ship extends Actor {
    constructor({x, y, radius, health, damage, speed, turnSpeed, 
@@ -98,17 +98,17 @@ export class Ship extends Actor {
       const hitAng = Math.atan2(-entity.dy, -entity.dx)
 
       for (let i = 0; i < 20; i ++) {
-         this.level.addParticle(SparkParticle.fromHitAt(entity.x, entity.y, hitAng))
+         this.level.addParticle(new Particles.Spark(entity.x, entity.y, hitAng))
       }
    }
 
    die() {
       for (let i = 0; i < 50; i ++) {
-         this.level.addParticle(FireParticle.fromExplosionAt(this.x, this.y))
+         this.level.addParticle(new Particles.Fire(this.x, this.y))
       }
 
       for (let i = 0; i < 50; i ++) {
-         this.level.addParticle(DebrisParticle.fromExplosionAt(this.x, this.y, this.radius, this.color))
+         this.level.addParticle(new Particles.ShipDebris(this.x, this.y, this.radius, this.color))
       }
    }
 
