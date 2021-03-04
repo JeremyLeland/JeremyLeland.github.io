@@ -1,10 +1,11 @@
 import { Entity } from "./entity.js"
 
 export class Actor extends Entity {
-   constructor(x, y, dx, dy, angle, dAngle, radius, health, damage) {
+   constructor(x, y, dx, dy, angle, dAngle, radius, health, damage, level) {
       super(x, y, dx, dy, angle, dAngle, radius)
       this.health = health
       this.damage = damage
+      this.level = level
    }
 
    isAlive() {

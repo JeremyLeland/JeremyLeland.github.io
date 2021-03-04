@@ -23,7 +23,7 @@ export class Gun {
       const dx = cosAngFront * this.bulletSpeed
       const dy = sinAngFront * this.bulletSpeed
 
-      const bullet = new Bullet(x, y, dx, dy, this.bulletDamage, this.bulletColor)
+      const bullet = new Bullet(x, y, dx, dy, this.bulletDamage, this.bulletColor, this.level)
       this.level.addActor(bullet)
 
       this.shootDelay = this.timeBetweenShots

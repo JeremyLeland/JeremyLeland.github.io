@@ -17,12 +17,11 @@ export class Asteroid extends Actor {
    }
 
    constructor(x, y, dx, dy, radius, color, level) {
-      const HEALTH_MULT = 10
+      const HEALTH_MULT = 100
       const DAMAGE_MULT = 10
-      super(x, y, dx, dy, 0, 0, radius, radius * HEALTH_MULT, radius * DAMAGE_MULT)
+      super(x, y, dx, dy, 0, 0, radius, radius * HEALTH_MULT, radius * DAMAGE_MULT, level)
 
       this.color = color
-      this.level = level
    }
 
    hitWith(actor) {
@@ -31,18 +30,12 @@ export class Asteroid extends Actor {
       }
       else {
          super.hitWith(actor)
-
-         const hitAng = Math.atan2(-actor.dy, -actor.dx)
-
-         for (let i = 0; i < 20; i ++) {
-            this.level.addParticle(new Particles.Spark(actor.x, actor.y, hitAng))
-         }
       }
    }
 
    die() {
       for (let i = 0; i < this.radius; i ++) {
-         this.level.addParticle(new Particles.RockDebris(this.x, this.y, this.radius, this.color))
+         this.level.addParticle(new Particles.RockDebris(this))
       }
 
       for (let i = 0; i < this.radius / 8; i ++) {

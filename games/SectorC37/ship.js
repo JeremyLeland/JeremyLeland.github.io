@@ -2,9 +2,8 @@ import { Actor } from "./actor.js"
 import * as Particles from "./particles.js"
 
 export class Ship extends Actor {
-   constructor({x, y, radius, health, damage, speed, turnSpeed, 
-                color, level}) {
-      super(x, y, 0, 0, 0, 0, radius, health, damage)
+   constructor({x, y, radius, health, damage, speed, turnSpeed, color, level}) {
+      super(x, y, 0, 0, 0, 0, radius, health, damage, level)
 
       this.goalX = x
       this.goalY = y
@@ -16,7 +15,6 @@ export class Ship extends Actor {
       this.isShooting = false
 
       this.color = color
-      this.level = level
    }
 
    setGuns(...guns) {
@@ -88,23 +86,13 @@ export class Ship extends Actor {
       this.isShooting = false
    }
 
-   hitWith(actor) {
-      super.hitWith(actor)
-
-      const hitAng = Math.atan2(-actor.dy, -actor.dx)
-
-      for (let i = 0; i < 20; i ++) {
-         this.level.addParticle(new Particles.Spark(actor.x, actor.y, hitAng))
-      }
-   }
-
    die() {
       for (let i = 0; i < 50; i ++) {
-         this.level.addParticle(new Particles.Fire(this.x, this.y))
+         this.level.addParticle(new Particles.Fire(this))
       }
 
       for (let i = 0; i < 50; i ++) {
-         this.level.addParticle(new Particles.ShipDebris(this.x, this.y, this.radius, this.color))
+         this.level.addParticle(new Particles.ShipDebris(this))
       }
    }
 

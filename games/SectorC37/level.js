@@ -71,7 +71,7 @@ export class Level {
 
    getActorsNear(actor) {
       // TODO: only return actors close to given actor
-      return this.actors.filter(a => a != actor)
+      return this.actors.filter(a => a != actor && a.isAlive())
    }
 
    spawnEnemies(dt) {

@@ -2,7 +2,7 @@ import { Entity } from "./entity.js"
 
 class Particle extends Entity {
    constructor({startX, startY, startSpread = 0, 
-                dirAngle = 0, dirSpread = Math.PI * 2, 
+                startDX = 0, startDY = 0, dirAngle = 0, dirSpread = Math.PI * 2, 
                 minSpeed = 0, maxSpeed, maxSpin = 0,
                 minRadius = 0, maxRadius, life}) {
       const angle = dirAngle + Math.random() * dirSpread - dirSpread/2
@@ -13,8 +13,8 @@ class Particle extends Entity {
       const y = startY + Math.sin(angle) * dist
 
       const speed = minSpeed + Math.random() * (maxSpeed - minSpeed)
-      const dx = Math.cos(angle) * speed
-      const dy = Math.sin(angle) * speed
+      const dx = startDX + Math.cos(angle) * speed
+      const dy = startDY + Math.sin(angle) * speed
 
       const radius = minRadius + Math.random() * (maxRadius - minRadius)
       
@@ -35,8 +35,9 @@ class Particle extends Entity {
 }
 
 export class Fire extends Particle {
-   constructor(x, y) {
-      super({startX: x, startY: y, maxSpeed: 0.04, maxRadius: 16, life: 1000})
+   constructor(actor) {
+      super({startX: actor.x, startY: actor.y, startDX: actor.dx, startDY: actor.dy,
+             maxSpeed: 0.04, maxRadius: 16, life: 1000})
    }
 
    draw(ctx) {
@@ -95,11 +96,11 @@ export class Spark extends Particle {
 }
 
 export class RockDebris extends Particle {
-   constructor(x, y, asteroidRadius, asteroidColor) {
-      super({startX: x, startY: y, startSpread: asteroidRadius,
+   constructor(asteroid) {
+      super({startX: asteroid.x, startY: asteroid.y, startSpread: asteroid.radius,
              maxSpeed: 0.1, maxSpin: 0.01, maxRadius: 5, life: 1000})
 
-      this.color = asteroidColor
+      this.color = asteroid.color
    }
 
    draw(ctx) {
@@ -120,11 +121,12 @@ export class RockDebris extends Particle {
 }
 
 export class ShipDebris extends Particle {
-   constructor(x, y, shipRadius, shipColor) {
-      super({startX: x, startY: y, startSpread: shipRadius,
+   constructor(ship) {
+      super({startX: ship.x, startY: ship.y, startSpread: ship.radius,
+             startDX: ship.dx, startDY: ship.dy, 
              maxSpeed: 0.1, maxSpin: 0.01, maxRadius: 3, life: 1000})
 
-      this.color = shipColor
+      this.color = ship.color
    }
 
    draw(ctx) {
