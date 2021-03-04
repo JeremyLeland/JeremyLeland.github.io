@@ -1,8 +1,9 @@
 import { Entity } from "./entity.js"
 
 export class Actor extends Entity {
-   constructor(x, y, dx, dy, angle, dAngle, radius, health, damage, level) {
+   constructor(x, y, dx, dy, angle, dAngle, radius, mass, health, damage, level) {
       super(x, y, dx, dy, angle, dAngle, radius)
+      this.mass = mass
       this.health = health
       this.damage = damage
       this.level = level

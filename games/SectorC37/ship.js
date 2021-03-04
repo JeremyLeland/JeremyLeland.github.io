@@ -2,8 +2,8 @@ import { Actor } from "./actor.js"
 import * as Particles from "./particles.js"
 
 export class Ship extends Actor {
-   constructor({x, y, radius, health, damage, speed, turnSpeed, color, level}) {
-      super(x, y, 0, 0, 0, 0, radius, health, damage, level)
+   constructor({x, y, radius, mass, health, damage, speed, turnSpeed, color, level}) {
+      super(x, y, 0, 0, 0, 0, radius, mass, health, damage, level)
 
       this.goalX = x
       this.goalY = y

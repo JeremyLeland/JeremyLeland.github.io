@@ -22,6 +22,7 @@ export class Player extends Ship {
       super({
          x: x, y: y, 
          radius: 10, 
+         mass: 1,
          health: 100, 
          damage: 50, 
          speed: 0.2, 

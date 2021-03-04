@@ -17,20 +17,15 @@ export class Asteroid extends Actor {
    }
 
    constructor(x, y, dx, dy, radius, color, level) {
-      const HEALTH_MULT = 100
+      // Mass, health, and damage based on radius
+      const MASS_MULT = 0.5
+      const HEALTH_MULT = 20
       const DAMAGE_MULT = 10
-      super(x, y, dx, dy, 0, 0, radius, radius * HEALTH_MULT, radius * DAMAGE_MULT, level)
+      super(x, y, dx, dy, 0, 0, 
+            radius, radius * MASS_MULT, radius * HEALTH_MULT, radius * DAMAGE_MULT,
+            level)
 
       this.color = color
-   }
-
-   hitWith(actor) {
-      if (actor instanceof Asteroid) {
-         // TODO: Bounce asteroids off each other?
-      }
-      else {
-         super.hitWith(actor)
-      }
    }
 
    die() {

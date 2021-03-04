@@ -13,9 +13,13 @@ export class Entity {
       return true
    }
 
-   update(dt) {
+   updatePosition(dt) {
       this.x += this.dx * dt
       this.y += this.dy * dt
       this.angle += this.dAngle * dt
+   }
+
+   update(dt) {
+      this.updatePosition(dt)
    }
 }

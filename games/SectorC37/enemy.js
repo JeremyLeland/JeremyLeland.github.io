@@ -22,6 +22,7 @@ export class Enemy extends Ship {
       super({
          x: x, y: y, 
          radius: 10, 
+         mass: 1,
          health: 50, 
          damage: 50, 
          speed: 0.15, 

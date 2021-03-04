@@ -90,21 +90,21 @@ export class Level {
       }
    }
 
-   handleAsteroidCollision(a1, a2) {
+   handleBounce(a1, a2) {
       // See https://ericleong.me/research/circle-circle/#dynamic-circle-circle-collision
+      // TODO: try something from this monster? http://www.euclideanspace.com/physics/dynamics/collision/twod/index.htm
       const diffX = a2.x - a1.x
       const diffY = a2.y - a1.y
       const distBetween = Math.sqrt(diffX * diffX + diffY * diffY)
       const normX = diffX / distBetween
       const normY = diffY / distBetween
-      const m1 = a1.radius, m2 = a2.radius   // Use radius for mass
 
-      const p = 2 * (a1.dx * normX + a1.dy * normY - a2.dx * normX - a2.dy * normY) / (m1 + m2)
+      const p = 2 * (a1.dx * normX + a1.dy * normY - a2.dx * normX - a2.dy * normY) / (a1.mass + a2.mass)
 
-      a1.dx -= p * m1 * normX
-      a1.dy -= p * m1 * normY
-      a2.dx += p * m2 * normX
-      a2.dy += p * m2 * normY
+      a1.dx -= p * a2.mass * normX
+      a1.dy -= p * a2.mass * normY
+      a2.dx += p * a1.mass * normX
+      a2.dy += p * a1.mass * normY
    }
 
    update(dt) {
@@ -119,19 +119,18 @@ export class Level {
             const hitTime = a.timeUntilHit(n)
             if (-dt < hitTime && hitTime < 0) {
                // Roll back actors to time of collision
-               a.x += a.dx * hitTime
-               a.y += a.dy * hitTime
-               n.x += n.dx * hitTime
-               n.y += n.dy * hitTime
+               a.updatePosition(hitTime)
+               n.updatePosition(hitTime)
 
                // Collision response
-               if (a instanceof Asteroid && n instanceof Asteroid) {
-                  this.handleAsteroidCollision(a, n)
-               }
-               else {
-                  a.hitWith(n)
-                  n.hitWith(a)
-               }
+               this.handleBounce(a, n)
+               a.hitWith(n)
+               n.hitWith(a)
+
+               // Finish the update with new velocity
+               // TODO: Do we need this? Can't tell if its having an effect...
+               a.updatePosition(-hitTime)
+               n.updatePosition(-hitTime)
             }
          })
       })
