@@ -1,6 +1,79 @@
 import { Game } from "./game.js"
 import { Level } from "./level.js"
+import { Starfield } from "./starfield.js"
 import { Player } from "./player.js"
+import { Enemy } from "./enemy.js"
+import { Asteroid } from "./asteroid.js"
+
+class GameLevel extends Level {
+   constructor(width, height) {
+      super(width, height)
+
+      this.starfield = new Starfield(this.width, this.height, 1000)
+
+      this.player = new Player(this.width / 2, this.height / 2, this)
+      this.actors.push(this.player)
+
+      this.spawnEnemyDelay = this.timeBetweenEnemies = 12000
+      this.spawnEnemyDelay = this.timeBetweenEnemies = 14000
+
+      // Initial spawns are inside of level, future spawns will be outside level
+      for (let i = 0; i < 5; i ++) {
+         this.addRandomEnemy(this.width/4 + this.width*i/5)
+      }
+
+      for (let i = 0; i < 40; i ++) {
+         this.addRandomAsteroid(this.width/4 + this.width*i/40)
+      }
+   }
+
+   addRandomEnemy(distFromCenter) {
+      const [x, y] = this.getRandomSpawnLocation(distFromCenter)
+      this.addActor(new Enemy(x, y, this))
+   }
+
+   addRandomAsteroid(distFromCenter) {
+      const [x, y] = this.getRandomSpawnLocation(distFromCenter)
+      this.addActor(Asteroid.randomAsteroid(x, y, this))
+   }
+
+   getRandomSpawnLocation(distFromCenter) {
+      const ang = Math.random() * Math.PI * 2
+      const x = Math.cos(ang) * distFromCenter
+      const y = Math.sin(ang) * distFromCenter
+
+      return [x + this.width / 2, y + this.height / 2]
+   }
+
+   spawnEnemies(dt) {
+      this.spawnEnemyDelay -= dt
+      if (this.spawnEnemyDelay < 0) {
+         this.addRandomEnemy(this.width * 1.5)
+         this.spawnEnemyDelay = this.timeBetweenEnemies
+      }
+   }
+
+   spawnAsteroids(dt) {
+      this.spawnAsteroidDelay -= dt
+      if (this.spawnAsteroidDelay < 0) {
+         this.addRandomAsteroid(this.width * 1.5)
+         this.spawnAsteroidDelay = this.timeBetweenAsteroids
+      }
+   }
+
+   update(dt) {
+      this.spawnEnemies(dt)
+      this.spawnAsteroids(dt)
+
+      super.update(dt)
+   }
+
+   draw(ctx) {
+      this.starfield.draw(ctx)
+
+      super.draw(ctx)
+   }
+}
 
 export class SectorC37 extends Game {
    constructor() {
@@ -8,25 +81,12 @@ export class SectorC37 extends Game {
 
       super()
 
-      this.level = new Level(2000, 2000)
-      this.level.initGameLevel()
+      this.level = new GameLevel(2000, 2000)
       this.player = this.level.player
       
       this.canvas.style.cursor = "crosshair"
 
       this.startGame()
-   }
-
-   prepareUI() {
-      super.prepareUI()
-
-      
-   }
-
-   updateDebugUI() {
-      // const str = "e0->e1 = " + this.enemies[0].timeUntilHitShip(this.enemies[1]) +
-      //             "\r\ne1->e0 = " + this.enemies[1].timeUntilHitShip(this.enemies[0])
-      // this.debugUI.textContent = str
    }
 
    updateScroll() {
@@ -37,7 +97,7 @@ export class SectorC37 extends Game {
       this.scrollY = Math.max(0, Math.min(this.level.height - h, this.player.y - h/2))
    }
 
-   controlPlayer(dt) {
+   controlPlayer() {
       const goalX = this.mousex + this.scrollX
       const goalY = this.mousey + this.scrollY
       this.player.setGoal(goalX, goalY)
@@ -53,10 +113,8 @@ export class SectorC37 extends Game {
    update(dt) {
       this.updateScroll()
 
-      this.controlPlayer(dt)
+      this.controlPlayer()
       this.level.update(dt)
-
-      this.updateDebugUI()
    }
 
    draw(ctx) {

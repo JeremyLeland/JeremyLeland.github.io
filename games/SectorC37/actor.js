@@ -92,4 +92,27 @@ export class Actor extends Entity {
          // }
       }
    }
+
+   static handleBounce(a1, a2) {
+      // See https://ericleong.me/research/circle-circle/#dynamic-circle-circle-collision
+      // TODO: try something from this monster? http://www.euclideanspace.com/physics/dynamics/collision/twod/index.htm
+      const diffX = a2.x - a1.x
+      const diffY = a2.y - a1.y
+      const distBetween = Math.sqrt(diffX * diffX + diffY * diffY)
+      const normX = diffX / distBetween
+      const normY = diffY / distBetween
+
+      const p = 2 * (a1.dx * normX + a1.dy * normY - a2.dx * normX - a2.dy * normY) / (a1.mass + a2.mass)
+
+      // console.log(`Before bounce: a1 ${a1.dx}, ${a1.dy}`)
+      // console.log(`Before bounce: a2 ${a2.dx}, ${a2.dy}`)
+
+      a1.dx -= p * a2.mass * normX
+      a1.dy -= p * a2.mass * normY
+      a2.dx += p * a1.mass * normX
+      a2.dy += p * a1.mass * normY
+
+      // console.log(`After bounce: a1 ${a1.dx}, ${a1.dy}`)
+      // console.log(`After bounce: a2 ${a2.dx}, ${a2.dy}`)
+   }
 }

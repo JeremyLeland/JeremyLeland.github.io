@@ -16,6 +16,16 @@ export class Asteroid extends Actor {
       return new Asteroid(x, y, dx, dy, radius, parent.color, parent.level)
    }
 
+   static randomAsteroid(x, y, level) {
+      const dx = Math.random() * 0.02 - 0.01
+      const dy = Math.random() * 0.02 - 0.01
+      const radius = Math.random() * 50 + 20
+      const c = Math.random() * 100 + 100
+      const col = `rgb(${c}, ${c/2}, 0)`
+
+      return new Asteroid(x, y, dx, dy, radius, col, level)
+   }
+
    constructor(x, y, dx, dy, radius, color, level) {
       // Mass, health, and damage based on radius
       const MASS_MULT = 0.5

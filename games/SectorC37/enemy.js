@@ -36,14 +36,20 @@ export class Enemy extends Ship {
       this.targetActor = null
       this.avoidActor = null
 
+      this.setRandomGoal()
+
       this.SHOOT_DISTANCE = 300
       this.SHOOT_ANGLE = 0.5
+   }
+
+   setRandomGoal() {
+      this.setGoal(Math.random() * this.level.width, Math.random() * this.level.height)
    }
 
    checkForGoal() {
       // TODO: also change this after time, in case the goal is somewhere we must avoid?
       if (this.distanceFromPoint(this.goalX, this.goalY) < this.radius * 2) {
-         this.setGoal(Math.random() * this.level.width, Math.random() * this.level.height)
+         this.setRandomGoal()
       }
    }
 
