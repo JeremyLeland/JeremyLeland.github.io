@@ -101,7 +101,7 @@ export class Spark extends Particle {
 
 export class RockDebris extends Particle {
    constructor(asteroid) {
-      super({startX: asteroid.x, startY: asteroid.y, startSpread: asteroid.radius / 2,
+      super({startX: asteroid.x, startY: asteroid.y, startSpread: asteroid.radius,
              maxSpeed: 0.06, maxSpin: 0.01, maxRadius: 5, life: 1500})
 
       this.color = asteroid.color
@@ -112,7 +112,8 @@ export class RockDebris extends Particle {
 
       ctx.translate(this.x, this.y)
 
-      const alpha = Particle.percentageToHex(this.life / this.MAX_LIFE)
+      const slowedPerc = Math.sin(0.5 * Math.PI * this.life / this.MAX_LIFE)
+      const alpha = Particle.percentageToHex(slowedPerc)
 
       ctx.fillStyle = this.color
       ctx.fillStyle = `${ctx.fillStyle}${alpha}`
