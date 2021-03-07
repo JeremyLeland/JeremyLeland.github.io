@@ -22,6 +22,11 @@ class Particle extends Entity {
       this.life = this.MAX_LIFE = life
    }
 
+   static percentageToHex(perc) {
+      // e.g. 0.5 -> '7f'
+      return Math.floor(perc * 255).toString(16).padStart(2, '0')
+   }
+
    isAlive() {
       return this.life > 0
    }
@@ -31,7 +36,6 @@ class Particle extends Entity {
 
       super.update(dt)
    }
-
 }
 
 export class Fire extends Particle {
@@ -97,8 +101,8 @@ export class Spark extends Particle {
 
 export class RockDebris extends Particle {
    constructor(asteroid) {
-      super({startX: asteroid.x, startY: asteroid.y, startSpread: asteroid.radius,
-             maxSpeed: 0.1, maxSpin: 0.01, maxRadius: 5, life: 1000})
+      super({startX: asteroid.x, startY: asteroid.y, startSpread: asteroid.radius / 2,
+             maxSpeed: 0.06, maxSpin: 0.01, maxRadius: 5, life: 1500})
 
       this.color = asteroid.color
    }
@@ -108,8 +112,11 @@ export class RockDebris extends Particle {
 
       ctx.translate(this.x, this.y)
 
+      const alpha = Particle.percentageToHex(this.life / this.MAX_LIFE)
+
       ctx.fillStyle = this.color
-      ctx.strokeStyle = "black"
+      ctx.fillStyle = `${ctx.fillStyle}${alpha}`
+      ctx.strokeStyle = `#000000${alpha}`
 
       ctx.beginPath()
       ctx.arc(0, 0, this.radius, 0, Math.PI * 2)

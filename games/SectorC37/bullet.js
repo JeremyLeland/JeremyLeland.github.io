@@ -3,7 +3,7 @@ import * as Particles from "./particles.js"
 
 export class Bullet extends Actor {
    constructor(x, y, dx, dy, damage, color, level) {
-      super(x, y, dx, dy, 0, 0, 1, 0.1, 1, damage, level)
+      super(x, y, dx, dy, 0, 0, 1, 0.01, 1, damage, level)
 
       this.color = color
 

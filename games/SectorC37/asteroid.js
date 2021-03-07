@@ -2,20 +2,6 @@ import { Actor } from "./actor.js"
 import * as Particles from "./particles.js"
 
 export class Asteroid extends Actor {
-   static fromBiggerAsteroid(parent) {
-      const ang = Math.random() * Math.PI * 2
-      const x = parent.x + Math.cos(ang) * parent.radius
-      const y = parent.y + Math.sin(ang) * parent.radius
-
-      const SPEED = 0.01
-      const dx = parent.dx + Math.cos(ang) * SPEED
-      const dy = parent.dy + Math.sin(ang) * SPEED
-
-      const radius = parent.radius * 0.4
-
-      return new Asteroid(x, y, dx, dy, radius, parent.color, parent.level)
-   }
-
    static randomAsteroid(x, y, level) {
       const dx = Math.random() * 0.02 - 0.01
       const dy = Math.random() * 0.02 - 0.01
@@ -39,12 +25,24 @@ export class Asteroid extends Actor {
    }
 
    die() {
-      for (let i = 0; i < this.radius; i ++) {
+      for (let i = 0; i < this.radius * 2; i ++) {
          this.level.addParticle(new Particles.RockDebris(this))
       }
 
-      for (let i = 0; i < this.radius / 8; i ++) {
-         this.level.addActor(Asteroid.fromBiggerAsteroid(this))
+      const NUM_SMALLER = 3
+      const startAng = Math.random() * Math.PI * 2
+      for (let i = 0; i < NUM_SMALLER; i ++) {
+         const ang = startAng + i * Math.PI * 2 / NUM_SMALLER
+         const x = this.x + Math.cos(ang) * this.radius / 2
+         const y = this.y + Math.sin(ang) * this.radius / 2
+
+         const SPEED = 0.01
+         const dx = this.dx + Math.cos(ang) * SPEED
+         const dy = this.dy + Math.sin(ang) * SPEED
+
+         const radius = this.radius * (Math.random() * 0.2 + 0.2)
+
+         this.level.addActor(new Asteroid(x, y, dx, dy, radius, this.color, this.level))
       }
    }
 
