@@ -1,4 +1,5 @@
 import { Ship } from "./ship.js"
+import { Player } from "./player.js"
 import { Gun } from "./gun.js"
 
 class EnemyGun extends Gun {
@@ -40,6 +41,9 @@ export class Enemy extends Ship {
 
       this.SHOOT_DISTANCE = 300
       this.SHOOT_ANGLE = 0.5
+
+      this.AVOID_TIME = 2000
+      this.TARGET_DIST = 1000
    }
 
    setRandomGoal() {
@@ -53,36 +57,44 @@ export class Enemy extends Ship {
       }
    }
 
-   checkForTarget() {
-      if (this.level.player.isAlive() && this.distanceFrom(this.level.player) < 1000) {
-         this.targetActor = this.level.player
-      }
-      else {
-         this.targetActor = null
-      }
-   }
-
-   checkForAvoid() {
+   evaluateNearbyActors() {
+      // Look for actors to avoid or target
       const nearby = this.level.getActorsNear(this)
 
-      let closestActor = null, closestTime = Number.POSITIVE_INFINITY
+      let closestAvoid = null, closestAvoidTime = Number.POSITIVE_INFINITY
+      let closestPlayer = null, closestPlayerDist = Number.POSITIVE_INFINITY
       nearby.forEach(n => {
+         //
+         // Look for actors to avoid
+         //
          const time = this.timeUntilHit(n, 10)
 
          // Include hits in the near "past", since we may be in our buffer zone
-         if (time > -100 && time < closestTime) {
-            closestActor = n
-            closestTime = time
+         if (time > -100 && time < closestAvoidTime) {
+            closestAvoid = n
+            closestAvoidTime = time
+         }
+
+         //
+         // Look for targets
+         //
+         if (n instanceof Player) {
+            const dist = this.distanceFrom(n)
+
+            if (dist < closestPlayerDist) {
+               closestPlayer = n
+               closestPlayerDist = dist
+            }
          }
       })
 
-      this.avoidActor = closestTime < 2000 ? closestActor : null
+      this.avoidActor = closestAvoidTime < this.AVOID_TIME ? closestAvoid : null
+      this.targetActor = closestPlayerDist < this.TARGET_DIST ? closestPlayer : null
    }
 
    update(dt) {
       this.checkForGoal()
-      this.checkForTarget()
-      this.checkForAvoid()
+      this.evaluateNearbyActors()
 
       // TODO: Flocking?
       // - https://www.red3d.com/cwr/boids/

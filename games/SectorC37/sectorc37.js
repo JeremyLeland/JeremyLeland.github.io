@@ -11,11 +11,8 @@ class GameLevel extends Level {
 
       this.starfield = new Starfield(this.width, this.height, 1000)
 
-      this.player = new Player(this.width / 2, this.height / 2, this)
-      this.actors.push(this.player)
-
       this.spawnEnemyDelay = this.timeBetweenEnemies = 12000
-      this.spawnEnemyDelay = this.timeBetweenEnemies = 14000
+      this.spawnAsteroidDelay = this.timeBetweenAsteroids = 14000
 
       // Initial spawns are inside of level, future spawns will be outside level
       for (let i = 0; i < 5; i ++) {
@@ -77,16 +74,22 @@ class GameLevel extends Level {
 
 export class SectorC37 extends Game {
    constructor() {
-      Game.VERSION = "Sector C37 v0.05"
+      Game.VERSION = "Sector C37 v0.1"
 
       super()
 
       this.level = new GameLevel(2000, 2000)
-      this.player = this.level.player
-      
-      this.canvas.style.cursor = "crosshair"
+      this.spawnDelay = this.timeBeforeSpawn = 1000
+      this.spawnPlayer()
 
+      this.canvas.style.cursor = "crosshair"
       this.startGame()
+   }
+
+   spawnPlayer() {
+      this.player = new Player(this.level.width / 2, this.level.height / 2, this.level)
+      this.level.addActor(this.player)
+      this.spawnDelay = this.timeBeforeSpawn
    }
 
    updateScroll() {
@@ -101,7 +104,7 @@ export class SectorC37 extends Game {
       const goalX = this.mousex + this.scrollX
       const goalY = this.mousey + this.scrollY
       this.player.setGoal(goalX, goalY)
- 
+
       if (this.mouseIsDown) {
          this.player.startShooting()
       }
@@ -113,7 +116,16 @@ export class SectorC37 extends Game {
    update(dt) {
       this.updateScroll()
 
-      this.controlPlayer()
+      if (this.player.isAlive()) {
+         this.controlPlayer()
+      }
+      else {
+         this.spawnDelay -= dt
+         if (this.spawnDelay < 0 && this.mouseIsDown) {
+            this.spawnPlayer()
+         }
+      }
+
       this.level.update(dt)
    }
 
