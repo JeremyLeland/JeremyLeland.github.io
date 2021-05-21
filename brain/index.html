@@ -5,132 +5,148 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
+    .column { float: left; width: 50%; }
     table { border-collapse: collapse; }
     td { border: 1px solid black; }
     td { vertical-align: top; }
+    body { font-family: Arial, Helvetica, sans-serif; }
   </style>
 </head>
 
 <body>
-  <table>
-    <tr>
-      <td>ROOM</td>
-      <td colspan="2">
-        Name:<br>
-        Age:<br>
-        Allergies:
-      </td>
-      <td>
-        ISO<br><br>
-        Contact<br>
-        Enteric<br>
-        Droplet<br>
-      </td>
-      <td>
-        CODE<br><br>
-        Full<br>
-        Partial<br>
-        DNAR<br>
-      </td>
-    </tr>
-    <tr>
-      <td>DX<br><br>Adm:</td>
-      <td colspan="2"></td>
-      <td colspan="2">
-        MD<br>
-        SIP  ACSS  ID  GI  TFM  
-        Nephro  Neuro / IR / Surg  
-        Ortho / Spine  Cardio  Pulm  Trauma
-      </td>
-    </tr>
-    <tr>
-      <td>PMH</td>
-      <td colspan="4">
-        AFib Anemia Asthma CAD Cancer CHF CKD COPD CVA DM2 ESRD EtOH 
-        GERD HPLD HT HTN MI OSA PolySub Psych Seizure TIA Trauma
-      </td>
-    </tr>
-    <tr>
-      <td>Neuro</td>
-      <td>Moves / Follows</td>
-      <td>Neuro✓:<br>CIWA✓:<br></td>
-      <td colspan="2" rowspan="5">
-        IV PICC Midline CVC<br>
-        LAC LFA L____<br>
-        RAC RFA R____<br>
-        Port HD Fistula<br><br>
-        Drips<br><br><br>
-        Drains<br><br><br>
-        PRNs
-      </td>
-    </tr>
-    <tr>
-      <td>C/V</td>
-      <td>AFib / NSR</td>
-      <td>Goal:</td>
-    </tr>
-    <tr>
-      <td>Resp</td>
-      <td>
-        Hi-Flow / NC / Mask / Trach: _____<br><br>
-        Home O2:
-      </td>
-      <td>Sat:</td>
-    </tr>
-    <tr>
-      <td>GI</td>
-      <td>NG / Dob / PEG: ____<br><br>Whole / Crushed</td>
-      <td>Diet:<br><br>BS✓: </td>
-    </tr>
-    <tr>
-      <td>GU</td>
-      <td>
-        BR / Cmd / Urinal / Ext / Foley: ____<br><br>
-        Continent / Urgency / Incontinent
-      </td>
-      <td>BM:</td>
-    </tr>
-    <tr>
-      <td>Skin</td>
-      <td></td>
-      <td>Temp:<br>Turns:<br>DVT:<br></td>
-      <td rowspan="2">
-        WBC _____<br>
-        H/H _____<br>
-        Na _____<br>
-        K _____<br>
-        Ca _____<br>
-        Phos_____<br>
-      </td>
-      <td rowspan="2">
-        Mg _____<br>
-        BUN _____<br>
-        Creat _____<br>
-        Trop _____<br>
-        PT/INR____<br>
-        Lact _____<br>
-      </td>
-    </tr>
-    <tr>
-      <td>Pain</td>
-      <td></td>
-      <td>Mobility:<br>Standby / 1 / 2<br>FWW / Bed</td>
-    </tr>
-    <tr>
-      <td colspan="5">PLAN:</td>
-    </tr>
-    <tr>
-      <td colspan="4">
-        Turns: 8 10 12 14 16 18
-      </td>
-      <td>
-        Insulin:<br>
-        Assess: 8 12 16<br>
-        Meds: 9<br>
-        NIH CHG I/O<br>
-      </td>
-    </tr>
-  </table>
+  <div class="column" id="template">
+    <div style="padding: 5px">
+      <table>
+        <tr>
+          <td><b>ROOM</b></td>
+          <td colspan="2">
+            Name:<br>
+            Age:<br>
+            Allergies:
+          </td>
+          <td>
+            <b>ISO</b><br><br>
+            Contact<br>
+            Enteric<br>
+            Droplet<br>
+          </td>
+          <td>
+            <b>CODE</b><br><br>
+            Full<br>
+            Partial<br>
+            DNAR<br>
+          </td>
+        </tr>
+        <tr>
+          <td><b>DX</b><br><br>Adm:</td>
+          <td colspan="2"></td>
+          <td colspan="2">
+            <b>MD</b><br>
+            SIP  ACSS  ID  GI  TFM  
+            Nephro  Neuro / IR / Surg  
+            Ortho / Spine  Cardio  Pulm  Trauma
+          </td>
+        </tr>
+        <tr>
+          <td><b>PMH</b></td>
+          <td colspan="4">
+            AFib  Anemia  Asthma  CAD  Cancer  CHF  CKD  COPD  CVA  DM2  ESRD  EtOH  
+            GERD  HPLD  HT  HTN  MI  OSA  PolySub  Psych  Seizure  TIA  Trauma
+          </td>
+        </tr>
+        <tr>
+          <td><b>Neuro</b></td>
+          <td>Moves / Follows</td>
+          <td>Neuro✓:<br>CIWA✓:<br></td>
+          <td colspan="2" rowspan="5">
+            <b>IV</b>  PICC  Midline  CVC<br>
+            LAC  LFA  L____<br>
+            RAC  RFA  R____<br>
+            Port  HD  Fistula<br><br>
+            <b>Drips</b><br><br><br>
+            <b>Drains</b><br><br><br>
+            <b>PRNs</b>
+          </td>
+        </tr>
+        <tr>
+          <td><b>C/V</b></td>
+          <td>AFib / NSR</td>
+          <td>Goal:</td>
+        </tr>
+        <tr>
+          <td><b>Resp</b></td>
+          <td>
+            Hi-Flow / NC / Mask / Trach: _____<br><br>
+            Home O2:
+          </td>
+          <td>Sat:</td>
+        </tr>
+        <tr>
+          <td><b>GI</b></td>
+          <td>NG / Dob / PEG: ____<br><br>Whole / Crushed</td>
+          <td>Diet:<br><br>BS✓: </td>
+        </tr>
+        <tr>
+          <td><b>GU</b></td>
+          <td>
+            BR / Cmd / Urinal / Ext / Foley: ____<br><br>
+            Continent / Urgency / Incontinent
+          </td>
+          <td>BM:</td>
+        </tr>
+        <tr>
+          <td><b>Skin</b></td>
+          <td></td>
+          <td>Temp:<br>Turns:<br>DVT:<br></td>
+          <td rowspan="2">
+            <b>WBC</b> _____<br>
+            <b>H/H</b> _____<br>
+            <b>Na</b> _____<br>
+            <b>K</b> _____<br>
+            <b>Ca</b> _____<br>
+            <b>Phos</b>_____<br>
+          </td>
+          <td rowspan="2">
+            <b>Mg</b> _____<br>
+            <b>BUN</b> _____<br>
+            <b>Creat</b> _____<br>
+            <b>Trop</b> _____<br>
+            <b>PT/INR</b>____<br>
+            <b>Lact</b> _____<br>
+          </td>
+        </tr>
+        <tr>
+          <td><b>Pain</b></td>
+          <td></td>
+          <td>Mobility:<br>Standby / 1 / 2<br>FWW / Bed</td>
+        </tr>
+        <tr>
+          <td colspan="5"><b>PLAN:</b></td>
+        </tr>
+        <tr>
+          <td colspan="4">
+            <b>Turns:</b> 8 10 12 14 16 18
+          </td>
+          <td>
+            <b>Insulin:</b><br>
+            <b>Assess:</b> 8 12 16<br>
+            <b>Meds:</b> 9<br>
+            <b>NIH CHG I/O</b><br>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <div class="column" id="front-right"></div>
+  <div class="column" id="back-left"></div>
+  <div class="column" id="back-right"></div>
+
+  <script>
+    const templateHTML = document.getElementById("template").innerHTML;
+    document.getElementById("front-right").innerHTML = templateHTML;
+    document.getElementById("back-left").innerHTML = templateHTML;
+    document.getElementById("back-right").innerHTML = templateHTML;
+  </script>
 </body>
 
 </html>
