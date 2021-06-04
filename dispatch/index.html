@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dispatch</title>
+  <link rel="stylesheet" href="styles.css">
+  <script type="text/javascript" src="dispatch.js"></script>
+</head>
+
+<body>
+  <div id="teams">
+    <button>New Team</button>
+    <table id="team_table">
+      <!-- <th>Team</th>
+      <th>Status</th>
+      <tr>
+        <td>Team 1</td>
+        <td>
+          <select>
+            <option value="none" selected disabled hidden>Available</option>
+            <option value="call1">Call 1</option>
+            <option value="call2">Call 2</option>
+            <option value="call3">Call 3</option>
+            <option value="unavailable">Unavilable</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td>Team 2</td>
+        <td>Available</td>
+      </tr>
+      <tr>
+        <td>Team 3</td>
+        <td>Available</td>
+      </tr> -->
+    </table>
+  </div>
+
+  <div id="calls">
+    <button>New Call</button>
+    <table id="call_table">
+      <!-- <th>Description</th>
+      <th>Location</th>
+      <th>Start</th>
+      <th>Teams</th>
+      <th>End</th>
+      <th>Disposition</th>
+      <tr>
+        <td>ETOH</td>
+        <td>Stage Left Cafe</td>
+        <td>19:28</td>
+        <td>Team 1, Team 2<button>Add</button></td>
+        <td>Active</td>
+        <td>Clinic</td>
+      </tr> -->
+    </table>
+  </div>
+</body>
+
+<script>
+  document.getElementById('team_table').innerHTML = getTeamTableHTML();
+  document.getElementById('call_table').innerHTML = getCallTableHTML();
+</script>
+
+</html>

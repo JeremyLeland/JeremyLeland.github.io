@@ -1,0 +1,25 @@
+#teams {
+  background-color: burlywood;
+  float: right;
+  width: 25%;
+}
+
+#teams tr:nth-child(odd) {
+  background-color: bisque;
+}
+#teams tr:nth-child(even) {
+  background-color: beige;
+}
+
+#calls {
+  background-color: teal;
+  float: left;
+  width: 75%;
+}
+
+#calls tr:nth-child(odd) {
+  background-color: lightblue;
+}
+#calls tr:nth-child(even) {
+  background-color: lightcyan;
+}
