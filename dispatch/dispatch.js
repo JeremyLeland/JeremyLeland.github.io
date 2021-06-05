@@ -26,8 +26,16 @@ class Team {
   }
 }
 
+class Log {
+  constructor(message) {
+    this.time = new Date();
+    this.message = message;
+  }
+}
+
 const calls = [];
 const teams = [];
+const logs = [];
 
 teams.push(new Team(1, 'Team 1'));
 teams.push(new Team(2, 'Team 2'));
@@ -60,7 +68,7 @@ function getCallTableHTML() {
       <td>${call.location}</td>
       <td>${getFormattedTime(call.startTime)}</td>
       <td>
-        ${[...call.teams].map(team => `${team.name}<br>`).join('')}
+        ${[...call.teams].sort((a, b) => a.id - b.id).map(team => `${team.name}<br>`).join('')}
         ${getAssignSelectorHTML(call)}
       </td>
       <td>${call.endTime}</td>
@@ -122,6 +130,25 @@ function getStatusOptionHTML(team, status) {
 }
 
 //
+// Logs
+//
+
+function getLogTableHTML() {
+  return `<table>
+    <tr>
+      <th>Time</th>
+      <th>Message</th>
+    </tr>
+  ${logs.map(log => `
+    <tr>
+      <td>${getFormattedTime(log.time)}</td>
+      <td>${log.message}</td>
+    </tr>
+  `).join('')}
+  </table>`;
+}
+
+//
 // Misc
 //
 
@@ -130,7 +157,7 @@ function assignTeam(teamID, callID) {
 }
 
 function setTeamStatus(teamID, status) {
-  const team = teams.find(t => t.id == teamID);
+  const team = teamFromID(teamID);
   team.status = status;
 
   const currentCall = calls.find(c => c.teams.has(team));
@@ -139,19 +166,38 @@ function setTeamStatus(teamID, status) {
   }
 
   if (status != 'Ready' && status != 'Busy') {
-    const call = calls.find(c => c.id == status);
+    const call = callFromID(status);
 
     if (call) {
       call.teams.add(team);
+      logMessage(`Assigning ${team} to ${call}`);
     }
+  }
+  else {
+    logMessage(`${teamFromID(teamID)} is now ${status}`);
   }
 
   updateDisplay();
 }
 
+function teamFromID(teamID) {
+  return teams.find(t => t.id == teamID);
+}
+
+function callFromID(callID) {
+  return calls.find(c => c.id == callID);
+}
+
+function logMessage(message) {
+  const log = new Log(message);
+  logs.push(log);
+  console.log(`${getFormattedTime(log.time)}: ${log.message}`);
+}
+
 function updateDisplay() {
   document.getElementById('team_table').innerHTML = getTeamTableHTML();
   document.getElementById('call_table').innerHTML = getCallTableHTML();
+  document.getElementById('log_table').innerHTML = getLogTableHTML();
 }
 
 function getFormattedTime(time) {
