@@ -4,9 +4,13 @@ class Call {
     this.description = description;
     this.location = location;
     this.startTime = new Date();
-    this.teams = [];
+    this.teams = new Set();
     this.endTime = null;
     this.disposition = null;
+  }
+
+  toString() {
+    return `Call ${this.id}`;
   }
 }
 
@@ -16,10 +20,14 @@ class Team {
     this.name = name;
     this.status = 'Ready';
   }
+
+  toString() {
+    return this.name;
+  }
 }
 
-var calls = [];
-var teams = [];
+const calls = [];
+const teams = [];
 
 teams.push(new Team(1, 'Team 1'));
 teams.push(new Team(2, 'Team 2'));
@@ -52,7 +60,7 @@ function getCallTableHTML() {
       <td>${call.description}</td>
       <td>${call.location}</td>
       <td>${getFormattedTime(call.startTime)}</td>
-      <td>${call.teams.map(team => team.name).join('')}<button>Assign Team</button></td>
+      <td>${[...call.teams].map(team => `${team.name}<br>`).join('')}<button>Assign Team</button></td>
       <td>${call.endTime}</td>
       <td>${call.disposition}</td>
     </tr>
@@ -76,17 +84,40 @@ function getTeamTableHTML() {
 }
 
 function getStatusSelectorHTML(team) {
-  var options = ['Ready', ...calls.map(call => `Call ${call.id}`), 'Busy'];
-
   return `<select onchange='setTeamStatus(${team.id}, this.value)'>
-  ${options.map(o => `
-    <option ${team.status == o ? 'selected disabled hidden' : ''}>${o}</option>
-  `).join('')}
+    ${getStatusOptionHTML(team, 'Ready')}
+    ${calls.map(c => getStatusOptionHTML(team, c)).join('')}
+    ${getStatusOptionHTML(team, 'Busy')}
   </select>`;
 }
 
+function getStatusOptionHTML(team, status) {
+  return `<option
+    ${team.status == status ? ' selected disabled hidden ' : ''}
+    ${status instanceof Call ? (status.teams.size == 0 ? ' class="bold" ' : ' class="italic"') : ''}
+  >${status}</option>`;
+}
+
 function setTeamStatus(teamID, status) {
-  teams.find(e => e.id == teamID).status = status;
+  const team = teams.find(t => t.id == teamID);
+  team.status = status;
+
+  const currentCall = calls.find(c => c.teams.has(team));
+  if (currentCall) {
+    currentCall.teams.delete(team);
+  }
+
+  if (status != 'Ready' && status != 'Busy') {
+    const newCallID = status.match(/^Call\s(\d+)/)[1];
+    if (newCallID) {
+      const call = calls.find(c => c.id == newCallID);
+
+      if (call) {
+        call.teams.add(team);
+      }
+    }
+  }
+
   updateDisplay();
 }
 
