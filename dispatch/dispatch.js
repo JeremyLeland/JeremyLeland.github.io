@@ -11,25 +11,32 @@ class Call {
 }
 
 class Team {
-  constructor(name) {
+  constructor(id, name) {
+    this.id = id;
     this.name = name;
-    this.status = 'Available';
+    this.status = 'Ready';
   }
 }
 
 var calls = [];
 var teams = [];
 
-teams.push(new Team('Team 1'), new Team('Team 2'), new Team('Team 3'));
+teams.push(new Team(1, 'Team 1'));
+teams.push(new Team(2, 'Team 2'));
+teams.push(new Team(3, 'Team 3'));
 
 calls.push(new Call(1, 'ETOH', 'Stage Right Cafe'));
 calls.push(new Call(2, 'ETOH', 'North Gate'));
 calls.push(new Call(3, 'Fall', 'Stage Left Stairs'));
-calls.push(new Call(4, 'Unk', 'Stage Right Cafe'));
+calls.push(new Call(4, 'Unknown', 'Stage Right Cafe'));
+
+function updateDisplay() {
+  document.getElementById('team_table').innerHTML = getTeamTableHTML();
+  document.getElementById('call_table').innerHTML = getCallTableHTML();
+}
 
 function getCallTableHTML() {
-  return `
-  <table>
+  return `<table>
     <tr>
       <th>ID</th>
       <th>Description</th>
@@ -45,32 +52,45 @@ function getCallTableHTML() {
       <td>${call.description}</td>
       <td>${call.location}</td>
       <td>${getFormattedTime(call.startTime)}</td>
-      <td>${call.teams.map(team => team.name).join('')}</td>
+      <td>${call.teams.map(team => team.name).join('')}<button>Assign Team</button></td>
       <td>${call.endTime}</td>
       <td>${call.disposition}</td>
     </tr>
   `).join('')}
-  </table>
-  `;
+  </table>`;
 }
 
 function getTeamTableHTML() {
-  return `
-  <table>
+  return `<table>
     <tr>
       <th>Team</th>
       <th>Status</th>
     </tr>
   ${teams.map(team => `
     <tr>
-      <td>${team.name}</td>
-      <td>${team.status}</td>
+      <td class="${team.status == 'Ready' ? 'ready' : 'busy'}">${team.name}</td>
+      <td>${getStatusSelectorHTML(team)}</td>
     </tr>
   `).join('')}
-  </table>
-  `;
+  </table>`;
+}
+
+function getStatusSelectorHTML(team) {
+  var options = ['Ready', ...calls.map(call => `Call ${call.id}`), 'Busy'];
+
+  return `<select onchange='setTeamStatus(${team.id}, this.value)'>
+  ${options.map(o => `
+    <option ${team.status == o ? 'selected disabled hidden' : ''}>${o}</option>
+  `).join('')}
+  </select>`;
+}
+
+function setTeamStatus(teamID, status) {
+  teams.find(e => e.id == teamID).status = status;
+  updateDisplay();
 }
 
 function getFormattedTime(time) {
-  return [time.getHours(), time.getMinutes()].map(e => e.toString().padStart(2, '0')).join(':');
+  const parts = [time.getHours(), time.getMinutes()];
+  return parts.map(e => e.toString().padStart(2, '0')).join(':');
 }

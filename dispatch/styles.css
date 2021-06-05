@@ -1,9 +1,9 @@
+/* Teams */
 #teams {
   background-color: burlywood;
   float: right;
   width: 25%;
 }
-
 #teams tr:nth-child(odd) {
   background-color: bisque;
 }
@@ -11,15 +11,26 @@
   background-color: beige;
 }
 
+/* Calls */
 #calls {
   background-color: teal;
   float: left;
   width: 75%;
 }
-
 #calls tr:nth-child(odd) {
   background-color: lightblue;
 }
 #calls tr:nth-child(even) {
   background-color: lightcyan;
+}
+
+/* Text */
+.ready {
+  color: green;
+  font-weight: bold;
+}
+
+.busy {
+  color: red;
+  font-style: italic;
 }
