@@ -104,11 +104,20 @@ function getTeamTableHTML() {
     </tr>
   ${teams.map(team => `
     <tr>
-      <td class="${team.status == 'Ready' ? 'ready' : 'busy'}">${team.name}</td>
+      <td contenteditable="true"
+        onblur='setTeamName(${team.id}, this.innerText)'
+        onkeydown='onKeyDown(event)'
+        class="${team.status == 'Ready' ? 'ready' : 'busy'}">${team.name}</td>
       <td>${getStatusSelectorHTML(team)}</td>
     </tr>
   `).join('')}
   </table>`;
+}
+
+function onKeyDown(event) {
+  if (event.keyCode == 13) { 
+    event.target.blur();
+  }
 }
 
 function getStatusSelectorHTML(team) {
@@ -154,6 +163,17 @@ function getLogTableHTML() {
 
 function assignTeam(teamID, callID) {
   setTeamStatus(teamID, callID);
+}
+
+function setTeamName(teamID, name) {
+  const team = teamFromID(teamID);
+  const oldName = team.name;
+
+  if (oldName != name) {
+    team.name = name;
+    logMessage(`${oldName} changed name to ${name}`);
+    updateDisplay();
+  }
 }
 
 function setTeamStatus(teamID, status) {
