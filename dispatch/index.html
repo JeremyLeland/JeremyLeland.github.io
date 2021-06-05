@@ -16,7 +16,7 @@
   </div>
 
   <div id="teams">
-    <button>New Team</button>
+    <button onclick='newTeam()'>New Team</button>
     <table id="team_table"></table>
   </div>
 
@@ -26,7 +26,11 @@
 </body>
 
 <script>
-  updateDisplay();
+  calls.push(new Call(1, 'ETOH', 'Stage Right Cafe'));
+  calls.push(new Call(2, 'ETOH', 'North Gate'));
+  calls.push(new Call(3, 'Fall', 'Stage Left Stairs'));
+  calls.push(new Call(4, 'Unknown', 'Stage Right Cafe'));
+
 </script>
 
 </html>

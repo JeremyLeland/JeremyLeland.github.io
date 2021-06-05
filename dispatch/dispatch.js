@@ -15,9 +15,9 @@ class Call {
 }
 
 class Team {
-  constructor(id, name) {
+  constructor(id) {
     this.id = id;
-    this.name = name;
+    this.name = `Team ${id}`;
     this.status = 'Ready';
   }
 
@@ -37,14 +37,8 @@ const calls = [];
 const teams = [];
 const logs = [];
 
-teams.push(new Team(1, 'Team 1'));
-teams.push(new Team(2, 'Team 2'));
-teams.push(new Team(3, 'Team 3'));
-
-calls.push(new Call(1, 'ETOH', 'Stage Right Cafe'));
-calls.push(new Call(2, 'ETOH', 'North Gate'));
-calls.push(new Call(3, 'Fall', 'Stage Left Stairs'));
-calls.push(new Call(4, 'Unknown', 'Stage Right Cafe'));
+var nextCallID = 1;
+var nextTeamID = 1;
 
 //
 // Call Table
@@ -104,20 +98,15 @@ function getTeamTableHTML() {
     </tr>
   ${teams.map(team => `
     <tr>
-      <td contenteditable="true"
+      <td id="team_${team.id}_name" contenteditable="true"
         onblur='setTeamName(${team.id}, this.innerText)'
-        onkeydown='onKeyDown(event)'
+        onfocus='selectAllText(this.id)'
+        onkeydown='blurOnEnter(event)'
         class="${team.status == 'Ready' ? 'ready' : 'busy'}">${team.name}</td>
       <td>${getStatusSelectorHTML(team)}</td>
     </tr>
   `).join('')}
   </table>`;
-}
-
-function onKeyDown(event) {
-  if (event.keyCode == 13) { 
-    event.target.blur();
-  }
 }
 
 function getStatusSelectorHTML(team) {
@@ -158,11 +147,22 @@ function getLogTableHTML() {
 }
 
 //
-// Misc
+// Actions
 //
 
 function assignTeam(teamID, callID) {
   setTeamStatus(teamID, callID);
+}
+
+function newTeam() {
+  const team = new Team(nextTeamID++);
+  teams.push(team);
+
+  logMessage(`New team added: ${team.name}`);
+  updateDisplay();
+
+  var td = document.getElementById(`team_${team.id}_name`);
+  td.focus();
 }
 
 function setTeamName(teamID, name) {
@@ -190,7 +190,13 @@ function setTeamStatus(teamID, status) {
 
     if (call) {
       call.teams.add(team);
-      logMessage(`Assigning ${team} to ${call}`);
+
+      if (currentCall) {
+        logMessage(`Reassigning ${team} from ${currentCall} to ${call}`);
+      }
+      else {
+        logMessage(`Assigning ${team} to ${call}`);
+      }
     }
   }
   else {
@@ -199,6 +205,10 @@ function setTeamStatus(teamID, status) {
 
   updateDisplay();
 }
+
+//
+// Util
+//
 
 function teamFromID(teamID) {
   return teams.find(t => t.id == teamID);
@@ -223,4 +233,19 @@ function updateDisplay() {
 function getFormattedTime(time) {
   const parts = [time.getHours(), time.getMinutes()];
   return parts.map(e => e.toString().padStart(2, '0')).join(':');
+}
+
+function selectAllText(id) {
+  const p = document.getElementById(id);
+  const s = window.getSelection();
+  const r = document.createRange();
+  r.selectNodeContents(p);
+  s.removeAllRanges();
+  s.addRange(r);
+}
+
+function blurOnEnter(event) {
+  if (event.keyCode == 13) { 
+    event.target.blur();
+  }
 }
