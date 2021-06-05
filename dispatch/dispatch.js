@@ -9,9 +9,13 @@ class Call {
     this.disposition = null;
   }
 
-  toString() {
-    return `Call ${this.id}`;
-  }
+  toString() { return `Call ${this.id}`; }
+
+  // UI elements IDs
+  descriptionElementID() { return `call_${this.id}_description`; }
+  locationElementID()    { return `call_${this.id}_location`; }
+  startTimeElementID()   { return `call_${this.id}_startTime`; }
+  endTimeElementID()     { return `call_${this.id}_endTime`; }
 }
 
 class Team {
@@ -21,9 +25,10 @@ class Team {
     this.status = 'Ready';
   }
 
-  toString() {
-    return this.name;
-  }
+  toString() { return this.name; }
+
+  // UI elements IDs
+  nameElementID() { return `team_${this.id}_name`; }
 }
 
 class Log {
@@ -39,6 +44,12 @@ const logs = [];
 
 var nextCallID = 1;
 var nextTeamID = 1;
+
+const editableTemplate = `
+  contenteditable="true" 
+  onfocus='selectAllText(this.id)' 
+  onkeydown='blurOnEnter(event)'
+`;
 
 //
 // Call Table
@@ -58,14 +69,18 @@ function getCallTableHTML() {
   ${calls.map(call => `
     <tr>
       <td>${call.id}</td>
-      <td>${call.description}</td>
-      <td>${call.location}</td>
-      <td>${getFormattedTime(call.startTime)}</td>
+      <td id="${call.descriptionElementID()}" 
+        ${editableTemplate}
+        onblur='setCallDescription(${call.id}, this.innerText)'>${call.description}</td>
+      <td id="${call.locationElementID()}"
+        ${editableTemplate}
+        onblur='setCallLocation(${call.id}, this.innerText)'>${call.location}</td>
+      <td id="${call.startTimeElementID()}"   ${editableTemplate}>${getFormattedTime(call.startTime)}</td>
       <td>
         ${[...call.teams].sort((a, b) => a.id - b.id).map(team => `${team.name}<br>`).join('')}
         ${getAssignSelectorHTML(call)}
       </td>
-      <td>${call.endTime}</td>
+      <td ${editableTemplate}>${call.endTime}</td>
       <td>${call.disposition}</td>
     </tr>
   `).join('')}
@@ -98,10 +113,9 @@ function getTeamTableHTML() {
     </tr>
   ${teams.map(team => `
     <tr>
-      <td id="team_${team.id}_name" contenteditable="true"
+      <td id="${team.nameElementID()}"
+        ${editableTemplate}
         onblur='setTeamName(${team.id}, this.innerText)'
-        onfocus='selectAllText(this.id)'
-        onkeydown='blurOnEnter(event)'
         class="${team.status == 'Ready' ? 'ready' : 'busy'}">${team.name}</td>
       <td>${getStatusSelectorHTML(team)}</td>
     </tr>
@@ -150,6 +164,32 @@ function getLogTableHTML() {
 // Actions
 //
 
+function setCallDescription(callID, description) {
+  const call = callFromID(callID);
+  const oldDescription = call.description;
+
+  if (oldDescription != description) {
+    call.description = description;
+    logMessage(`${call} changed description from "${oldDescription}" to "${description}"`);
+    updateDisplay();
+  }
+
+  window.getSelection().removeAllRanges();
+}
+
+function setCallLocation(callID, location) {
+  const call = callFromID(callID);
+  const oldLocation = call.location;
+
+  if (oldLocation != location) {
+    call.location = location;
+    logMessage(`${call} changed location from "${oldLocation}" to "${location}"`);
+    updateDisplay();
+  }
+
+  window.getSelection().removeAllRanges();
+}
+
 function assignTeam(teamID, callID) {
   setTeamStatus(teamID, callID);
 }
@@ -161,7 +201,7 @@ function newTeam() {
   logMessage(`New team added: ${team.name}`);
   updateDisplay();
 
-  var td = document.getElementById(`team_${team.id}_name`);
+  var td = document.getElementById(team.nameElementID());
   td.focus();
 }
 
@@ -174,6 +214,8 @@ function setTeamName(teamID, name) {
     logMessage(`${oldName} changed name to ${name}`);
     updateDisplay();
   }
+
+  window.getSelection().removeAllRanges();
 }
 
 function setTeamStatus(teamID, status) {
