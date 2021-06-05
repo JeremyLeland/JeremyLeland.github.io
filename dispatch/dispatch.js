@@ -38,10 +38,9 @@ calls.push(new Call(2, 'ETOH', 'North Gate'));
 calls.push(new Call(3, 'Fall', 'Stage Left Stairs'));
 calls.push(new Call(4, 'Unknown', 'Stage Right Cafe'));
 
-function updateDisplay() {
-  document.getElementById('team_table').innerHTML = getTeamTableHTML();
-  document.getElementById('call_table').innerHTML = getCallTableHTML();
-}
+//
+// Call Table
+//
 
 function getCallTableHTML() {
   return `<table>
@@ -60,13 +59,34 @@ function getCallTableHTML() {
       <td>${call.description}</td>
       <td>${call.location}</td>
       <td>${getFormattedTime(call.startTime)}</td>
-      <td>${[...call.teams].map(team => `${team.name}<br>`).join('')}<button>Assign Team</button></td>
+      <td>
+        ${[...call.teams].map(team => `${team.name}<br>`).join('')}
+        ${getAssignSelectorHTML(call)}
+      </td>
       <td>${call.endTime}</td>
       <td>${call.disposition}</td>
     </tr>
   `).join('')}
   </table>`;
 }
+
+function getAssignSelectorHTML(call) {
+  return `<select onchange='assignTeam(this.value, ${call.id})'>
+    <option selected disabled hidden>Assign Team</option>
+    ${teams.map(t => getAssignOptionHTML(t)).join('')}
+  </select>`;
+}
+
+function getAssignOptionHTML(team) {
+  return `<option
+    value="${team.id}"
+    class="${team.status == 'Ready' ? 'bold' : 'italic'}"
+  >${team}</option>`;
+}
+
+//
+// Team Table
+//
 
 function getTeamTableHTML() {
   return `<table>
@@ -84,18 +104,29 @@ function getTeamTableHTML() {
 }
 
 function getStatusSelectorHTML(team) {
+  var statuses = ['Ready', ...calls, 'Busy'];
+
   return `<select onchange='setTeamStatus(${team.id}, this.value)'>
-    ${getStatusOptionHTML(team, 'Ready')}
-    ${calls.map(c => getStatusOptionHTML(team, c)).join('')}
-    ${getStatusOptionHTML(team, 'Busy')}
+    ${statuses.map(s => getStatusOptionHTML(team, s)).join('')}
   </select>`;
 }
 
 function getStatusOptionHTML(team, status) {
+  const statusVal = status instanceof Call ? status.id : status;
+
   return `<option
-    ${team.status == status ? ' selected disabled hidden ' : ''}
-    ${status instanceof Call ? (status.teams.size == 0 ? ' class="bold" ' : ' class="italic"') : ''}
+    ${team.status == statusVal ? ' selected disabled hidden ' : ''}
+    value="${statusVal}"
+    ${status instanceof Call ? `class="${status.teams.size == 0 ? 'bold' : 'italic'}` : ''}"
   >${status}</option>`;
+}
+
+//
+// Misc
+//
+
+function assignTeam(teamID, callID) {
+  setTeamStatus(teamID, callID);
 }
 
 function setTeamStatus(teamID, status) {
@@ -108,17 +139,19 @@ function setTeamStatus(teamID, status) {
   }
 
   if (status != 'Ready' && status != 'Busy') {
-    const newCallID = status.match(/^Call\s(\d+)/)[1];
-    if (newCallID) {
-      const call = calls.find(c => c.id == newCallID);
+    const call = calls.find(c => c.id == status);
 
-      if (call) {
-        call.teams.add(team);
-      }
+    if (call) {
+      call.teams.add(team);
     }
   }
 
   updateDisplay();
+}
+
+function updateDisplay() {
+  document.getElementById('team_table').innerHTML = getTeamTableHTML();
+  document.getElementById('call_table').innerHTML = getCallTableHTML();
 }
 
 function getFormattedTime(time) {
