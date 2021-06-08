@@ -24,6 +24,28 @@
   background-color: beige;
 }
 
+/* Custom selectors */
+.custom-select {
+  position: relative;
+  width: 100px;
+}
+.select-selected {
+  background-color: yellowgreen;
+  cursor: pointer;
+}
+.select-items {
+  background-color: greenyellow;
+  cursor: pointer;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 99;
+}
+.select-items div:hover {
+  background-color: lime;
+}
+
 /* Logs */
 #logs {
   background-color: lightsteelblue;

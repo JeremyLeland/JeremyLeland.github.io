@@ -53,7 +53,7 @@ class Call extends TableDisplay {
     this.td['startTime'].innerText = getFormattedTime(this.startTime);
   }
 
-  toString() { return `Call ${this.id}: "${this.description}" @ ${this.location}`; }
+  toString() { return `Call ${this.id} (${this.description} @ ${this.location})`; }
 }
 
 class Team extends TableDisplay {
@@ -64,17 +64,49 @@ class Team extends TableDisplay {
     this.name = `Team ${id}`;
     this.status = 'Ready';
 
-    ['name', 'status'].forEach(e => {
-      this.createTableData(e);
+    ['name', 'status'].forEach(e => { this.createTableData(e); });
+    this.makeTableDataContentEditable('name');
+
+    this.td['status'].innerText = '';
+
+    this.statusDiv = document.createElement('div');
+    this.statusDiv.setAttribute('class', 'custom-select');
+
+    this.statusButton = document.createElement('div');
+    this.statusButton.setAttribute('class', 'select-selected');
+    this.statusButton.innerText = this.status;
+    this.statusButton.addEventListener('click', () => {
+      this.statusDiv.appendChild(getStatusSelectorDiv(this));
+    });
+    this.statusButton.addEventListener('blur', () => {
+      this.statusDiv.removeChild(this.statusDiv.childNodes[1]);
+      this.statusButton.innerText = this.status;
     });
 
-    this.makeTableDataContentEditable('name');
+    this.statusDiv.appendChild(this.statusButton);
+
+    //this.td['status'].removeChild(this.td['status'].childNodes[0]);
+    this.td['status'].appendChild(this.statusDiv);
   }
 
   toString() { return this.name; }
 
-  // UI elements IDs
-  nameElementID() { return `team_${this.id}_name`; }
+  setStatus(status) {
+    if (this.status instanceof Call) {
+      this.status.teams.delete(this);
+      logMessage(`Reassigning ${this} from ${this.status} to ${status}`)
+    }
+    else {
+      logMessage(`Assigning ${this} to ${status}`);
+    }
+
+    this.status = status;
+    this.statusButton.innerText = this.status;
+
+    if (this.status instanceof Call) {
+      this.status.teams.add(this);
+    }
+  }
 }
 
 class Log {
@@ -95,78 +127,31 @@ var nextTeamID = 1;
 // Call Table
 //
 
-function getAssignSelectorHTML(call) {
-  return `<select onchange='assignTeam(this.value, ${call.id})'>
-    <option selected disabled hidden>Assign Team</option>
-    ${teams.map(t => getAssignOptionHTML(t)).join('')}
-  </select>`;
-}
-
-function getAssignOptionHTML(team) {
-  return `<option
-    value="${team.id}"
-    class="${team.status == 'Ready' ? 'bold' : 'italic'}"
-  >${team}</option>`;
-}
-
 //
 // Team Table
 //
 
-function getTeamTableHTML() {
-  return `<table>
-    <tr>
-      <th>Team</th>
-      <th>Status</th>
-    </tr>
-  ${teams.map(team => `
-    <tr>
-      <td id="${team.nameElementID()}"
-        ${editableTemplate}
-        onblur='setTeamName(${team.id}, this.innerText)'
-        class="${team.status == 'Ready' ? 'ready' : 'busy'}">${team.name}</td>
-      <td>${getStatusSelectorHTML(team)}</td>
-    </tr>
-  `).join('')}
-  </table>`;
+function getStatusSelectorDiv(team) {
+  const selectItems = document.createElement('div');
+  selectItems.setAttribute('class', 'select-items');
+
+  const statuses = ['Ready', ...calls, 'Busy'];
+  
+  statuses.forEach(status => {
+    if (team.status != status) {
+      const item = document.createElement('div');
+      item.innerText = status;
+      item.addEventListener('click', () => {
+        team.setStatus(status)
+        item.parentElement.parentElement.removeChild(item.parentElement);
+      });
+      selectItems.appendChild(item);
+    }
+  });
+  
+  return selectItems;
 }
 
-function getStatusSelectorHTML(team) {
-  var statuses = ['Ready', ...calls, 'Busy'];
-
-  return `<select onchange='setTeamStatus(${team.id}, this.value)'>
-    ${statuses.map(s => getStatusOptionHTML(team, s)).join('')}
-  </select>`;
-}
-
-function getStatusOptionHTML(team, status) {
-  const statusVal = status instanceof Call ? status.id : status;
-
-  return `<option
-    ${team.status == statusVal ? ' selected disabled hidden ' : ''}
-    value="${statusVal}"
-    ${status instanceof Call ? `class="${status.teams.size == 0 ? 'bold' : 'italic'}` : ''}"
-  >${status}</option>`;
-}
-
-//
-// Logs
-//
-
-function getLogTableHTML() {
-  return `<table>
-    <tr>
-      <th>Time</th>
-      <th>Message</th>
-    </tr>
-  ${logs.map(log => `
-    <tr>
-      <td>${getFormattedTime(log.time)}</td>
-      <td>${log.message}</td>
-    </tr>
-  `).join('')}
-  </table>`;
-}
 
 //
 // Actions
@@ -182,10 +167,6 @@ function newCall() {
   logMessage(`Created ${call}`);
 }
 
-function assignTeam(teamID, callID) {
-  setTeamStatus(teamID, callID);
-}
-
 function newTeam() {
   const team = new Team(nextTeamID++);
   teams.push(team);
@@ -196,71 +177,14 @@ function newTeam() {
   logMessage(`Created ${team}`);
 }
 
-function setTeamName(teamID, name) {
-  const team = teamFromID(teamID);
-  const oldName = team.name;
-
-  if (oldName != name) {
-    team.name = name;
-    logMessage(`${oldName} changed name to ${name}`);
-    updateDisplay();
-  }
-
-  window.getSelection().removeAllRanges();
-}
-
-function setTeamStatus(teamID, status) {
-  const team = teamFromID(teamID);
-  team.status = status;
-
-  const currentCall = calls.find(c => c.teams.has(team));
-  if (currentCall) {
-    currentCall.teams.delete(team);
-  }
-
-  if (status != 'Ready' && status != 'Busy') {
-    const call = callFromID(status);
-
-    if (call) {
-      call.teams.add(team);
-
-      if (currentCall) {
-        logMessage(`Reassigning ${team} from ${currentCall} to ${call}`);
-      }
-      else {
-        logMessage(`Assigning ${team} to ${call}`);
-      }
-    }
-  }
-  else {
-    logMessage(`${teamFromID(teamID)} is now ${status}`);
-  }
-
-  updateDisplay();
-}
-
 //
 // Util
 //
-
-function teamFromID(teamID) {
-  return teams.find(t => t.id == teamID);
-}
-
-function callFromID(callID) {
-  return calls.find(c => c.id == callID);
-}
 
 function logMessage(message) {
   const log = new Log(message);
   logs.push(log);
   console.log(`${getFormattedTime(log.time)}: ${log.message}`);
-}
-
-function updateDisplay() {
-  document.getElementById('team_table').innerHTML = getTeamTableHTML();
-  document.getElementById('call_table').innerHTML = getCallTableHTML();
-  document.getElementById('log_table').innerHTML = getLogTableHTML();
 }
 
 function getFormattedTime(time) {
