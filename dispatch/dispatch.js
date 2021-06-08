@@ -1,28 +1,74 @@
-class Call {
-  constructor(id, description, location) {
+class TableDisplay {
+  constructor() {
+    this.td = {};
+  }
+
+  getTableRow() {
+    const row = document.createElement('tr');
+    for (var e in this.td) { row.appendChild(this.td[e]); }
+    return row;
+  }
+
+  createTableData(property) {
+    this.td[property] = document.createElement('td');
+    this.td[property].innerText = this[property];
+  }
+
+  makeTableDataContentEditable(property) {
+    this.td[property].contentEditable = true;
+    this.td[property].addEventListener('focus', () => selectAllText(this.td[property]));
+    this.td[property].addEventListener('keydown', (event) => blurOnEnter(event));
+    this.td[property].addEventListener('blur', () => this.updatePropertyFromTable(property));
+  }
+
+  updatePropertyFromTable(property) {
+    const newValue = this.td[property].innerText;
+    if (this[property] != newValue) {
+      logMessage(`${this} changed ${property} from "${this[property]}" to "${newValue}"`);
+      this[property] = newValue;
+    }
+  }
+}
+
+class Call extends TableDisplay {
+  constructor(id) {
+    super();
+
     this.id = id;
-    this.description = description;
-    this.location = location;
+    this.description = "Unknown";
+    this.location = "TBD";
     this.startTime = new Date();
     this.teams = new Set();
     this.endTime = null;
     this.disposition = null;
+    
+    ['id', 'description', 'location', 'startTime', 'teams', 'endTime', 'disposition'].forEach(e => {
+      this.createTableData(e);
+    });
+
+    ['description', 'location'].forEach(e => {
+      this.makeTableDataContentEditable(e);
+    });
+
+    this.td['startTime'].innerText = getFormattedTime(this.startTime);
   }
 
-  toString() { return `Call ${this.id}`; }
-
-  // UI elements IDs
-  descriptionElementID() { return `call_${this.id}_description`; }
-  locationElementID()    { return `call_${this.id}_location`; }
-  startTimeElementID()   { return `call_${this.id}_startTime`; }
-  endTimeElementID()     { return `call_${this.id}_endTime`; }
+  toString() { return `Call ${this.id}: "${this.description}" @ ${this.location}`; }
 }
 
-class Team {
+class Team extends TableDisplay {
   constructor(id) {
+    super();
+
     this.id = id;
     this.name = `Team ${id}`;
     this.status = 'Ready';
+
+    ['name', 'status'].forEach(e => {
+      this.createTableData(e);
+    });
+
+    this.makeTableDataContentEditable('name');
   }
 
   toString() { return this.name; }
@@ -45,47 +91,9 @@ const logs = [];
 var nextCallID = 1;
 var nextTeamID = 1;
 
-const editableTemplate = `
-  contenteditable="true" 
-  onfocus='selectAllText(this.id)' 
-  onkeydown='blurOnEnter(event)'
-`;
-
 //
 // Call Table
 //
-
-function getCallTableHTML() {
-  return `<table>
-    <tr>
-      <th>ID</th>
-      <th>Description</th>
-      <th>Location</th>
-      <th>Start</th>
-      <th>Teams</th>
-      <th>End</th>
-      <th>Disposition</th>
-    </tr>
-  ${calls.map(call => `
-    <tr>
-      <td>${call.id}</td>
-      <td id="${call.descriptionElementID()}" 
-        ${editableTemplate}
-        onblur='setCallDescription(${call.id}, this.innerText)'>${call.description}</td>
-      <td id="${call.locationElementID()}"
-        ${editableTemplate}
-        onblur='setCallLocation(${call.id}, this.innerText)'>${call.location}</td>
-      <td id="${call.startTimeElementID()}"   ${editableTemplate}>${getFormattedTime(call.startTime)}</td>
-      <td>
-        ${[...call.teams].sort((a, b) => a.id - b.id).map(team => `${team.name}<br>`).join('')}
-        ${getAssignSelectorHTML(call)}
-      </td>
-      <td ${editableTemplate}>${call.endTime}</td>
-      <td>${call.disposition}</td>
-    </tr>
-  `).join('')}
-  </table>`;
-}
 
 function getAssignSelectorHTML(call) {
   return `<select onchange='assignTeam(this.value, ${call.id})'>
@@ -164,30 +172,14 @@ function getLogTableHTML() {
 // Actions
 //
 
-function setCallDescription(callID, description) {
-  const call = callFromID(callID);
-  const oldDescription = call.description;
+function newCall() {
+  const call = new Call(nextCallID++);
+  calls.push(call);
 
-  if (oldDescription != description) {
-    call.description = description;
-    logMessage(`${call} changed description from "${oldDescription}" to "${description}"`);
-    updateDisplay();
-  }
+  document.getElementById('call_table').appendChild(call.getTableRow());
+  call.td['description'].focus();
 
-  window.getSelection().removeAllRanges();
-}
-
-function setCallLocation(callID, location) {
-  const call = callFromID(callID);
-  const oldLocation = call.location;
-
-  if (oldLocation != location) {
-    call.location = location;
-    logMessage(`${call} changed location from "${oldLocation}" to "${location}"`);
-    updateDisplay();
-  }
-
-  window.getSelection().removeAllRanges();
+  logMessage(`Created ${call}`);
 }
 
 function assignTeam(teamID, callID) {
@@ -198,11 +190,10 @@ function newTeam() {
   const team = new Team(nextTeamID++);
   teams.push(team);
 
-  logMessage(`New team added: ${team.name}`);
-  updateDisplay();
+  document.getElementById('team_table').appendChild(team.getTableRow());
+  team.td['name'].focus();
 
-  var td = document.getElementById(team.nameElementID());
-  td.focus();
+  logMessage(`Created ${team}`);
 }
 
 function setTeamName(teamID, name) {
@@ -277,11 +268,10 @@ function getFormattedTime(time) {
   return parts.map(e => e.toString().padStart(2, '0')).join(':');
 }
 
-function selectAllText(id) {
-  const p = document.getElementById(id);
+function selectAllText(element) {
   const s = window.getSelection();
   const r = document.createRange();
-  r.selectNodeContents(p);
+  r.selectNodeContents(element);
   s.removeAllRanges();
   s.addRange(r);
 }
