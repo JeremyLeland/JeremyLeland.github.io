@@ -2,7 +2,7 @@
 #calls {
   background-color: teal;
   float: left;
-  width: 75%;
+  width: 65%;
 }
 #calls tr:nth-child(odd) {
   background-color: lightblue;
@@ -27,7 +27,7 @@
 /* Custom selectors */
 .custom-select {
   position: relative;
-  width: 100px;
+  width: 150px;
 }
 .select-selected {
   background-color: yellowgreen;

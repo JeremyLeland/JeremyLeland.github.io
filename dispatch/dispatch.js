@@ -75,12 +75,12 @@ class Team extends TableDisplay {
     this.statusButton = document.createElement('div');
     this.statusButton.setAttribute('class', 'select-selected');
     this.statusButton.innerText = this.status;
-    this.statusButton.addEventListener('click', () => {
-      this.statusDiv.appendChild(getStatusSelectorDiv(this));
-    });
-    this.statusButton.addEventListener('blur', () => {
-      this.statusDiv.removeChild(this.statusDiv.childNodes[1]);
-      this.statusButton.innerText = this.status;
+    this.statusButton.addEventListener('click', (event) => {
+      if (customSelector == null) {
+        event.stopPropagation();
+        customSelector = getStatusSelectorDiv(this);
+        this.statusDiv.appendChild(customSelector);
+      }
     });
 
     this.statusDiv.appendChild(this.statusButton);
@@ -120,6 +120,9 @@ const calls = [];
 const teams = [];
 const logs = [];
 
+var customSelector = null;
+document.addEventListener('click', closeCustomSelector);
+
 var nextCallID = 1;
 var nextTeamID = 1;
 
@@ -142,8 +145,8 @@ function getStatusSelectorDiv(team) {
       const item = document.createElement('div');
       item.innerText = status;
       item.addEventListener('click', () => {
-        team.setStatus(status)
-        item.parentElement.parentElement.removeChild(item.parentElement);
+        team.setStatus(status);
+        closeCustomSelector();
       });
       selectItems.appendChild(item);
     }
@@ -203,5 +206,12 @@ function selectAllText(element) {
 function blurOnEnter(event) {
   if (event.keyCode == 13) { 
     event.target.blur();
+  }
+}
+
+function closeCustomSelector() {
+  if (customSelector != null) {
+    customSelector.parentElement.removeChild(customSelector);
+    customSelector = null;
   }
 }
