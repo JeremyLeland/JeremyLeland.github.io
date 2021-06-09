@@ -2,14 +2,31 @@
 <html>
 
 <head>
+  <title>Brain</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    .column { float: left; width: 50%; }
-    table { border-collapse: collapse; }
-    td { border: 1px solid black; }
-    td { vertical-align: top; }
-    body { margin: 0; font-family: Arial, Helvetica, sans-serif; }
+    .column { 
+      float: left;
+      width: 50%;
+      height: 100vh;
+    }
+    .padding {
+      padding: 5px;
+    }
+    table {
+      border-collapse: collapse;
+      height: 100vh;
+    }
+    td { 
+      border: 1px solid black;
+      vertical-align: top;
+    }
+    body {
+      margin: 0; 
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: small;
+    }
     /* ISO Paper Size */
     @page {
       size: A4 landscape;
@@ -19,8 +36,13 @@
 
 <body>
   <div class="column" id="template">
-    <div style="padding: 5px">
+    <div class="padding">
       <table>
+        <colgroup>
+          <col>
+          <col style="width: 2.25in">
+          <col style="width: 1in">
+        </colgroup>
         <tr>
           <td><b>ROOM</b></td>
           <td colspan="2">
@@ -127,7 +149,7 @@
         <tr>
           <td colspan="5"><b>PLAN:</b></td>
         </tr>
-        <tr>
+        <tr style="height: 100vh">
           <td colspan="4">
             <b>Turns:</b> 8 10 12 14 16 18
           </td>
