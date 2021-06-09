@@ -74,29 +74,30 @@ class Team extends TableDisplay {
     this.id = id;
     this.name = `Team ${id}`;
     this.status = 'Ready';
+    this.call = null;
 
-    ['name', 'status'].forEach(e => { this.createTableData(e); });
+    ['name', 'status', 'call'].forEach(e => { this.createTableData(e); });
     this.makeTableDataContentEditable('name');
 
-    this.td['status'].innerText = '';
+    this.td['status'].innerText = this.status;
 
-    this.statusDiv = document.createElement('div');
-    this.statusDiv.setAttribute('class', 'custom-select');
+    this.callDiv = document.createElement('div');
+    this.callDiv.setAttribute('class', 'custom-select');
 
-    this.statusButton = document.createElement('div');
-    this.statusButton.setAttribute('class', 'select-selected');
-    this.statusButton.innerText = this.status;
-    this.statusButton.addEventListener('click', (event) => {
+    this.callButton = document.createElement('div');
+    this.callButton.setAttribute('class', 'select-selected');
+    this.callButton.innerText = 'Assign Call...';
+    this.callButton.addEventListener('click', (event) => {
       if (customSelector == null) {
         event.stopPropagation();
-        customSelector = getStatusSelectorDiv(this);
-        this.statusDiv.appendChild(customSelector);
+        customSelector = getCallSelectorDiv(this);
+        this.callDiv.appendChild(customSelector);
       }
     });
 
-    this.statusDiv.appendChild(this.statusButton);
+    this.callDiv.appendChild(this.callButton);
 
-    this.td['status'].appendChild(this.statusDiv);
+    this.td['call'].appendChild(this.callDiv);
 
     this.callTableEntry = document.createElement('div');
     this.callTableEntry.innerText = this.name;
@@ -105,20 +106,24 @@ class Team extends TableDisplay {
   toString() { return this.name; }
 
   setStatus(status) {
-    if (this.status instanceof Call) {
-      this.status.removeTeam(this);
-      logMessage(`Reassigning ${this} from ${this.status} to ${status}`)
+    this.status = status;
+    this.td['status'].innerText = this.status;
+  }
+
+  setCall(call) {
+    if (this.call != null) {
+      this.call.removeTeam(this);
+      logMessage(`Reassigning ${this} from ${this.call} to ${call}`)
     }
     else {
-      logMessage(`Assigning ${this} to ${status}`);
+      logMessage(`Assigning ${this} to ${call}`);
     }
 
-    this.status = status;
-    this.statusButton.innerText = this.status;
+    this.setStatus('En route');
+    this.call = call;
+    this.call.addTeam(this);
 
-    if (this.status instanceof Call) {
-      this.status.addTeam(this);
-    }
+    this.callButton.innerText = this.call;
   }
 }
 
@@ -147,17 +152,15 @@ var nextTeamID = 1;
 // Team Table
 //
 
-function getStatusSelectorDiv(team) {
+function getCallSelectorDiv(team) {
   const selectItems = document.createElement('div');
   selectItems.setAttribute('class', 'select-items');
 
-  const statuses = ['Ready', ...calls, 'Busy'];
-  
-  statuses.forEach(status => {
-    if (team.status != status) {
+  calls.forEach(call => {
+    if (team.call != call) {
       const item = document.createElement('div');
-      item.innerText = status;
-      item.addEventListener('click', () => team.setStatus(status));
+      item.innerText = call;
+      item.addEventListener('click', () => team.setCall(call));
       selectItems.appendChild(item);
     }
   });

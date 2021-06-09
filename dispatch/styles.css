@@ -15,7 +15,7 @@
 #teams {
   background-color: burlywood;
   float: right;
-  width: 25%;
+  width: 35%;
 }
 #teams tr:nth-child(odd) {
   background-color: bisque;
@@ -27,7 +27,7 @@
 /* Custom selectors */
 .custom-select {
   position: relative;
-  width: 150px;
+  width: 200px;
 }
 .select-selected {
   background-color: yellowgreen;
