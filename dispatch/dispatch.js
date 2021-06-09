@@ -51,9 +51,20 @@ class Call extends TableDisplay {
     });
 
     this.td['startTime'].innerText = getFormattedTime(this.startTime);
+    this.td['teams'].innerText = '';
   }
 
   toString() { return `Call ${this.id} (${this.description} @ ${this.location})`; }
+
+  addTeam(team) {
+    this.teams.add(team);
+    this.td['teams'].appendChild(team.callTableEntry);
+  }
+
+  removeTeam(team) {
+    this.teams.delete(team);
+    this.td['teams'].removeChild(team.callTableEntry);
+  }
 }
 
 class Team extends TableDisplay {
@@ -85,15 +96,17 @@ class Team extends TableDisplay {
 
     this.statusDiv.appendChild(this.statusButton);
 
-    //this.td['status'].removeChild(this.td['status'].childNodes[0]);
     this.td['status'].appendChild(this.statusDiv);
+
+    this.callTableEntry = document.createElement('div');
+    this.callTableEntry.innerText = this.name;
   }
 
   toString() { return this.name; }
 
   setStatus(status) {
     if (this.status instanceof Call) {
-      this.status.teams.delete(this);
+      this.status.removeTeam(this);
       logMessage(`Reassigning ${this} from ${this.status} to ${status}`)
     }
     else {
@@ -104,7 +117,7 @@ class Team extends TableDisplay {
     this.statusButton.innerText = this.status;
 
     if (this.status instanceof Call) {
-      this.status.teams.add(this);
+      this.status.addTeam(this);
     }
   }
 }
@@ -144,10 +157,7 @@ function getStatusSelectorDiv(team) {
     if (team.status != status) {
       const item = document.createElement('div');
       item.innerText = status;
-      item.addEventListener('click', () => {
-        team.setStatus(status);
-        closeCustomSelector();
-      });
+      item.addEventListener('click', () => team.setStatus(status));
       selectItems.appendChild(item);
     }
   });
