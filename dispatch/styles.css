@@ -27,7 +27,6 @@
 /* Custom selectors */
 .custom-select {
   position: relative;
-  width: 200px;
 }
 .select-selected {
   background-color: yellowgreen;
@@ -41,6 +40,9 @@
   left: 0;
   right: 0;
   z-index: 99;
+  width: max-content;
+  min-width: 100%;
+  border: 1px solid black;
 }
 .select-items div:hover {
   background-color: lime;

@@ -55,6 +55,9 @@ class Call extends TableDisplay {
     this.td['startTime'].innerText = getFormattedTime(this.startTime);
     this.td['teams'].innerText = '';
 
+    this.teamList = document.createElement('div');
+    this.td['teams'].appendChild(this.teamList);
+
     this.teamSelector = makeCustomSelector('Assign Team...', () => makeTeamSelector(this));
     this.td['teams'].appendChild(this.teamSelector);
   }
@@ -73,12 +76,12 @@ class Call extends TableDisplay {
 
   addTeam(team) {
     this.teams.add(team);
-    this.td['teams'].appendChild(team.callTableEntry);
+    this.teamList.appendChild(team.callTableEntry);
   }
 
   removeTeam(team) {
     this.teams.delete(team);
-    this.td['teams'].removeChild(team.callTableEntry);
+    this.teamList.removeChild(team.callTableEntry);
   }
 }
 
