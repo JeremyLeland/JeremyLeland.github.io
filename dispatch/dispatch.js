@@ -53,7 +53,8 @@ class Call extends TableDisplay {
     this.td['startTime'].innerText = getFormattedTime(this.startTime);
     this.td['teams'].innerText = '';
 
-    //this.addTeamButton = 
+    this.teamSelector = makeCustomSelector('Assign Team...', () => makeTeamSelector(this));
+    this.td['teams'].appendChild(this.teamSelector);
   }
 
   toString() { return `Call ${this.id} (${this.description} @ ${this.location})`; }
@@ -83,8 +84,8 @@ class Team extends TableDisplay {
 
     this.td['status'].innerText = this.status;
 
-    this.callDiv = makeCustomSelector(() => getCallSelectorDiv(this));
-    this.td['call'].appendChild(this.callDiv);
+    this.callSelector = makeCustomSelector('Assign Call...', () => makeCallSelector(this));
+    this.td['call'].appendChild(this.callSelector);
 
     this.callTableEntry = document.createElement('div');
     this.callTableEntry.innerText = this.name;
@@ -110,7 +111,7 @@ class Team extends TableDisplay {
     this.call = call;
     this.call.addTeam(this);
 
-    this.callDiv.firstChild.innerText = this.call;
+    this.callSelector.firstChild.innerText = this.call;
   }
 }
 
@@ -131,13 +132,13 @@ document.addEventListener('click', closeCustomSelector);
 var nextCallID = 1;
 var nextTeamID = 1;
 
-function makeCustomSelector(selectorGenerator) {
+function makeCustomSelector(label, selectorGenerator) {
   const div = document.createElement('div');
   div.setAttribute('class', 'custom-select');
   
-  const button = document.createElement('div');
+  const button = document.createElement('button');
   button.setAttribute('class', 'select-selected');
-  button.innerText = 'Assign Call...';
+  button.innerText = label;
 
   button.addEventListener('click', (event) => {
     if (customSelector == null) {
@@ -152,7 +153,23 @@ function makeCustomSelector(selectorGenerator) {
   return div;
 }
 
-function getCallSelectorDiv(team) {
+function makeTeamSelector(call) {
+  const selectItems = document.createElement('div');
+  selectItems.setAttribute('class', 'select-items');
+
+  teams.forEach(team => {
+    if (team.call != call) {
+      const item = document.createElement('div');
+      item.innerText = team;
+      item.addEventListener('click', () => team.setCall(call));
+      selectItems.appendChild(item);
+    }
+  });
+  
+  return selectItems;
+}
+
+function makeCallSelector(team) {
   const selectItems = document.createElement('div');
   selectItems.setAttribute('class', 'select-items');
 
