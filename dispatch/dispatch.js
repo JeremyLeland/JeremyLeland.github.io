@@ -52,6 +52,8 @@ class Call extends TableDisplay {
 
     this.td['startTime'].innerText = getFormattedTime(this.startTime);
     this.td['teams'].innerText = '';
+
+    //this.addTeamButton = 
   }
 
   toString() { return `Call ${this.id} (${this.description} @ ${this.location})`; }
@@ -81,22 +83,7 @@ class Team extends TableDisplay {
 
     this.td['status'].innerText = this.status;
 
-    this.callDiv = document.createElement('div');
-    this.callDiv.setAttribute('class', 'custom-select');
-
-    this.callButton = document.createElement('div');
-    this.callButton.setAttribute('class', 'select-selected');
-    this.callButton.innerText = 'Assign Call...';
-    this.callButton.addEventListener('click', (event) => {
-      if (customSelector == null) {
-        event.stopPropagation();
-        customSelector = getCallSelectorDiv(this);
-        this.callDiv.appendChild(customSelector);
-      }
-    });
-
-    this.callDiv.appendChild(this.callButton);
-
+    this.callDiv = makeCustomSelector(() => getCallSelectorDiv(this));
     this.td['call'].appendChild(this.callDiv);
 
     this.callTableEntry = document.createElement('div');
@@ -123,7 +110,7 @@ class Team extends TableDisplay {
     this.call = call;
     this.call.addTeam(this);
 
-    this.callButton.innerText = this.call;
+    this.callDiv.firstChild.innerText = this.call;
   }
 }
 
@@ -144,13 +131,26 @@ document.addEventListener('click', closeCustomSelector);
 var nextCallID = 1;
 var nextTeamID = 1;
 
-//
-// Call Table
-//
+function makeCustomSelector(selectorGenerator) {
+  const div = document.createElement('div');
+  div.setAttribute('class', 'custom-select');
+  
+  const button = document.createElement('div');
+  button.setAttribute('class', 'select-selected');
+  button.innerText = 'Assign Call...';
 
-//
-// Team Table
-//
+  button.addEventListener('click', (event) => {
+    if (customSelector == null) {
+      event.stopPropagation();
+      customSelector = selectorGenerator();
+      div.appendChild(customSelector);
+    }
+  });
+
+  div.appendChild(button);
+
+  return div;
+}
 
 function getCallSelectorDiv(team) {
   const selectItems = document.createElement('div');
