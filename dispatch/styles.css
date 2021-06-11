@@ -2,7 +2,7 @@
 #calls {
   background-color: teal;
   float: left;
-  width: 65%;
+  width: 70%;
 }
 #calls tr:nth-child(odd) {
   background-color: lightblue;
@@ -15,7 +15,7 @@
 #teams {
   background-color: burlywood;
   float: right;
-  width: 35%;
+  width: 30%;
 }
 #teams tr:nth-child(odd) {
   background-color: bisque;

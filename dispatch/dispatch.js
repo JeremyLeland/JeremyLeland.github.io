@@ -33,6 +33,24 @@ class TableDisplay {
   }
 }
 
+const Status = {
+  Ready: 'Ready',
+  Assigned: 'Assigned',
+  EnRoute: 'En Route',
+  OnScene: 'On Scene',
+  Busy: 'Busy'
+}
+
+const Disposition = {
+  Clinic: 'Clinic',
+  Treated: 'Treated',
+  Refused: 'Refused',
+  NoMedicalMerit: 'No Medical Merit',
+  UnableToLocate: 'Unable to Locate',
+  Transported: 'Transported',
+  Cancelled: 'Cancelled'
+}
+
 class Call extends TableDisplay {
   constructor(id) {
     super();
@@ -41,11 +59,17 @@ class Call extends TableDisplay {
     this.description = "Unknown";
     this.location = "TBD";
     this.startTime = new Date();
+    this.enrouteTimes = [];
+    this.onsceneTimes = [];
+    this.clearedTimes = [];
     this.teams = new Set();
     this.endTime = null;
     this.disposition = null;
+
+    this.teamTableEntry = document.createElement('div');
+    this.teamTableEntry.innerText = this.toString();
     
-    ['id', 'description', 'location', 'startTime', 'teams', 'endTime', 'disposition'].forEach(e => {
+    ['id', 'description', 'location', 'startTime', 'teams', 'disposition', 'endTime'].forEach(e => {
       this.createTableData(e);
     });
 
@@ -91,11 +115,10 @@ class Team extends TableDisplay {
 
     this.id = id;
     this.name = `Team ${id}`;
-    this.status = 'Ready';
+    this.status = Status.Ready;
     this.call = null;
 
-    this.callTableEntry = document.createElement('div');
-    this.callTableEntry.innerText = this.name;
+    this.callTableEntry = this.makeCallTableEntry();
 
     ['name', 'status', 'call'].forEach(e => { this.createTableData(e); });
     this.makeTableDataContentEditable('name', () => this.updateName());
@@ -109,7 +132,7 @@ class Team extends TableDisplay {
   toString() { return this.name; }
 
   updateName() {
-    this.callTableEntry.innerText = this.name;
+    this.callTableEntry.firstChild.innerText = this.name;
   }
 
   setStatus(status) {
@@ -126,11 +149,26 @@ class Team extends TableDisplay {
       logMessage(`Assigning ${this} to ${call}`);
     }
 
-    this.setStatus('En route');
+    this.setStatus(Status.Assigned);
     this.call = call;
     this.call.addTeam(this);
 
     this.callSelector.firstChild.innerText = this.call;
+  }
+
+  makeCallTableEntry() {
+    const div = document.createElement('div');
+    const name = document.createElement('span');
+    name.innerText = this.name;
+    div.appendChild(name);
+
+    [Status.EnRoute, Status.OnScene, 'Clear'].forEach(status => {
+      const button = document.createElement('button');
+      button.innerText = status;
+      div.appendChild(button);
+    });
+
+    return div;
   }
 }
 
