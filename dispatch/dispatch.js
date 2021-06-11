@@ -14,11 +14,14 @@ class TableDisplay {
     this.td[property].innerText = this[property];
   }
 
-  makeTableDataContentEditable(property) {
+  makeTableDataContentEditable(property, blurFunction) {
     this.td[property].contentEditable = true;
     this.td[property].addEventListener('focus', () => selectAllText(this.td[property]));
     this.td[property].addEventListener('keydown', (event) => blurOnEnter(event));
-    this.td[property].addEventListener('blur', () => this.updatePropertyFromTable(property));
+    this.td[property].addEventListener('blur', () => {
+      this.updatePropertyFromTable(property);
+      blurFunction();
+    });
   }
 
   updatePropertyFromTable(property) {
@@ -46,9 +49,8 @@ class Call extends TableDisplay {
       this.createTableData(e);
     });
 
-    ['description', 'location'].forEach(e => {
-      this.makeTableDataContentEditable(e);
-    });
+    this.makeTableDataContentEditable('description', () => this.updateDescription());
+    this.makeTableDataContentEditable('location', () => this.updateLocation());
 
     this.td['startTime'].innerText = getFormattedTime(this.startTime);
     this.td['teams'].innerText = '';
@@ -58,6 +60,16 @@ class Call extends TableDisplay {
   }
 
   toString() { return `Call ${this.id} (${this.description} @ ${this.location})`; }
+
+  // TODO: use a div with a reference to our div (like team does) and update that way?
+  //       instead of changing button text
+  updateDescription() {
+    teams.filter(t => t.call == this).forEach(t => t.callSelector.firstChild.innerText = this);
+  }
+
+  updateLocation() {
+    teams.filter(t => t.call == this).forEach(t => t.callSelector.firstChild.innerText = this);
+  }
 
   addTeam(team) {
     this.teams.add(team);
@@ -79,19 +91,23 @@ class Team extends TableDisplay {
     this.status = 'Ready';
     this.call = null;
 
+    this.callTableEntry = document.createElement('div');
+    this.callTableEntry.innerText = this.name;
+
     ['name', 'status', 'call'].forEach(e => { this.createTableData(e); });
-    this.makeTableDataContentEditable('name');
+    this.makeTableDataContentEditable('name', () => this.updateName());
 
     this.td['status'].innerText = this.status;
 
     this.callSelector = makeCustomSelector('Assign Call...', () => makeCallSelector(this));
     this.td['call'].appendChild(this.callSelector);
-
-    this.callTableEntry = document.createElement('div');
-    this.callTableEntry.innerText = this.name;
   }
 
   toString() { return this.name; }
+
+  updateName() {
+    this.callTableEntry.innerText = this.name;
+  }
 
   setStatus(status) {
     this.status = status;
