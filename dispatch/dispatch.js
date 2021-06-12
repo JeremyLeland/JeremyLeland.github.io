@@ -37,12 +37,12 @@ const Status = {
 }
 
 const Disposition = {
-  Clinic: 'Clinic',
-  Treated: 'Treated',
-  Refused: 'Refused',
+  Clinic: 'Brought to Clinic',
+  Transported: 'Transported from Scene',
+  Treated: 'Treated in Field',
+  Refused: 'Refused Treatment',
   NoMedicalMerit: 'No Medical Merit',
   UnableToLocate: 'Unable to Locate',
-  Transported: 'Transported',
   Cancelled: 'Cancelled'
 }
 
@@ -83,6 +83,9 @@ class Call extends TableDisplay {
 
     this.teamSelector = makeCustomSelector('Assign Team...', () => this.makeTeamSelector());
     this.td['teams'].appendChild(this.teamSelector);
+
+    this.dispositionSelector = makeCustomSelector('Active', () => this.makeDispositionSelector());
+    this.td['disposition'].appendChild(this.dispositionSelector);
   }
 
   toString() { return `Call ${this.id} (${this.description} @ ${this.location})`; }
@@ -107,6 +110,25 @@ class Call extends TableDisplay {
     this.teamList.removeChild(team.callTableEntry);
   }
 
+  setDisposition(disposition) {
+    this.disposition = disposition;
+
+    this.teams.forEach(team => team.clearCall(null));
+
+    this.teamSelector = null;
+    this.td['teams'].lastChild.innerText = '';
+
+    this.dispositionSelector = null;
+    this.td['disposition'].innerText = this.disposition;
+
+    this.setEndTime(new Date());
+  }
+
+  setEndTime(endTime) {
+    this.endTime = endTime;
+    this.td['endTime'].innerText = getFormattedTime(this.endTime);
+  }
+
   makeTeamSelector() {
     const selectItems = document.createElement('div');
     selectItems.setAttribute('class', 'select-items');
@@ -114,9 +136,24 @@ class Call extends TableDisplay {
     teams.filter(team => team.call != this).forEach(team => {
       const item = document.createElement('div');
       item.innerText = team;
-      item.addEventListener('click', () => team.setCall(this));
+      item.addEventListener('click', () => team.assignCall(this));
       selectItems.appendChild(item);
     });
+    
+    return selectItems;
+  }
+
+  makeDispositionSelector() {
+    const selectItems = document.createElement('div');
+    selectItems.setAttribute('class', 'select-items');
+  
+    for (var d in Disposition) {
+      const disposition = Disposition[d];
+      const item = document.createElement('div');
+      item.innerText = disposition;
+      item.addEventListener('click', () => this.setDisposition(disposition));
+      selectItems.appendChild(item);
+    }
     
     return selectItems;
   }
@@ -153,15 +190,20 @@ class Team extends TableDisplay {
     this.callTableEntry.firstChild.innerText = this.name;
   }
 
+  assignCall(call) {
+    this.setStatus(Status.Assigned);
+    this.setCall(call);
+  }
+
+  clearCall() {
+    this.setStatus(Status.Ready);
+    this.setCall(null);
+  }
+
   setStatus(status) {
     this.status = status;
 
-    if (this.status == Status.Ready || this.status == Status.Busy) {
-      this.setCall(null);
-    }
-    else {
-      this.callTableEntry.lastChild.innerText = ` (${this.status} @ ${getFormattedTime(new Date())})`;
-    }
+    this.callTableEntry.lastChild.innerText = ` (${this.status} @ ${getFormattedTime(new Date())})`;
 
     this.td['name'].setAttribute('class', this.status.replace(' ', '-'));
     this.statusSelector.firstChild.innerText = this.status;
@@ -185,7 +227,6 @@ class Team extends TableDisplay {
     this.call = call;
 
     if (this.call != null) {
-      this.setStatus(Status.Assigned);
       this.call.addTeam(this);
       this.callSelector.firstChild.innerText = this.call;
     }
@@ -204,7 +245,13 @@ class Team extends TableDisplay {
     statuses.filter(status => this.status != status).forEach(status => {
       const item = document.createElement('div');
       item.innerText = status;
-      item.addEventListener('click', () => this.setStatus(status));
+      item.addEventListener('click', () => {
+        this.setStatus(status);
+
+        if (this.status == Status.Ready || this.status == Status.Busy) {
+          this.setCall(null);
+        }
+      });
       selectItems.appendChild(item);
     });
     
@@ -215,10 +262,10 @@ class Team extends TableDisplay {
     const selectItems = document.createElement('div');
     selectItems.setAttribute('class', 'select-items');
   
-    calls.filter(call => this.call != call).forEach(call => {
+    calls.filter(call => this.call != call && call.disposition == null).forEach(call => {
       const item = document.createElement('div');
       item.innerText = call;
-      item.addEventListener('click', () => this.setCall(call));
+      item.addEventListener('click', () => this.assignCall(call));
       selectItems.appendChild(item);
     });
     
@@ -319,7 +366,9 @@ function blurOnEnter(event) {
 
 function closeCustomSelector() {
   if (customSelector != null) {
-    customSelector.parentElement.removeChild(customSelector);
+    if (customSelector.parentElement != null) {
+      customSelector.parentElement.removeChild(customSelector);
+    }
     customSelector = null;
   }
 }
