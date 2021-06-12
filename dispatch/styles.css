@@ -56,12 +56,26 @@
 }
 
 /* Text */
-.ready {
+.Ready {
   color: green;
   font-weight: bold;
 }
 
-.busy {
+.Assigned {
+  color: orange;
+  font-weight: bold;
+}
+
+.En-Route {
+  color: purple;
+  font-style: italic;
+}
+
+.On-Scene {
+  color: blue;
+}
+
+.Busy {
   color: red;
   font-style: italic;
 }

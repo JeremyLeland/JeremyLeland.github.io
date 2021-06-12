@@ -9,11 +9,6 @@ class TableDisplay {
     return row;
   }
 
-  createTableData(property) {
-    this.td[property] = document.createElement('td');
-    this.td[property].innerText = this[property];
-  }
-
   makeTableDataContentEditable(property, blurFunction) {
     this.td[property].contentEditable = true;
     this.td[property].addEventListener('focus', () => selectAllText(this.td[property]));
@@ -70,8 +65,12 @@ class Call extends TableDisplay {
     this.teamTableEntry.innerText = this.toString();
     
     ['id', 'description', 'location', 'startTime', 'teams', 'disposition', 'endTime'].forEach(e => {
-      this.createTableData(e);
+      this.td[e] = document.createElement('td');
     });
+
+    this.td['id'].innerText = this.id;
+    this.td['description'].innerText = this.description;
+    this.td['location'].innerText = this.location;
 
     this.makeTableDataContentEditable('description', () => this.updateDescription());
     this.makeTableDataContentEditable('location', () => this.updateLocation());
@@ -118,12 +117,17 @@ class Team extends TableDisplay {
     this.status = Status.Ready;
     this.call = null;
 
-    this.callTableEntry = this.makeCallTableEntry();
+    this.callTableEntry = document.createElement('div');
+    this.callTableEntry.appendChild(document.createElement('span'));  // name
+    this.callTableEntry.appendChild(document.createElement('span'));  // status
 
-    ['name', 'status', 'call'].forEach(e => { this.createTableData(e); });
+    ['name', 'status', 'call'].forEach(e => { this.td[e] = document.createElement('td'); });
+    this.td['name'].innerText = this.name;
+    this.td['name'].setAttribute('class', this.status);
     this.makeTableDataContentEditable('name', () => this.updateName());
 
-    this.td['status'].innerText = this.status;
+    this.statusSelector = makeCustomSelector(this.status, () => makeStatusSelector(this));
+    this.td['status'].appendChild(this.statusSelector);
 
     this.callSelector = makeCustomSelector('Assign Call...', () => makeCallSelector(this));
     this.td['call'].appendChild(this.callSelector);
@@ -137,38 +141,43 @@ class Team extends TableDisplay {
 
   setStatus(status) {
     this.status = status;
-    this.td['status'].innerText = this.status;
+
+    if (this.status == Status.Ready || this.status == Status.Busy) {
+      this.setCall(null);
+    }
+    else {
+      this.callTableEntry.lastChild.innerText = ` (${this.status} @ ${getFormattedTime(new Date())})`;
+    }
+
+    this.td['name'].setAttribute('class', this.status.replace(' ', '-'));
+    this.statusSelector.firstChild.innerText = this.status;
   }
 
   setCall(call) {
     if (this.call != null) {
       this.call.removeTeam(this);
-      logMessage(`Reassigning ${this} from ${this.call} to ${call}`)
+
+      if (call != null) {
+        logMessage(`Reassigning ${this} from ${this.call} to ${call}`);
+      }
+      else {
+        logMessage(`Clearing ${this} from ${this.call}`);
+      }
     }
     else {
       logMessage(`Assigning ${this} to ${call}`);
     }
 
-    this.setStatus(Status.Assigned);
     this.call = call;
-    this.call.addTeam(this);
 
-    this.callSelector.firstChild.innerText = this.call;
-  }
-
-  makeCallTableEntry() {
-    const div = document.createElement('div');
-    const name = document.createElement('span');
-    name.innerText = this.name;
-    div.appendChild(name);
-
-    [Status.EnRoute, Status.OnScene, 'Clear'].forEach(status => {
-      const button = document.createElement('button');
-      button.innerText = status;
-      div.appendChild(button);
-    });
-
-    return div;
+    if (this.call != null) {
+      this.setStatus(Status.Assigned);
+      this.call.addTeam(this);
+      this.callSelector.firstChild.innerText = this.call;
+    }
+    else {
+      this.callSelector.firstChild.innerText = 'Assign Call...';
+    }
   }
 }
 
@@ -221,6 +230,23 @@ function makeTeamSelector(call) {
       item.addEventListener('click', () => team.setCall(call));
       selectItems.appendChild(item);
     }
+  });
+  
+  return selectItems;
+}
+
+function makeStatusSelector(team) {
+  const selectItems = document.createElement('div');
+  selectItems.setAttribute('class', 'select-items');
+
+  const statuses = team.call == null ? [Status.Ready, Status.Busy] : 
+    [Status.EnRoute, Status.OnScene, Status.Ready, Status.Busy];
+
+  statuses.filter(status => team.status != status).forEach(status => {
+    const item = document.createElement('div');
+    item.innerText = status;
+    item.addEventListener('click', () => team.setStatus(status));
+    selectItems.appendChild(item);
   });
   
   return selectItems;
