@@ -80,6 +80,11 @@
   font-style: italic;
 }
 
+.closed {
+  font-style: italic;
+  text-decoration: line-through;
+}
+
 .bold {
   font-weight: bold;
 }

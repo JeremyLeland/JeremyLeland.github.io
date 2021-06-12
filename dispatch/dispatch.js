@@ -107,7 +107,12 @@ class Call extends TableDisplay {
 
   removeTeam(team) {
     this.teams.delete(team);
-    this.teamList.removeChild(team.callTableEntry);
+
+    const crossedOutEntry = document.createElement('div');
+    crossedOutEntry.innerText = team.callTableEntry.innerText;
+    crossedOutEntry.setAttribute('class', 'closed');
+
+    this.teamList.replaceChild(crossedOutEntry, team.callTableEntry);
   }
 
   setDisposition(disposition) {
@@ -120,6 +125,8 @@ class Call extends TableDisplay {
 
     this.dispositionSelector = null;
     this.td['disposition'].innerText = this.disposition;
+
+    this.td['disposition'].parentElement.setAttribute('class', 'closed');
 
     this.setEndTime(new Date());
   }
@@ -191,13 +198,13 @@ class Team extends TableDisplay {
   }
 
   assignCall(call) {
-    this.setStatus(Status.Assigned);
     this.setCall(call);
+    this.setStatus(Status.Assigned);
   }
 
   clearCall() {
-    this.setStatus(Status.Ready);
     this.setCall(null);
+    this.setStatus(Status.Ready);
   }
 
   setStatus(status) {
@@ -246,11 +253,11 @@ class Team extends TableDisplay {
       const item = document.createElement('div');
       item.innerText = status;
       item.addEventListener('click', () => {
-        this.setStatus(status);
-
-        if (this.status == Status.Ready || this.status == Status.Busy) {
+        if (status == Status.Ready || status == Status.Busy) {
           this.setCall(null);
         }
+
+        this.setStatus(status);
       });
       selectItems.appendChild(item);
     });
