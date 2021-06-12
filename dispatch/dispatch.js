@@ -129,6 +129,8 @@ class Call extends TableDisplay {
     this.td['disposition'].parentElement.setAttribute('class', 'closed');
 
     this.setEndTime(new Date());
+
+    logMessage(`Closing ${this} with disposition: ${this.disposition}`);
   }
 
   setEndTime(endTime) {
