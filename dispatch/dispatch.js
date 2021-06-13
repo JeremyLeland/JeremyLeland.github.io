@@ -1,12 +1,11 @@
 class TableDisplay {
   constructor() {
+    this.tr = document.createElement('tr');
     this.td = {};
   }
 
-  getTableRow() {
-    const row = document.createElement('tr');
-    for (var e in this.td) { row.appendChild(this.td[e]); }
-    return row;
+  fillInTableRow() {
+    for (var e in this.td) { this.tr.appendChild(this.td[e]); }
   }
 
   makeTableDataContentEditable(property, blurFunction) {
@@ -84,8 +83,10 @@ class Call extends TableDisplay {
     this.teamSelector = makeCustomSelector('Assign Team...', () => this.makeTeamSelector());
     this.td['teams'].appendChild(this.teamSelector);
 
-    this.dispositionSelector = makeCustomSelector('Active', () => this.makeDispositionSelector());
+    this.dispositionSelector = makeCustomSelector('End Call As...', () => this.makeDispositionSelector());
     this.td['disposition'].appendChild(this.dispositionSelector);
+
+    this.fillInTableRow();
   }
 
   toString() { return `Call ${this.id} (${this.description} @ ${this.location})`; }
@@ -181,7 +182,7 @@ class Team extends TableDisplay {
     this.callTableEntry.appendChild(document.createElement('span'));  // name
     this.callTableEntry.appendChild(document.createElement('span'));  // status
 
-    ['name', 'status', 'call'].forEach(e => { this.td[e] = document.createElement('td'); });
+    ['name', 'status', 'call', 'remove'].forEach(e => { this.td[e] = document.createElement('td'); });
     this.td['name'].innerText = this.name;
     this.td['name'].setAttribute('class', this.status);
     this.makeTableDataContentEditable('name', () => this.updateName());
@@ -191,6 +192,13 @@ class Team extends TableDisplay {
 
     this.callSelector = makeCustomSelector('Assign Call...', () => this.makeCallSelector());
     this.td['call'].appendChild(this.callSelector);
+
+    this.removeButton = document.createElement('button');
+    this.removeButton.innerText = '❌';
+    this.removeButton.addEventListener('click', () => removeTeam(this));
+    this.td['remove'].appendChild(this.removeButton);
+
+    this.fillInTableRow();
   }
 
   toString() { return this.name; }
@@ -290,7 +298,7 @@ class Log {
 }
 
 const calls = [];
-const teams = [];
+var teams = [];
 const logs = [];
 
 var customSelector = null;
@@ -328,7 +336,7 @@ function newCall() {
   const call = new Call(nextCallID++);
   calls.push(call);
 
-  document.getElementById('call_table').appendChild(call.getTableRow());
+  document.getElementById('call_table').appendChild(call.tr);
   call.td['description'].focus();
 
   logMessage(`Created ${call}`);
@@ -338,10 +346,19 @@ function newTeam() {
   const team = new Team(nextTeamID++);
   teams.push(team);
 
-  document.getElementById('team_table').appendChild(team.getTableRow());
+  document.getElementById('team_table').appendChild(team.tr);
   team.td['name'].focus();
 
   logMessage(`Created ${team}`);
+}
+
+function removeTeam(team) {
+  team.clearCall();
+  teams = teams.filter(t => t != team);
+
+  document.getElementById('team_table').removeChild(team.tr);
+
+  logMessage(`Removed ${team}`);
 }
 
 //

@@ -29,11 +29,11 @@
   position: relative;
 }
 .select-selected {
-  background-color: yellowgreen;
+  /* background-color: yellowgreen; */
   cursor: pointer;
 }
 .select-items {
-  background-color: greenyellow;
+  background-color: white;
   cursor: pointer;
   position: absolute;
   top: 100%;
@@ -45,7 +45,7 @@
   border: 1px solid black;
 }
 .select-items div:hover {
-  background-color: lime;
+  background-color: lightskyblue;
 }
 
 /* Logs */
