@@ -20,6 +20,9 @@
       border: 1px solid black;
       vertical-align: top;
     }
+    td .blanks {
+      border: 0;
+    }
     body {
       margin: 0; 
       font-family: Arial, Helvetica, sans-serif;
@@ -30,6 +33,18 @@
       size: A4 landscape;
     }
   </style>
+  <script>
+    function spaceOut(...items) {
+      document.write(items.join('&nbsp;&nbsp;&nbsp;'));
+    }
+    function alignBlanks(...items) {
+      document.write('<table>');
+      items.forEach(e => {
+        document.write(`<tr><td class="blanks">${e}</td><td class="blanks">______</td></tr>`);
+      });
+      document.write('</table>');
+    }
+  </script>
 </head>
 
 <body>
@@ -66,43 +81,28 @@
           <td colspan="2"></td>
           <td colspan="2">
             <b>MD</b><br>
-            SIP&nbsp;&nbsp;&nbsp;
-            ACSS&nbsp;&nbsp;&nbsp;
-            ID&nbsp;&nbsp;&nbsp;
-            GI&nbsp;&nbsp;&nbsp;
-            TFM
+            <script>spaceOut('SIP', 'ACSS', 'Pulm', 'Trauma')</script>
             <br>
-            Nephro&nbsp;&nbsp;&nbsp;
-            Neuro / IR / Surg
+            <script>spaceOut('Cardio', 'ID', 'GI', 'Nephro')</script>
             <br>
-            Ortho / Spine&nbsp;&nbsp;&nbsp;
-            Cardio&nbsp;&nbsp;&nbsp;
-            Pulm&nbsp;&nbsp;&nbsp;
-            Trauma
+            <script>spaceOut('Neuro/IR/Surg', 'Ortho/Spine')</script>
           </td>
         </tr>
         <tr>
           <td><b>PMH</b></td>
           <td colspan="4">
-            AFib&nbsp;&nbsp;&nbsp;
-            Anemia&nbsp;&nbsp;&nbsp;
-            Asthma&nbsp;&nbsp;&nbsp;
-            CAD&nbsp;&nbsp;&nbsp;
-            Cancer&nbsp;&nbsp;&nbsp;
-            CHF&nbsp;&nbsp;&nbsp;
-            CKD&nbsp;&nbsp;&nbsp;
-            COPD&nbsp;&nbsp;&nbsp;
-            CVA&nbsp;&nbsp;&nbsp;
-            DM2&nbsp;&nbsp;&nbsp;
-            ESRD&nbsp;&nbsp;&nbsp;
-            EtOH
+            <script>spaceOut('AFib', 'Anemia', 'Asthma', 'CAD', 'Cancer', 'CHF', 'CKD', 'COPD', 'CVA', 'DM2', 'ESRD')</script>
             <br>
-            GERD  HPLD  HT  HTN  MI  OSA  PolySub  Psych  Seizure  TIA  Trauma
+            <script>spaceOut('EtOH', 'GERD', 'Gout', 'HPLD', 'HT', 'HTN', 'MI', 'OSA', 'PolySub', 'Psych', 'Seizure', 'TIA')</script>
+            <br><br>
           </td>
         </tr>
         <tr>
           <td><b>Neuro</b></td>
-          <td>Moves / Follows</td>
+          <td align="right">
+            Moves / Follows
+            <br><br><br>
+          </td>
           <td>Neuro✓:<br>CIWA✓:<br></td>
           <td colspan="2" rowspan="5">
             <b>IV</b>  PICC  Midline  CVC<br>
@@ -116,25 +116,32 @@
         </tr>
         <tr>
           <td><b>C/V</b></td>
-          <td>AFib / NSR</td>
+          <td align="right">AFib / NSR</td>
           <td>Goal:</td>
         </tr>
         <tr>
           <td><b>Resp</b></td>
-          <td>
-            Hi-Flow / NC / Mask / Trach: _____<br><br>
-            Home O2:
+          <td align="right">
+            ETT / Trach / BiPAP / Hi-Flow / NC<br>
+            <br><br>
+            Home O2: ____
           </td>
-          <td>Sat:</td>
+          <td>
+            <script>alignBlanks('Rate:', 'TVol:', 'PEEP:', 'FiO2:')</script>
+          </td>
         </tr>
         <tr>
           <td><b>GI</b></td>
-          <td>NG / Dob / PEG: ____<br><br>Whole / Crushed</td>
+          <td align="right">
+            PEG / OG / NG / Dob
+            <br><br>
+            Whole / Crushed
+          </td>
           <td>Diet:<br><br>BS✓: </td>
         </tr>
         <tr>
           <td><b>GU</b></td>
-          <td>
+          <td align="right">
             BR / Cmd / Urinal / Ext / Foley: ____<br><br>
             Continent / Urgency / Incontinent
           </td>
@@ -157,7 +164,7 @@
             <b>BUN</b> _____<br>
             <b>Creat</b> _____<br>
             <b>Trop</b> _____<br>
-            <b>PT/INR</b>____<br>
+            <b>INR</b>____<br>
             <b>Lact</b> _____<br>
           </td>
         </tr>
@@ -170,10 +177,10 @@
           <td colspan="5"><b>PLAN:</b></td>
         </tr>
         <tr style="height: 2in">
-          <td colspan="4">
+          <td colspan="3">
             <b>Turns:</b> 8 10 12 14 16 18
           </td>
-          <td>
+          <td colspan="2">
             <b>Insulin:</b><br>
             <b>Assess:</b> 8 12 16<br>
             <b>Meds:</b> 9<br>
