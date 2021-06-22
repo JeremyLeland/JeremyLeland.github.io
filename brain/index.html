@@ -99,41 +99,46 @@
         </tr>
         <tr>
           <td><b>Neuro</b></td>
-          <td align="right">
+          <td style="text-align: right">
             Moves / Follows
             <br><br><br>
           </td>
           <td>Neuro✓:<br>CIWA✓:<br></td>
           <td colspan="2" rowspan="5">
-            <b>IV</b>  PICC  Midline  CVC<br>
-            LAC  LFA  L____<br>
-            RAC  RFA  R____<br>
-            Port  HD  Fistula<br><br>
-            <b>Drips</b><br><br><br>
-            <b>Drains</b><br><br><br>
+            <b>IV</b> &nbsp;&nbsp;
+            <script>spaceOut('PICC', 'Midline', 'CVC')</script><br>
+            <script>spaceOut('LAC', 'LFA', 'L____')</script><br>
+            <script>spaceOut('RAC', 'RFA', 'R____')</script><br>
+            <script>spaceOut('Port', 'HD', 'Fistula')</script><br>
+            <br>
+            <b>Drips</b><br><br><br><br><br>
+            <b>Drains</b><br><br><br><br><br>
             <b>PRNs</b>
           </td>
         </tr>
         <tr>
           <td><b>C/V</b></td>
-          <td align="right">AFib / NSR</td>
+          <td style="text-align: right">
+            AFib / NSR
+            <br><br><br>
+          </td>
           <td>Goal:</td>
         </tr>
         <tr>
           <td><b>Resp</b></td>
-          <td align="right">
+          <td style="text-align: right">
             ETT / Trach / BiPAP / Hi-Flow / NC<br>
             <br><br>
             Home O2: ____
           </td>
           <td>
-            <script>alignBlanks('Rate:', 'TVol:', 'PEEP:', 'FiO2:')</script>
+            <script>alignBlanks('Rate:', 'TVol:', 'Peep:', 'FiO2:')</script>
           </td>
         </tr>
         <tr>
           <td><b>GI</b></td>
-          <td align="right">
-            PEG / OG / NG / Dob
+          <td style="text-align: right">
+            PEG / OG / NG / Dob: ____
             <br><br>
             Whole / Crushed
           </td>
@@ -141,7 +146,7 @@
         </tr>
         <tr>
           <td><b>GU</b></td>
-          <td align="right">
+          <td style="text-align: right">
             BR / Cmd / Urinal / Ext / Foley: ____<br><br>
             Continent / Urgency / Incontinent
           </td>
@@ -152,20 +157,10 @@
           <td></td>
           <td>Temp:<br>Turns:<br>DVT:<br></td>
           <td rowspan="2">
-            <b>WBC</b> _____<br>
-            <b>H/H</b> _____<br>
-            <b>Na</b> _____<br>
-            <b>K</b> _____<br>
-            <b>Ca</b> _____<br>
-            <b>Phos</b>_____<br>
+            <script>alignBlanks('WBC', 'H/H', 'Na', 'K', 'Ca', 'Phos')</script>
           </td>
           <td rowspan="2">
-            <b>Mg</b> _____<br>
-            <b>BUN</b> _____<br>
-            <b>Creat</b> _____<br>
-            <b>Trop</b> _____<br>
-            <b>INR</b>____<br>
-            <b>Lact</b> _____<br>
+            <script>alignBlanks('Mg', 'BUN', 'Creat', 'Trop', 'INR', 'Lact')</script>
           </td>
         </tr>
         <tr>
@@ -173,18 +168,18 @@
           <td></td>
           <td>Mobility:<br>Standby / 1 / 2<br>FWW / Bed</td>
         </tr>
-        <tr>
+        <tr style="height: 0.5in">
           <td colspan="5"><b>PLAN:</b></td>
         </tr>
         <tr style="height: 2in">
-          <td colspan="3">
-            <b>Turns:</b> 8 10 12 14 16 18
+          <td colspan="3" style="vertical-align: bottom">
+            <script>spaceOut('<b>Turns:</b>', '8', '10', '12', '14', '16', '18')</script>
           </td>
-          <td colspan="2">
+          <td colspan="2" style="vertical-align: bottom">
             <b>Insulin:</b><br>
-            <b>Assess:</b> 8 12 16<br>
-            <b>Meds:</b> 9<br>
-            <b>NIH CHG I/O</b><br>
+            <script>spaceOut('<b>Assess:</b>', '8',  '12', '16')</script><br>
+            <script>spaceOut('<b>Meds:</b>', '', '9')</script><br>
+            <b><script>spaceOut('NIH', 'CHG', 'I/O')</script></b><br>
           </td>
         </tr>
       </table>
