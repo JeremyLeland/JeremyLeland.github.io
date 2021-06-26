@@ -307,6 +307,8 @@ document.addEventListener('click', closeCustomSelector);
 var nextCallID = 1;
 var nextTeamID = 1;
 
+// TODO: Look into https://css-tricks.com/striking-a-balance-between-native-and-custom-select-elements/
+//       to make these keyboard accessible
 function makeCustomSelector(label, selectorGenerator) {
   const div = document.createElement('div');
   div.setAttribute('class', 'custom-select');
