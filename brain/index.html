@@ -6,12 +6,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    .column { 
-      float: left;
-      width: 50%;
-    }
     .padding {
-      padding: 5px;
+      padding: 5px;   /* TODO: Better fix to pad these tables */
     }
     table {
       border-collapse: collapse;
@@ -31,7 +27,9 @@
     /* ISO Paper Size */
     @page {
       size: A4 landscape;
+      margin: 0.15in;
     }
+
   </style>
   <script>
     function spaceOut(...items) {
@@ -48,7 +46,7 @@
 </head>
 
 <body>
-  <div class="column" id="template">
+  <div style="display: flex; display: none;" id="template">
     <div class="padding">
       <table>
         <colgroup>
@@ -171,7 +169,7 @@
         <tr style="height: 0.5in">
           <td colspan="5"><b>PLAN:</b></td>
         </tr>
-        <tr style="height: 2in">
+        <tr style="height: 1.5in">
           <td colspan="3" style="vertical-align: bottom">
             <script>spaceOut('<b>Turns:</b>', '8', '10', '12', '14', '16', '18')</script>
           </td>
@@ -185,15 +183,23 @@
       </table>
     </div>
   </div>
-  <div class="column" id="front-right"></div>
-  <div class="column" id="back-left"></div>
-  <div class="column" id="back-right"></div>
+
+  <div style="display: flex">
+    <div class="column" id="front-left"></div>
+    <div class="column" id="front-right"></div>
+  </div>
+  <div style="page-break-inside: avoid; page-break-after: always"></div>
+  <div style="display: flex">
+    <div class="column" id="back-left"></div>
+    <div class="column" id="back-right"></div>
+  </div>
 
   <script>
     const templateHTML = document.getElementById("template").innerHTML;
+    document.getElementById("front-left").innerHTML = templateHTML;
     document.getElementById("front-right").innerHTML = templateHTML;
-    document.getElementById("back-left").innerHTML = templateHTML;
-    document.getElementById("back-right").innerHTML = templateHTML;
+    document.getElementById("back-left").innerHTML   = templateHTML;
+    document.getElementById("back-right").innerHTML  = templateHTML;
   </script>
 </body>
 
