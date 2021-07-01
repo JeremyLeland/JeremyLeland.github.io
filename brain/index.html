@@ -11,9 +11,11 @@
     }
     .column {
       width: 50%;
+      height: 100vh;
     }
-    table {
+    .main {
       margin: auto;
+      height: 100vh;
       border-collapse: collapse;
     }
     td { 
@@ -52,13 +54,13 @@
 
 <body>
   <div style="display: none;" id="template">
-    <table>
+    <table class='main'>
       <colgroup>
         <col>
         <col style="width: 2.25in">
         <col style="width: 1in">
       </colgroup>
-      <tr>
+      <tr style="height:0">
         <td><b>ROOM</b></td>
         <td colspan="2">
           Name:<br>
@@ -78,7 +80,7 @@
           DNAR<br>
         </td>
       </tr>
-      <tr>
+      <tr style="height:0">
         <td><b>DX</b><br><br>Adm:</td>
         <td colspan="2"></td>
         <td colspan="2">
@@ -90,7 +92,7 @@
           <script>spaceOut('Neuro/IR/Surg', 'Ortho/Spine')</script>
         </td>
       </tr>
-      <tr>
+      <tr style="height:0">
         <td><b>PMH</b></td>
         <td colspan="4">
           <script>spaceOut('AFib', 'Anemia', 'Asthma', 'CAD', 'Cancer', 'CHF', 'CKD', 'COPD', 'CVA', 'DM2', 'ESRD')</script>
@@ -99,7 +101,7 @@
           <br><br>
         </td>
       </tr>
-      <tr>
+      <tr style="height:0">
         <td><b>Neuro</b></td>
         <td style="text-align: right">
           Moves / Follows
@@ -118,7 +120,7 @@
           <b>PRNs</b>
         </td>
       </tr>
-      <tr>
+      <tr style="height:0">
         <td><b>C/V</b></td>
         <td style="text-align: right">
           AFib / NSR
@@ -126,7 +128,7 @@
         </td>
         <td>Goal:</td>
       </tr>
-      <tr>
+      <tr style="height:0">
         <td><b>Resp</b></td>
         <td style="text-align: right">
           ETT / Trach / BiPAP / Hi-Flow / NC<br>
@@ -137,7 +139,7 @@
           <script>alignBlanks('Rate:', 'TVol:', 'Peep:', 'FiO2:')</script>
         </td>
       </tr>
-      <tr>
+      <tr style="height:0">
         <td><b>GI</b></td>
         <td style="text-align: right">
           PEG / OG / NG / Dob: ____
@@ -146,7 +148,7 @@
         </td>
         <td>Diet:<br><br>BS✓: </td>
       </tr>
-      <tr>
+      <tr style="height:0">
         <td><b>GU</b></td>
         <td style="text-align: right">
           BR / Cmd / Urinal / Ext / Foley: ____<br><br>
@@ -154,7 +156,7 @@
         </td>
         <td>BM:</td>
       </tr>
-      <tr>
+      <tr style="height:0">
         <td><b>Skin</b></td>
         <td></td>
         <td>Temp:<br>Turns:<br>DVT:<br></td>
@@ -165,15 +167,15 @@
           <script>alignBlanks('Mg', 'BUN', 'Creat', 'Trop', 'INR', 'Lact')</script>
         </td>
       </tr>
-      <tr>
+      <tr style="height:0">
         <td><b>Pain</b></td>
         <td></td>
         <td>Mobility:<br>Standby / 1 / 2<br>FWW / Bed</td>
       </tr>
-      <tr style="height: 0.5in">
-        <td colspan="5"><b>PLAN:</b></td>
+      <tr style="height:0">
+        <td colspan="5"><b>PLAN:<br><br><br></b></td>
       </tr>
-      <tr style="height: 1.5in">
+      <tr>
         <td colspan="3" style="vertical-align: bottom">
           <script>spaceOut('<b>Turns:</b>', '8', '10', '12', '14', '16', '18')</script>
         </td>
@@ -187,7 +189,7 @@
     </table>
   </div>
 
-  <div style="display: flex">
+  <div style="display: flex; height: 100vh">
     <div class="column" id="front-left"></div>
     <div class="column" id="front-right"></div>
   </div>
