@@ -9,7 +9,11 @@
     .padding {
       padding: 5px;   /* TODO: Better fix to pad these tables */
     }
+    .column {
+      width: 50%;
+    }
     table {
+      margin: auto;
       border-collapse: collapse;
     }
     td { 
@@ -19,10 +23,11 @@
     td .blanks {
       border: 0;
     }
+    html, body { margin: 0; padding: 0; }
     body {
       margin: 0; 
       font-family: Arial, Helvetica, sans-serif;
-      font-size: small;
+      font-size: 9pt;
     }
     /* ISO Paper Size */
     @page {
@@ -46,142 +51,140 @@
 </head>
 
 <body>
-  <div style="display: flex; display: none;" id="template">
-    <div class="padding">
-      <table>
-        <colgroup>
-          <col>
-          <col style="width: 2.25in">
-          <col style="width: 1in">
-        </colgroup>
-        <tr>
-          <td><b>ROOM</b></td>
-          <td colspan="2">
-            Name:<br>
-            Age:<br>
-            Allergies:
-          </td>
-          <td>
-            <b>ISO</b><br><br>
-            Contact<br>
-            Enteric<br>
-            Droplet<br>
-          </td>
-          <td>
-            <b>CODE</b><br><br>
-            Full<br>
-            Partial<br>
-            DNAR<br>
-          </td>
-        </tr>
-        <tr>
-          <td><b>DX</b><br><br>Adm:</td>
-          <td colspan="2"></td>
-          <td colspan="2">
-            <b>MD</b><br>
-            <script>spaceOut('SIP', 'ACSS', 'Pulm', 'Trauma')</script>
-            <br>
-            <script>spaceOut('Cardio', 'ID', 'GI', 'Nephro')</script>
-            <br>
-            <script>spaceOut('Neuro/IR/Surg', 'Ortho/Spine')</script>
-          </td>
-        </tr>
-        <tr>
-          <td><b>PMH</b></td>
-          <td colspan="4">
-            <script>spaceOut('AFib', 'Anemia', 'Asthma', 'CAD', 'Cancer', 'CHF', 'CKD', 'COPD', 'CVA', 'DM2', 'ESRD')</script>
-            <br>
-            <script>spaceOut('EtOH', 'GERD', 'Gout', 'HPLD', 'HT', 'HTN', 'MI', 'OSA', 'PolySub', 'Psych', 'Seizure', 'TIA')</script>
-            <br><br>
-          </td>
-        </tr>
-        <tr>
-          <td><b>Neuro</b></td>
-          <td style="text-align: right">
-            Moves / Follows
-            <br><br><br>
-          </td>
-          <td>Neuro✓:<br>CIWA✓:<br></td>
-          <td colspan="2" rowspan="5">
-            <b>IV</b> &nbsp;&nbsp;
-            <script>spaceOut('PICC', 'Midline', 'CVC')</script><br>
-            <script>spaceOut('LAC', 'LFA', 'L____')</script><br>
-            <script>spaceOut('RAC', 'RFA', 'R____')</script><br>
-            <script>spaceOut('Port', 'HD', 'Fistula')</script><br>
-            <br>
-            <b>Drips</b><br><br><br><br><br>
-            <b>Drains</b><br><br><br><br><br>
-            <b>PRNs</b>
-          </td>
-        </tr>
-        <tr>
-          <td><b>C/V</b></td>
-          <td style="text-align: right">
-            AFib / NSR
-            <br><br><br>
-          </td>
-          <td>Goal:</td>
-        </tr>
-        <tr>
-          <td><b>Resp</b></td>
-          <td style="text-align: right">
-            ETT / Trach / BiPAP / Hi-Flow / NC<br>
-            <br><br>
-            Home O2: ____
-          </td>
-          <td>
-            <script>alignBlanks('Rate:', 'TVol:', 'Peep:', 'FiO2:')</script>
-          </td>
-        </tr>
-        <tr>
-          <td><b>GI</b></td>
-          <td style="text-align: right">
-            PEG / OG / NG / Dob: ____
-            <br><br>
-            Whole / Crushed
-          </td>
-          <td>Diet:<br><br>BS✓: </td>
-        </tr>
-        <tr>
-          <td><b>GU</b></td>
-          <td style="text-align: right">
-            BR / Cmd / Urinal / Ext / Foley: ____<br><br>
-            Continent / Urgency / Incontinent
-          </td>
-          <td>BM:</td>
-        </tr>
-        <tr>
-          <td><b>Skin</b></td>
-          <td></td>
-          <td>Temp:<br>Turns:<br>DVT:<br></td>
-          <td rowspan="2">
-            <script>alignBlanks('WBC', 'H/H', 'Na', 'K', 'Ca', 'Phos')</script>
-          </td>
-          <td rowspan="2">
-            <script>alignBlanks('Mg', 'BUN', 'Creat', 'Trop', 'INR', 'Lact')</script>
-          </td>
-        </tr>
-        <tr>
-          <td><b>Pain</b></td>
-          <td></td>
-          <td>Mobility:<br>Standby / 1 / 2<br>FWW / Bed</td>
-        </tr>
-        <tr style="height: 0.5in">
-          <td colspan="5"><b>PLAN:</b></td>
-        </tr>
-        <tr style="height: 1.5in">
-          <td colspan="3" style="vertical-align: bottom">
-            <script>spaceOut('<b>Turns:</b>', '8', '10', '12', '14', '16', '18')</script>
-          </td>
-          <td colspan="2" style="vertical-align: bottom">
-            <b>Insulin:</b><br>
-            <script>spaceOut('<b>Assess:</b>', '8',  '12', '16')</script><br>
-            <script>spaceOut('<b>Meds:</b>', '', '9')</script><br>
-            <b><script>spaceOut('NIH', 'CHG', 'I/O')</script></b><br>
-          </td>
-        </tr>
-      </table>
-    </div>
+  <div style="display: none;" id="template">
+    <table>
+      <colgroup>
+        <col>
+        <col style="width: 2.25in">
+        <col style="width: 1in">
+      </colgroup>
+      <tr>
+        <td><b>ROOM</b></td>
+        <td colspan="2">
+          Name:<br>
+          Age:<br>
+          Allergies:
+        </td>
+        <td>
+          <b>ISO</b><br><br>
+          Contact<br>
+          Enteric<br>
+          Droplet<br>
+        </td>
+        <td>
+          <b>CODE</b><br><br>
+          Full<br>
+          Partial<br>
+          DNAR<br>
+        </td>
+      </tr>
+      <tr>
+        <td><b>DX</b><br><br>Adm:</td>
+        <td colspan="2"></td>
+        <td colspan="2">
+          <b>MD</b><br>
+          <script>spaceOut('SIP', 'ACSS', 'Pulm', 'Trauma')</script>
+          <br>
+          <script>spaceOut('Cardio', 'ID', 'GI', 'Nephro')</script>
+          <br>
+          <script>spaceOut('Neuro/IR/Surg', 'Ortho/Spine')</script>
+        </td>
+      </tr>
+      <tr>
+        <td><b>PMH</b></td>
+        <td colspan="4">
+          <script>spaceOut('AFib', 'Anemia', 'Asthma', 'CAD', 'Cancer', 'CHF', 'CKD', 'COPD', 'CVA', 'DM2', 'ESRD')</script>
+          <br>
+          <script>spaceOut('EtOH', 'GERD', 'Gout', 'HPLD', 'HT', 'HTN', 'MI', 'OSA', 'PolySub', 'Psych', 'Seizure', 'TIA')</script>
+          <br><br>
+        </td>
+      </tr>
+      <tr>
+        <td><b>Neuro</b></td>
+        <td style="text-align: right">
+          Moves / Follows
+          <br><br><br>
+        </td>
+        <td>Neuro✓:<br>CIWA✓:<br></td>
+        <td colspan="2" rowspan="5">
+          <b>IV</b> &nbsp;&nbsp;
+          <script>spaceOut('PICC', 'Midline', 'CVC')</script><br>
+          <script>spaceOut('LAC', 'LFA', 'L____')</script><br>
+          <script>spaceOut('RAC', 'RFA', 'R____')</script><br>
+          <script>spaceOut('Port', 'HD', 'Fistula')</script><br>
+          <br>
+          <b>Drips</b><br><br><br><br><br>
+          <b>Drains</b><br><br><br><br><br>
+          <b>PRNs</b>
+        </td>
+      </tr>
+      <tr>
+        <td><b>C/V</b></td>
+        <td style="text-align: right">
+          AFib / NSR
+          <br><br><br>
+        </td>
+        <td>Goal:</td>
+      </tr>
+      <tr>
+        <td><b>Resp</b></td>
+        <td style="text-align: right">
+          ETT / Trach / BiPAP / Hi-Flow / NC<br>
+          <br><br>
+          Home O2: ____
+        </td>
+        <td>
+          <script>alignBlanks('Rate:', 'TVol:', 'Peep:', 'FiO2:')</script>
+        </td>
+      </tr>
+      <tr>
+        <td><b>GI</b></td>
+        <td style="text-align: right">
+          PEG / OG / NG / Dob: ____
+          <br><br>
+          Whole / Crushed
+        </td>
+        <td>Diet:<br><br>BS✓: </td>
+      </tr>
+      <tr>
+        <td><b>GU</b></td>
+        <td style="text-align: right">
+          BR / Cmd / Urinal / Ext / Foley: ____<br><br>
+          Continent / Urgency / Incontinent
+        </td>
+        <td>BM:</td>
+      </tr>
+      <tr>
+        <td><b>Skin</b></td>
+        <td></td>
+        <td>Temp:<br>Turns:<br>DVT:<br></td>
+        <td rowspan="2">
+          <script>alignBlanks('WBC', 'H/H', 'Na', 'K', 'Ca', 'Phos')</script>
+        </td>
+        <td rowspan="2">
+          <script>alignBlanks('Mg', 'BUN', 'Creat', 'Trop', 'INR', 'Lact')</script>
+        </td>
+      </tr>
+      <tr>
+        <td><b>Pain</b></td>
+        <td></td>
+        <td>Mobility:<br>Standby / 1 / 2<br>FWW / Bed</td>
+      </tr>
+      <tr style="height: 0.5in">
+        <td colspan="5"><b>PLAN:</b></td>
+      </tr>
+      <tr style="height: 1.5in">
+        <td colspan="3" style="vertical-align: bottom">
+          <script>spaceOut('<b>Turns:</b>', '8', '10', '12', '14', '16', '18')</script>
+        </td>
+        <td colspan="2" style="vertical-align: bottom">
+          <b>Insulin:</b><br>
+          <script>spaceOut('<b>Assess:</b>', '8',  '12', '16')</script><br>
+          <script>spaceOut('<b>Meds:</b>', '', '9')</script><br>
+          <b><script>spaceOut('NIH', 'CHG', 'I/O')</script></b><br>
+        </td>
+      </tr>
+    </table>
   </div>
 
   <div style="display: flex">
