@@ -1,0 +1,15 @@
+<link rel="stylesheet" href="../styles.css">
+<script type="module">
+  import * as THREE from '../lib/three.module.js';
+  import { ThreeDemo } from './src/ThreeDemo.js';
+
+  const geometry = new THREE.BoxBufferGeometry();
+  const material = new THREE.MeshBasicMaterial( { color: 'blue' } );
+
+  const mesh = new THREE.Mesh( geometry, material );
+
+  const demo = new ThreeDemo();
+  demo.scene.add( mesh );
+  demo.render();
+
+</script>
