@@ -5,9 +5,9 @@
 
   const cols = 3, rows = 3;
   const tileMap = [
-    1, 1, 1,
-    1, 0, 1,
-    1, 1, 1,
+    0, 0, 0,
+    0, 1, 1,
+    0, 0, 0,
   ];
 
   //
@@ -84,18 +84,42 @@
       in vec2 v_uv;
       flat in ivec4 f_tileIndex;
       
-      out vec4 outColor;
+      out vec3 outColor;
+
+      const vec2 NW = vec2( 0.0, 0.0 );
+      const vec2 NE = vec2( 1.0, 0.0 );
+      const vec2 SW = vec2( 0.0, 1.0 );
+      const vec2 SE = vec2( 1.0, 1.0 );
+
+      const float N = 0.0;
+      const float W = 0.0;
+      const float E = 1.0;
+      const float S = 1.0;
 
       void main() {
+      	// NW, NE, SW, SE
         vec4 corners = vec4( greaterThanEqual( f_tileIndex, ivec4( currentTileIndex ) ) );
 
-        float n = mix( corners.x, corners.y, v_uv.x );
-        float w = mix( corners.x, corners.z, v_uv.y );
-        float e = mix( corners.y, corners.w, v_uv.x );
-        float s = mix( corners.z, corners.w, v_uv.y );
+	// N, E, W, S
+	vec4 edges = corners.xxyz * corners.yzww;
 
-        //outColor = vec4( vec3( max( h, v ) ), 1.0 );
-        outColor = vec4( n, w, e, s );
+	float nw = corners.x * distance( v_uv, NW );
+	float ne = corners.y * distance( v_uv, NE );
+	float sw = corners.z * distance( v_uv, SW );
+	float se = corners.w * distance( v_uv, SE );
+
+	float n = edges.x * distance( v_uv.y, N );
+	float w = edges.y * distance( v_uv.x, W );
+	float e = edges.z * distance( v_uv.x, E );
+	float s = edges.w * distance( v_uv.x, S );
+
+
+	//float val = max( nw, max( ne, max( sw, se ) ) );
+	float val = max( n, max( w, max( e, s ) ) );
+	
+	//outColor = vec3( nw, ne, sw );
+
+        outColor = vec3( val ); 
       }
     `,
     glslVersion: THREE.GLSL3,
