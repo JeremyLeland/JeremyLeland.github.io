@@ -3,14 +3,11 @@
   import * as THREE from '../lib/three.module.js';
   import { ThreeDemo } from './src/ThreeDemo.js';
 
-  const cols = 6, rows = 6;
+  const cols = 3, rows = 3;
   const tileMap = [
-    0, 0, 2, 2, 0, 0,
-    0, 1, 0, 1, 1, 1,
-    0, 0, 0, 1, 3, 1,
-    1, 0, 1, 0, 2, 1,
-    0, 1, 0, 1, 1, 0,
-    1, 0, 1, 0, 0, 0,
+    1, 1, 1,
+    1, 0, 1,
+    1, 1, 1,
   ];
 
   //
@@ -90,14 +87,15 @@
       out vec4 outColor;
 
       void main() {
-        bvec4 corners = greaterThanEqual( f_tileIndex, ivec4( currentTileIndex ) );
+        vec4 corners = vec4( greaterThanEqual( f_tileIndex, ivec4( currentTileIndex ) ) );
 
-        float nw = corners.x ? 1.0 : 0.0;
-        float ne = corners.y ? 1.0 : 0.0;
-        float sw = corners.z ? 1.0 : 0.0;
-        float se = corners.w ? 1.0 : 0.0;
+        float n = mix( corners.x, corners.y, v_uv.x );
+        float w = mix( corners.x, corners.z, v_uv.y );
+        float e = mix( corners.y, corners.w, v_uv.x );
+        float s = mix( corners.z, corners.w, v_uv.y );
 
-        outColor = vec4( nw, ne, sw, 1.0 );
+        //outColor = vec4( vec3( max( h, v ) ), 1.0 );
+        outColor = vec4( n, w, e, s );
       }
     `,
     glslVersion: THREE.GLSL3,
