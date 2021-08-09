@@ -21,10 +21,10 @@ export class ThreeDemo {
     this.renderer = new THREE.WebGLRenderer();
     document.body.appendChild( this.renderer.domElement );
 
-    const controls = new OrbitControls( this.camera, this.renderer.domElement );
-    controls.addEventListener( 'change', () => this.render() );
-    controls.minDistance = 1;
-    controls.maxDistance = 10;
+    this.controls = new OrbitControls( this.camera, this.renderer.domElement );
+    this.controls.addEventListener( 'change', () => this.render() );
+    this.controls.minDistance = 1;
+    this.controls.maxDistance = 10;
 
     window.onresize = () => {
       this.camera.aspect = window.innerWidth / window.innerHeight;
