@@ -3,11 +3,11 @@
   import * as THREE from '../lib/three.module.js';
   import { ThreeDemo } from './src/ThreeDemo.js';
 
-  const cols = 3, rows = 3;
+  const cols = 4, rows = 3;
   const tileMap = [
-    0, 0, 0,
-    0, 1, 1,
-    0, 0, 0,
+    0, 0, 0, 0,
+    0, 1, 1, 0,
+    0, 0, 0, 0,
   ];
 
   //
@@ -100,26 +100,30 @@
       	// NW, NE, SW, SE
         vec4 corners = vec4( greaterThanEqual( f_tileIndex, ivec4( currentTileIndex ) ) );
 
-	// N, E, W, S
-	vec4 edges = corners.xxyz * corners.yzww;
+        // N, E, W, S
+        vec4 edges = corners.xxyz * corners.yzww;
 
-	float nw = corners.x * distance( v_uv, NW );
-	float ne = corners.y * distance( v_uv, NE );
-	float sw = corners.z * distance( v_uv, SW );
-	float se = corners.w * distance( v_uv, SE );
+        float nw = corners.x * distance( v_uv, NW );
+        float ne = corners.y * distance( v_uv, NE );
+        float sw = corners.z * distance( v_uv, SW );
+        float se = corners.w * distance( v_uv, SE );
 
-	float n = edges.x * distance( v_uv.y, N );
-	float w = edges.y * distance( v_uv.x, W );
-	float e = edges.z * distance( v_uv.x, E );
-	float s = edges.w * distance( v_uv.x, S );
+        float n = edges.x * distance( v_uv.y, N );
+        float w = edges.y * distance( v_uv.x, W );
+        float e = edges.z * distance( v_uv.x, E );
+        float s = edges.w * distance( v_uv.x, S );
 
 
-	//float val = max( nw, max( ne, max( sw, se ) ) );
-	float val = max( n, max( w, max( e, s ) ) );
-	
-	//outColor = vec3( nw, ne, sw );
+        //float val = max( nw, max( ne, max( sw, se ) ) );
+        //float val = max( n, max( w, max( e, s ) ) );
 
-        outColor = vec3( val ); 
+        float a = mix( corners.x, corners.y, v_uv.x );
+        float b = mix( corners.z, corners.w, v_uv.x );
+        float c = mix( a, b, v_uv.y );
+
+        //outColor = vec3( nw, ne, sw );
+
+        outColor = vec3( c ); 
       }
     `,
     glslVersion: THREE.GLSL3,
