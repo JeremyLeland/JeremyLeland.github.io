@@ -2,7 +2,7 @@ import * as THREE from '../lib/three.module.js';
 export * as ShaderChunks from '../src/ShaderChunks.js';
 
 import Stats from '../lib/stats.module.js';
-import { gui, GUI } from '../lib/dat.gui.module.js';
+import { GUI } from '../lib/dat.gui.module.js';
 import { OrbitControls } from '../lib/OrbitControls.js';
 
 export class ThreeDemo {
@@ -58,6 +58,7 @@ export class ThreeDemo {
       this.gui.add( uniform, 'value' ).
         min( uniform.min ?? 0 ).
         max( uniform.max ?? Math.pow( 10, Math.ceil( Math.log10( uniform.value ) ) ) * 0.5 ).
+        step( uniform.step ?? 0.01 ).
         name( uniform.name ?? 'moo' ).
         onChange( () => this.render() );
     }

@@ -109,7 +109,7 @@
     tileIndex,
     {
       minStep = 0.25, maxStep = 0.75,
-      noiseAmp = 0.2, noiseFreq = 10, noiseOffset = 1,
+      noiseAmp = 0.2, noiseFreq = 10, noiseOffset = 1, noiseOctaves = 1
     } = {} 
   ) {
     return new THREE.ShaderMaterial({
@@ -121,6 +121,7 @@
         noiseAmp: { value: noiseAmp, min: 0, max: 1, name: 'Noise Amp' },
         noiseFreq: { value: noiseFreq, min: 0, max: 40, name: 'Noise Freq' },
         noiseOffset: { value: noiseOffset, min: 0, max: 10, name: 'Noise Offset' },
+        noiseOctaves: { value: noiseOctaves, min: 1, max: 10, step: 1, name: 'Noise Octaves' },
       },
       vertexShader: `
         in ivec4 tileIndex;
@@ -140,13 +141,14 @@
       fragmentShader: `
         // TODO: Do we want higher precision for anything?
 
-        ${ ShaderChunks.Noise3D }
+        ${ ShaderChunks.OctaveNoise }
 
         uniform sampler2D diffuse;
         uniform int currentTileIndex;
 
         uniform float minStep, maxStep;
         uniform float noiseAmp, noiseFreq, noiseOffset;
+        uniform int noiseOctaves;
 
         in vec2 v_uv;
         in vec3 v_pos;
@@ -188,7 +190,7 @@
         float simpleBlend() {
           // NW, NE, SW, SE
           vec4 corners = vec4( greaterThanEqual( f_tileIndex, ivec4( currentTileIndex ) ) );
-          float noise = noiseAmp * snoise( noiseFreq * v_pos + noiseOffset );
+          float noise = noiseAmp * octaveNoise( noiseFreq * v_pos + noiseOffset, noiseOctaves );
 
           vec2 horiz = mix( corners.xz, corners.yw, smoothstep( minStep, maxStep, v_uv.x + noise ) );
           return mix( horiz.x, horiz.y, smoothstep( minStep, maxStep, v_uv.y + noise ) );

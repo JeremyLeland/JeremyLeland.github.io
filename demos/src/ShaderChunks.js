@@ -216,6 +216,10 @@ float octaveNoise( vec3 pos, int octaves, bool ridged ) {
   return ridged ? abs( val ) : val;
 }
 
+float octaveNoise( vec3 pos, int octaves ) {
+  return octaveNoise( pos, octaves, false );
+}
+
 float octaveNoise( vec3 pos ) {
   return octaveNoise( pos, 6, false );
 }
