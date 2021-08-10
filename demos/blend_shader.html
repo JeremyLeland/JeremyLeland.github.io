@@ -69,7 +69,7 @@
       minStep: { value: 0.25, min: 0, max: 1, name: 'Min Step' },
       maxStep: { value: 0.75, min: 0, max: 1, name: 'Max Step' },
       noiseAmp: { value: 0.2, min: 0, max: 1, name: 'Noise Amp' },
-      noiseFreq: { value: 10, min: 0, max: 20, name: 'Noise Freq' },
+      noiseFreq: { value: 10, min: 0, max: 40, name: 'Noise Freq' },
       noiseOffset: { value: 1, min: 0, max: 10, name: 'Noise Offset' },
     },
     vertexShader: `
@@ -138,13 +138,10 @@
       float simpleBlend() {
       	// NW, NE, SW, SE
         vec4 corners = vec4( greaterThanEqual( f_tileIndex, ivec4( currentTileIndex ) ) );
-
         float noise = noiseAmp * snoise( noiseFreq * v_pos + noiseOffset );
 
-        vec2 a = mix( corners.xz, corners.yw, smoothstep( minStep, maxStep, v_uv.x + noise ) );
-        float b = mix( a.x, a.y, smoothstep( minStep, maxStep, v_uv.y + noise ) );
-        
-        return b;
+        vec2 horiz = mix( corners.xz, corners.yw, smoothstep( minStep, maxStep, v_uv.x + noise ) );
+        return mix( horiz.x, horiz.y, smoothstep( minStep, maxStep, v_uv.y + noise ) );
       }
 
       void main() {
