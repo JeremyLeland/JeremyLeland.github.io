@@ -79,16 +79,21 @@
   function getTerrainGeometry() {
     const positions = [];
     const uvs = [];
+    const tileUVs = [];
     const indices = [];
     
     let index = 0;
     for ( let row = 0; row < rows - 1; row ++ ) {
       for ( let col = 0; col < cols - 1; col ++ ) {
         // Flipping the UV so my images will be right-side-up
-        positions.push( col + 1, 0, row     );  uvs.push( 1, 0 );
-        positions.push( col,     0, row     );  uvs.push( 0, 0 );
-        positions.push( col + 1, 0, row + 1 );  uvs.push( 1, 1 );
-        positions.push( col,     0, row + 1 );  uvs.push( 0, 1 );
+        for ( let v = 0; v <= 1; v++ ) {
+          for ( let u = 1; u >= 0; u-- ) {
+            positions.push( col + u, 0, row + v );
+            uvs.push( ( col + u ) / cols, ( row + v ) / rows );
+            tileUVs.push( u, v );
+          }
+        }
+
         indices.push( index,     index + 1, index + 2 );
         indices.push( index + 2, index + 1, index + 3 );
         index += 4;
@@ -98,6 +103,7 @@
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
     geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
+    geometry.setAttribute( 'tileUV', new THREE.Float32BufferAttribute( tileUVs, 2 ) );
     geometry.setIndex( indices );
 
     const tileIndices = [];
@@ -126,16 +132,21 @@
   function getPathGeometry() {
     const positions = [];
     const uvs = [];
+    const tileUVs = [];
     const indices = [];
     
     let index = 0;
     for ( let row = 0; row < 2; row ++ ) {
       for ( let col = 0; col < 2; col ++ ) {
         // Flipping the UV so my images will be right-side-up
-        positions.push( col + 1, 0, row     );  uvs.push( 1, 0 );
-        positions.push( col,     0, row     );  uvs.push( 0, 0 );
-        positions.push( col + 1, 0, row + 1 );  uvs.push( 1, 1 );
-        positions.push( col,     0, row + 1 );  uvs.push( 0, 1 );
+        for ( let v = 0; v <= 1; v++ ) {
+          for ( let u = 1; u >= 0; u-- ) {
+            positions.push( col + u, 0, row + v );
+            uvs.push( ( col + u ) / cols, ( row + v ) / rows );
+            tileUVs.push( u, v );
+          }
+        }
+
         indices.push( index,     index + 1, index + 2 );
         indices.push( index + 2, index + 1, index + 3 );
         index += 4;
@@ -145,6 +156,7 @@
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
     geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
+    geometry.setAttribute( 'tileUV', new THREE.Float32BufferAttribute( tileUVs, 2 ) );
     geometry.setIndex( indices );
 
     const tileIndices = [];
@@ -186,14 +198,17 @@
         noiseOctaves: { value: noiseOctaves, min: 1, max: 10, step: 1, name: 'Noise Octaves' },
       },
       vertexShader: `
+        in vec2 tileUV;
         in ivec4 tileIndex;
         
         out vec2 v_uv;
+        out vec2 v_tileUV;
         out vec3 v_pos;
         flat out ivec4 f_tileIndex;
         
         void main() {
           v_uv = uv;
+          v_tileUV = tileUV;
           v_pos = position;
           f_tileIndex = tileIndex;
           
@@ -213,6 +228,7 @@
         uniform int noiseOctaves;
 
         in vec2 v_uv;
+        in vec2 v_tileUV;
         in vec3 v_pos;
         flat in ivec4 f_tileIndex;
         
@@ -235,15 +251,15 @@
           // N, W, E, S
           vec4 edges = corners.xxyz * corners.yzww;
 
-          float nw = corners.x * distance( v_uv, NW );
-          float ne = corners.y * distance( v_uv, NE );
-          float sw = corners.z * distance( v_uv, SW );
-          float se = corners.w * distance( v_uv, SE );
+          float nw = corners.x * distance( v_tileUV, NW );
+          float ne = corners.y * distance( v_tileUV, NE );
+          float sw = corners.z * distance( v_tileUV, SW );
+          float se = corners.w * distance( v_tileUV, SE );
 
-          float n = edges.x * distance( v_uv.y, N );
-          float w = edges.y * distance( v_uv.x, W );
-          float e = edges.z * distance( v_uv.x, E );
-          float s = edges.w * distance( v_uv.x, S );
+          float n = edges.x * distance( v_tileUV.y, N );
+          float w = edges.y * distance( v_tileUV.x, W );
+          float e = edges.z * distance( v_tileUV.x, E );
+          float s = edges.w * distance( v_tileUV.x, S );
 
           // TODO: Still working on this one...
           return 0.0;
@@ -254,8 +270,8 @@
           vec4 corners = vec4( greaterThanEqual( f_tileIndex, ivec4( currentTileIndex ) ) );
           float noise = noiseAmp * octaveNoise( noiseFreq * v_pos + noiseOffset, noiseOctaves );
 
-          vec2 horiz = mix( corners.xz, corners.yw, smoothstep( minStep, maxStep, v_uv.x + noise ) );
-          return mix( horiz.x, horiz.y, smoothstep( minStep, maxStep, v_uv.y + noise ) );
+          vec2 horiz = mix( corners.xz, corners.yw, smoothstep( minStep, maxStep, v_tileUV.x + noise ) );
+          return mix( horiz.x, horiz.y, smoothstep( minStep, maxStep, v_tileUV.y + noise ) );
         }
 
         void main() {
