@@ -33,6 +33,7 @@
     const positions = [];
     const uvs = [];
     const tileUVs = [];
+    const blendWeights = [];
     const indices = [];
 
     const bezier = new Bezier( 0,0  ,  5,5  ,  5,-5  ,  10,0 );
@@ -49,19 +50,19 @@
       const a = points[ i ], b = points[ i + 1 ];
       const na = normals[ i ], nb = normals[ i + 1 ];
 
-      positions.push( a.x, 0, a.y );                tileUVs.push( 1, 0 );
-      positions.push( a.x + na.x, 0, a.y + na.y );  tileUVs.push( 0, 0 );
-      positions.push( b.x, 0, b.y );                tileUVs.push( 1, 1 );
-      positions.push( b.x + nb.x, 0, b.y + nb.y );  tileUVs.push( 0, 1 );
+      positions.push( a.x, 0, a.y );                tileUVs.push( 1, 0 );   blendWeights.push( 1 );
+      positions.push( a.x + na.x, 0, a.y + na.y );  tileUVs.push( 0, 0 );   blendWeights.push( 0 );
+      positions.push( b.x, 0, b.y );                tileUVs.push( 1, 1 );   blendWeights.push( 1 );
+      positions.push( b.x + nb.x, 0, b.y + nb.y );  tileUVs.push( 0, 1 );   blendWeights.push( 0 );
 
       indices.push( index, index + 1, index + 2 );
       indices.push( index + 2, index + 1, index + 3 );
       index += 4;
 
-      positions.push( a.x - na.x, 0, a.y - na.y );  tileUVs.push( 1, 0 );
-      positions.push( a.x, 0, a.y );                tileUVs.push( 0, 0 );
-      positions.push( b.x - nb.x, 0, b.y - nb.y );  tileUVs.push( 1, 1 );
-      positions.push( b.x, 0, b.y );                tileUVs.push( 0, 1 );
+      positions.push( a.x - na.x, 0, a.y - na.y );  tileUVs.push( 1, 0 );   blendWeights.push( 0 );
+      positions.push( a.x, 0, a.y );                tileUVs.push( 0, 0 );   blendWeights.push( 1 );
+      positions.push( b.x - nb.x, 0, b.y - nb.y );  tileUVs.push( 1, 1 );   blendWeights.push( 0 );
+      positions.push( b.x, 0, b.y );                tileUVs.push( 0, 1 );   blendWeights.push( 1 );
 
       indices.push( index, index + 1, index + 2 );
       indices.push( index + 2, index + 1, index + 3 );
@@ -72,6 +73,7 @@
     geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
     //geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
     geometry.setAttribute( 'tileUV', new THREE.Float32BufferAttribute( tileUVs, 2 ) );
+    geometry.setAttribute( 'blendWeight', new THREE.Float32BufferAttribute( blendWeights, 1 ) );
     geometry.setIndex( indices );
 
     return geometry;
@@ -84,17 +86,19 @@
       },
       vertexShader: `
         in vec2 tileUV;
-        in ivec4 tileIndex;
+        in float blendWeight;
         
         out vec2 v_uv;
         out vec2 v_tileUV;
         //out vec3 v_pos;
+        out float v_blendWeight;
         //flat out ivec4 f_tileIndex;
         
         void main() {
           v_uv = uv;
           v_tileUV = tileUV;
           //v_pos = position;
+          v_blendWeight = blendWeight;
           //f_tileIndex = tileIndex;
           
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
@@ -106,12 +110,13 @@
         in vec2 v_uv;
         in vec2 v_tileUV;
         //in vec3 v_pos;
+        in float v_blendWeight;
         //flat in ivec4 f_tileIndex;
         
-        out vec4 outColor;
+        out vec3 outColor;
 
         void main() {
-          outColor = vec4( v_tileUV, 0.0, 1.0 );
+          outColor = vec3( v_blendWeight );
         }
       `,
       glslVersion: THREE.GLSL3,
