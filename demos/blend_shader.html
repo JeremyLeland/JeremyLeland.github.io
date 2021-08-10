@@ -65,109 +65,19 @@
   // Sand (smooth): step 0.4-0.6, noise 0.25, 2, 1
   // Dirt (grainy): step 0.25-0.75, noise 0.35, 35, 1
   
-  const blendShader = new THREE.ShaderMaterial({
-    uniforms: {
-      diffuse: { value: null, showInGUI: false },
-      currentTileIndex: { value: 1, showInGUI: false },
-      minStep: { value: 0.25, min: 0, max: 1, name: 'Min Step' },
-      maxStep: { value: 0.75, min: 0, max: 1, name: 'Max Step' },
-      noiseAmp: { value: 0.2, min: 0, max: 1, name: 'Noise Amp' },
-      noiseFreq: { value: 10, min: 0, max: 40, name: 'Noise Freq' },
-      noiseOffset: { value: 1, min: 0, max: 10, name: 'Noise Offset' },
-    },
-    vertexShader: `
-      in ivec4 tileIndex;
-      
-      out vec2 v_uv;
-      out vec3 v_pos;
-      flat out ivec4 f_tileIndex;
-      
-      void main() {
-        v_uv = uv;
-        v_pos = position;
-        f_tileIndex = tileIndex;
-        
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      // TODO: Do we want higher precision for anything?
-
-      ${ ShaderChunks.Noise3D }
-
-      uniform sampler2D diffuse;
-      uniform int currentTileIndex;
-
-      uniform float minStep, maxStep;
-      uniform float noiseAmp, noiseFreq, noiseOffset;
-
-      in vec2 v_uv;
-      in vec3 v_pos;
-      flat in ivec4 f_tileIndex;
-      
-      out vec4 outColor;
-
-      const vec2 NW = vec2( 0.0, 0.0 );
-      const vec2 NE = vec2( 1.0, 0.0 );
-      const vec2 SW = vec2( 0.0, 1.0 );
-      const vec2 SE = vec2( 1.0, 1.0 );
-
-      const float N = 0.0;
-      const float W = 0.0;
-      const float E = 1.0;
-      const float S = 1.0;
-
-      float blend2() {
-      	// NW, NE, SW, SE
-        vec4 corners = vec4( greaterThanEqual( f_tileIndex, ivec4( currentTileIndex ) ) );
-
-        // N, W, E, S
-        vec4 edges = corners.xxyz * corners.yzww;
-
-        float nw = corners.x * distance( v_uv, NW );
-        float ne = corners.y * distance( v_uv, NE );
-        float sw = corners.z * distance( v_uv, SW );
-        float se = corners.w * distance( v_uv, SE );
-
-        float n = edges.x * distance( v_uv.y, N );
-        float w = edges.y * distance( v_uv.x, W );
-        float e = edges.z * distance( v_uv.x, E );
-        float s = edges.w * distance( v_uv.x, S );
-
-        // TODO: Still working on this one...
-        return 0.0;
-      }
-
-      float simpleBlend() {
-      	// NW, NE, SW, SE
-        vec4 corners = vec4( greaterThanEqual( f_tileIndex, ivec4( currentTileIndex ) ) );
-        float noise = noiseAmp * snoise( noiseFreq * v_pos + noiseOffset );
-
-        vec2 horiz = mix( corners.xz, corners.yw, smoothstep( minStep, maxStep, v_uv.x + noise ) );
-        return mix( horiz.x, horiz.y, smoothstep( minStep, maxStep, v_uv.y + noise ) );
-      }
-
-      void main() {
-
-        outColor = vec4( texture2D( diffuse, v_uv ).rgb, simpleBlend() );
-      }
-    `,
-    glslVersion: THREE.GLSL3,
-    transparent: true,
-  });
-
-  const dirt = new THREE.MeshBasicMaterial();
+  const dirt = getBlendShader( 0 );
+  const grass = getBlendShader( 1 );
   const grid = new THREE.MeshBasicMaterial({ wireframe: true, color: 'yellow' });
 
   const loader = new THREE.TextureLoader();
   loader.load('./textures/dirt_tileable.png', function( texture ) { 
-    dirt.map = texture;
+    dirt.uniforms.diffuse.value = texture;
     dirt.needsUpdate = true;
     demo.render();
   });
   loader.load('./textures/grass_tileable.png', function( texture ) { 
-    blendShader.uniforms.diffuse.value = texture;
-    blendShader.needsUpdate = true;
+    grass.uniforms.diffuse.value = texture;
+    grass.needsUpdate = true;
     demo.render();
   });
 
@@ -177,20 +87,119 @@
   geometry.addGroup( 0, Infinity, 1 );
   geometry.addGroup( 0, Infinity, 2 );
 
-  const mesh = new THREE.Mesh( geometry, [ dirt, blendShader, grid ] );
+  const mesh = new THREE.Mesh( geometry, [ dirt, grass, grid ] );
 
   const centerX = (cols - 1) / 2;
   const centerZ = (rows - 1) / 2;
 
   const demo = new ThreeDemo();
   demo.scene.add( mesh );
+  demo.camera.position.set( 0, 4, 4 );
   demo.camera.position.set( centerX, 3, centerZ * 3 );
   demo.controls.target.set( centerX, 0, centerZ * 1.5 );
   demo.controls.update();
   demo.render();
-  
-  for ( let u in blendShader.uniforms ) {
-    demo.addToGui(blendShader.uniforms[ u ]);
+
+  for ( let u in grass.uniforms ) {
+    demo.addToGui( grass.uniforms[ u ] );
+  }
+
+  function getBlendShader(
+    tileIndex,
+    {
+      minStep = 0.25, maxStep = 0.75,
+      noiseAmp = 0.2, noiseFreq = 10, noiseOffset = 1,
+    } = {} 
+  ) {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        diffuse: { value: null, showInGUI: false },
+        currentTileIndex: { value: tileIndex, showInGUI: false },
+        minStep: { value: minStep, min: 0, max: 1, name: 'Min Step' },
+        maxStep: { value: maxStep, min: 0, max: 1, name: 'Max Step' },
+        noiseAmp: { value: noiseAmp, min: 0, max: 1, name: 'Noise Amp' },
+        noiseFreq: { value: noiseFreq, min: 0, max: 40, name: 'Noise Freq' },
+        noiseOffset: { value: noiseOffset, min: 0, max: 10, name: 'Noise Offset' },
+      },
+      vertexShader: `
+        in ivec4 tileIndex;
+        
+        out vec2 v_uv;
+        out vec3 v_pos;
+        flat out ivec4 f_tileIndex;
+        
+        void main() {
+          v_uv = uv;
+          v_pos = position;
+          f_tileIndex = tileIndex;
+          
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        // TODO: Do we want higher precision for anything?
+
+        ${ ShaderChunks.Noise3D }
+
+        uniform sampler2D diffuse;
+        uniform int currentTileIndex;
+
+        uniform float minStep, maxStep;
+        uniform float noiseAmp, noiseFreq, noiseOffset;
+
+        in vec2 v_uv;
+        in vec3 v_pos;
+        flat in ivec4 f_tileIndex;
+        
+        out vec4 outColor;
+
+        const vec2 NW = vec2( 0.0, 0.0 );
+        const vec2 NE = vec2( 1.0, 0.0 );
+        const vec2 SW = vec2( 0.0, 1.0 );
+        const vec2 SE = vec2( 1.0, 1.0 );
+
+        const float N = 0.0;
+        const float W = 0.0;
+        const float E = 1.0;
+        const float S = 1.0;
+
+        float blend2() {
+        	// NW, NE, SW, SE
+          vec4 corners = vec4( greaterThanEqual( f_tileIndex, ivec4( currentTileIndex ) ) );
+
+          // N, W, E, S
+          vec4 edges = corners.xxyz * corners.yzww;
+
+          float nw = corners.x * distance( v_uv, NW );
+          float ne = corners.y * distance( v_uv, NE );
+          float sw = corners.z * distance( v_uv, SW );
+          float se = corners.w * distance( v_uv, SE );
+
+          float n = edges.x * distance( v_uv.y, N );
+          float w = edges.y * distance( v_uv.x, W );
+          float e = edges.z * distance( v_uv.x, E );
+          float s = edges.w * distance( v_uv.x, S );
+
+          // TODO: Still working on this one...
+          return 0.0;
+        }
+
+        float simpleBlend() {
+          // NW, NE, SW, SE
+          vec4 corners = vec4( greaterThanEqual( f_tileIndex, ivec4( currentTileIndex ) ) );
+          float noise = noiseAmp * snoise( noiseFreq * v_pos + noiseOffset );
+
+          vec2 horiz = mix( corners.xz, corners.yw, smoothstep( minStep, maxStep, v_uv.x + noise ) );
+          return mix( horiz.x, horiz.y, smoothstep( minStep, maxStep, v_uv.y + noise ) );
+        }
+
+        void main() {
+          outColor = vec4( texture2D( diffuse, v_uv ).rgb, simpleBlend() );
+        }
+      `,
+      glslVersion: THREE.GLSL3,
+      transparent: true,
+    });
   }
 
 </script>
