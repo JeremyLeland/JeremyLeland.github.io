@@ -54,9 +54,13 @@ export class ThreeDemo {
   }
 
   addToGui(uniform) {
-    this.gui.add( uniform, 'value' ).
-      min( uniform.min ).max( uniform.max ).
-      name( uniform.name ).onChange( () => this.render() );
+    if ( uniform.value != null && ( uniform.showInGUI ?? true ) ) {
+      this.gui.add( uniform, 'value' ).
+        min( uniform.min ?? 0 ).
+        max( uniform.max ?? Math.pow( 10, Math.ceil( Math.log10( uniform.value ) ) ) * 0.5 ).
+        name( uniform.name ?? 'moo' ).
+        onChange( () => this.render() );
+    }
   }
 }
 

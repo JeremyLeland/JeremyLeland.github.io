@@ -3,6 +3,8 @@
   import * as THREE from '../lib/three.module.js';
   import { ThreeDemo } from './src/ThreeDemo.js';
 
+  import * as ShaderChunks from './src/ShaderChunks.js';
+
   const cols = 5, rows = 6;
   const tileMap = [
     0, 0, 0, 1, 1,
@@ -62,10 +64,13 @@
   
   const blendShader = new THREE.ShaderMaterial({
     uniforms: {
-      diffuse: { value: null },
-      currentTileIndex: { value: 1 },
-      minStep: { value: 0, min: 0, max: 1, name: 'Min Step' },
-      maxStep: { value: 1, min: 0, max: 1, name: 'Max Step' },
+      diffuse: { value: null, showInGUI: false },
+      currentTileIndex: { value: 1, showInGUI: false },
+      minStep: { value: 0.25, min: 0, max: 1, name: 'Min Step' },
+      maxStep: { value: 0.75, min: 0, max: 1, name: 'Max Step' },
+      noiseAmp: { value: 1, min: 0, max: 10, name: 'Noise Amp' },
+      noiseFreq: { value: 10, min: 0, max: 20, name: 'Noise Freq' },
+      noiseOffset: { value: 1, min: 0, max: 10, name: 'Noise Offset' },
     },
     vertexShader: `
       in ivec4 tileIndex;
@@ -83,10 +88,13 @@
     fragmentShader: `
       // TODO: Do we want higher precision for anything?
 
+      ${ ShaderChunks.Noise2D }
+
       uniform sampler2D diffuse;
       uniform int currentTileIndex;
 
       uniform float minStep, maxStep;
+      uniform float noiseAmp, noiseFreq, noiseOffset;
 
       in vec2 v_uv;
       flat in ivec4 f_tileIndex;
@@ -120,13 +128,10 @@
         float e = edges.z * distance( v_uv.x, E );
         float s = edges.w * distance( v_uv.x, S );
 
+        vec2 a = mix( corners.xz, corners.yw, smoothstep( minStep, maxStep, v_uv.x ) );
+        float c = mix( a.x, a.y, smoothstep( minStep, maxStep, v_uv.y ) );
 
-        //float val = max( nw, max( ne, max( sw, se ) ) );
-        //float val = max( n, max( w, max( e, s ) ) );
-
-        float a = mix( corners.x, corners.y, smoothstep( minStep, maxStep, v_uv.x ) );
-        float b = mix( corners.z, corners.w, smoothstep( minStep, maxStep, v_uv.x ) );
-        float c = mix( a, b, smoothstep( minStep, maxStep, v_uv.y ) );
+        c *= 0.5 + 0.5 * noiseAmp * snoise( noiseFreq * v_uv + noiseOffset );
 
         //outColor = vec3( nw, ne, sw );
 
@@ -154,7 +159,8 @@
   demo.controls.update();
   demo.render();
   
-  demo.addToGui( blendShader.uniforms.minStep );
-  demo.addToGui( blendShader.uniforms.maxStep );
+  for ( let u in blendShader.uniforms ) {
+    demo.addToGui(blendShader.uniforms[ u ]);
+  }
 
 </script>
