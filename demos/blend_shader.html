@@ -68,7 +68,7 @@
       currentTileIndex: { value: 1, showInGUI: false },
       minStep: { value: 0.25, min: 0, max: 1, name: 'Min Step' },
       maxStep: { value: 0.75, min: 0, max: 1, name: 'Max Step' },
-      noiseAmp: { value: 1, min: 0, max: 10, name: 'Noise Amp' },
+      noiseAmp: { value: 0.2, min: 0, max: 1, name: 'Noise Amp' },
       noiseFreq: { value: 10, min: 0, max: 20, name: 'Noise Freq' },
       noiseOffset: { value: 1, min: 0, max: 10, name: 'Noise Offset' },
     },
@@ -76,10 +76,12 @@
       in ivec4 tileIndex;
       
       out vec2 v_uv;
+      out vec3 v_pos;
       flat out ivec4 f_tileIndex;
       
       void main() {
         v_uv = uv;
+        v_pos = position;
         f_tileIndex = tileIndex;
         
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
@@ -88,7 +90,7 @@
     fragmentShader: `
       // TODO: Do we want higher precision for anything?
 
-      ${ ShaderChunks.Noise2D }
+      ${ ShaderChunks.Noise3D }
 
       uniform sampler2D diffuse;
       uniform int currentTileIndex;
@@ -97,6 +99,7 @@
       uniform float noiseAmp, noiseFreq, noiseOffset;
 
       in vec2 v_uv;
+      in vec3 v_pos;
       flat in ivec4 f_tileIndex;
       
       out vec3 outColor;
@@ -111,11 +114,11 @@
       const float E = 1.0;
       const float S = 1.0;
 
-      void main() {
+      float blend2() {
       	// NW, NE, SW, SE
         vec4 corners = vec4( greaterThanEqual( f_tileIndex, ivec4( currentTileIndex ) ) );
 
-        // N, E, W, S
+        // N, W, E, S
         vec4 edges = corners.xxyz * corners.yzww;
 
         float nw = corners.x * distance( v_uv, NW );
@@ -128,14 +131,24 @@
         float e = edges.z * distance( v_uv.x, E );
         float s = edges.w * distance( v_uv.x, S );
 
-        vec2 a = mix( corners.xz, corners.yw, smoothstep( minStep, maxStep, v_uv.x ) );
-        float c = mix( a.x, a.y, smoothstep( minStep, maxStep, v_uv.y ) );
+        // TODO: Still working on this one...
+        return 0.0;
+      }
 
-        c *= 0.5 + 0.5 * noiseAmp * snoise( noiseFreq * v_uv + noiseOffset );
+      float simpleBlend() {
+      	// NW, NE, SW, SE
+        vec4 corners = vec4( greaterThanEqual( f_tileIndex, ivec4( currentTileIndex ) ) );
 
-        //outColor = vec3( nw, ne, sw );
+        float noise = noiseAmp * snoise( noiseFreq * v_pos + noiseOffset );
 
-        outColor = vec3( c ); 
+        vec2 a = mix( corners.xz, corners.yw, smoothstep( minStep, maxStep, v_uv.x + noise ) );
+        float b = mix( a.x, a.y, smoothstep( minStep, maxStep, v_uv.y + noise ) );
+        
+        return b;
+      }
+
+      void main() {
+        outColor = vec3( simpleBlend() );
       }
     `,
     glslVersion: THREE.GLSL3,
