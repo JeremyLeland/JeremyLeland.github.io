@@ -19,82 +19,52 @@
   // Geometry
   //
 
-  const positions = [];
-  const uvs = [];
-  const indices = [];
-  
-  let index = 0;
-  for ( let row = 0; row < rows - 1; row ++ ) {
-    for ( let col = 0; col < cols - 1; col ++ ) {
-      // Flipping the UV so my images will be right-side-up
-      positions.push( col + 1, 0, row     );  uvs.push( 1, 0 );
-      positions.push( col,     0, row     );  uvs.push( 0, 0 );
-      positions.push( col + 1, 0, row + 1 );  uvs.push( 1, 1 );
-      positions.push( col,     0, row + 1 );  uvs.push( 0, 1 );
-      indices.push( index,     index + 1, index + 2 );
-      indices.push( index + 2, index + 1, index + 3 );
-      index += 4;
-    }
-  }
+  const groundGeo = getTerrainGeometry();
+  groundGeo.clearGroups();
+  groundGeo.addGroup( 0, Infinity, 0 );
+  groundGeo.addGroup( 0, Infinity, 1 );
+  groundGeo.addGroup( 0, Infinity, 2 );
 
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
-  geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
-  geometry.setIndex( indices );
 
-  const tileIndices = [];
-
-  for ( let row = 0; row < rows - 1; row ++ ) {
-    for ( let col = 0; col < cols - 1; col ++ ) {
-      const wCol = Math.max(0, col), eCol = Math.min(col + 1, cols - 1);
-      const nRow = Math.max(0, row), sRow = Math.min(row + 1, rows - 1);
-
-      const nw = tileMap[ wCol + nRow * cols ];
-      const ne = tileMap[ eCol + nRow * cols ];
-      const sw = tileMap[ wCol + sRow * cols ];
-      const se = tileMap[ eCol + sRow * cols ];
-
-      for ( let i = 0; i < 4; i ++ ) {
-        tileIndices.push( nw, ne, sw, se );
-      }
-    }
-  }
-
-  geometry.setAttribute( 'tileIndex',  new THREE.Int32BufferAttribute( tileIndices, 4 ));
+  const pathGeo = getPathGeometry();
+  pathGeo.clearGroups();
+  pathGeo.addGroup( 0, Infinity, 0 );
 
   // Sand (smooth): step 0.4-0.6, noise 0.25, 2, 1
   // Dirt (grainy): step 0.25-0.75, noise 0.35, 35, 1
   
   const dirt = getBlendShader( 0 );
   const grass = getBlendShader( 1 );
+  const sand = getBlendShader( 1, { minStep: 0.4, maxStep: 0.6, noiseAmp: 0.25, noiseFreq: 2 } );
   const grid = new THREE.MeshBasicMaterial({ wireframe: true, color: 'yellow', visible: false });
 
   const loader = new THREE.TextureLoader();
-  loader.load('./textures/dirt_tileable.png', function( texture ) { 
+  loader.load('./textures/dirt.png', function( texture ) { 
     dirt.uniforms.diffuse.value = texture;
     dirt.needsUpdate = true;
     demo.render();
   });
-  loader.load('./textures/grass_tileable.png', function( texture ) { 
+  loader.load('./textures/grass.png', function( texture ) { 
     grass.uniforms.diffuse.value = texture;
     grass.needsUpdate = true;
     demo.render();
   });
+  loader.load('./textures/sand.jpg', function( texture ) { 
+    sand.uniforms.diffuse.value = texture;
+    sand.needsUpdate = true;
+    demo.render();
+  });
 
 
-  geometry.clearGroups();
-  geometry.addGroup( 0, Infinity, 0 );
-  geometry.addGroup( 0, Infinity, 1 );
-  geometry.addGroup( 0, Infinity, 2 );
+  const groundMesh = new THREE.Mesh( groundGeo, [ dirt, grass, grid ] );
+  const pathMesh = new THREE.Mesh( pathGeo, [ sand ] );
 
-  const mesh = new THREE.Mesh( geometry, [ dirt, grass, grid ] );
+  const demo = new ThreeDemo();
+  demo.scene.add( groundMesh );
+  demo.scene.add( pathMesh );
 
   const centerX = (cols - 1) / 2;
   const centerZ = (rows - 1) / 2;
-
-  const demo = new ThreeDemo();
-  demo.scene.add( mesh );
-  demo.camera.position.set( 0, 4, 4 );
   demo.camera.position.set( centerX, 3, centerZ * 3 );
   demo.controls.target.set( centerX, 0, centerZ * 1.5 );
   demo.controls.update();
@@ -104,6 +74,98 @@
     demo.addToGui( grass.uniforms[ u ] );
   }
   demo.gui.add( grid, 'visible' ).name( 'Show Grid' ).onChange( () => demo.render() );
+
+
+  function getTerrainGeometry() {
+    const positions = [];
+    const uvs = [];
+    const indices = [];
+    
+    let index = 0;
+    for ( let row = 0; row < rows - 1; row ++ ) {
+      for ( let col = 0; col < cols - 1; col ++ ) {
+        // Flipping the UV so my images will be right-side-up
+        positions.push( col + 1, 0, row     );  uvs.push( 1, 0 );
+        positions.push( col,     0, row     );  uvs.push( 0, 0 );
+        positions.push( col + 1, 0, row + 1 );  uvs.push( 1, 1 );
+        positions.push( col,     0, row + 1 );  uvs.push( 0, 1 );
+        indices.push( index,     index + 1, index + 2 );
+        indices.push( index + 2, index + 1, index + 3 );
+        index += 4;
+      }
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+    geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
+    geometry.setIndex( indices );
+
+    const tileIndices = [];
+
+    for ( let row = 0; row < rows - 1; row ++ ) {
+      for ( let col = 0; col < cols - 1; col ++ ) {
+        const wCol = Math.max(0, col), eCol = Math.min(col + 1, cols - 1);
+        const nRow = Math.max(0, row), sRow = Math.min(row + 1, rows - 1);
+
+        const nw = tileMap[ wCol + nRow * cols ];
+        const ne = tileMap[ eCol + nRow * cols ];
+        const sw = tileMap[ wCol + sRow * cols ];
+        const se = tileMap[ eCol + sRow * cols ];
+
+        for ( let i = 0; i < 4; i ++ ) {
+          tileIndices.push( nw, ne, sw, se );
+        }
+      }
+    }
+
+    geometry.setAttribute( 'tileIndex',  new THREE.Int32BufferAttribute( tileIndices, 4 ));
+
+    return geometry;
+  }
+
+  function getPathGeometry() {
+    const positions = [];
+    const uvs = [];
+    const indices = [];
+    
+    let index = 0;
+    for ( let row = 0; row < 2; row ++ ) {
+      for ( let col = 0; col < 2; col ++ ) {
+        // Flipping the UV so my images will be right-side-up
+        positions.push( col + 1, 0, row     );  uvs.push( 1, 0 );
+        positions.push( col,     0, row     );  uvs.push( 0, 0 );
+        positions.push( col + 1, 0, row + 1 );  uvs.push( 1, 1 );
+        positions.push( col,     0, row + 1 );  uvs.push( 0, 1 );
+        indices.push( index,     index + 1, index + 2 );
+        indices.push( index + 2, index + 1, index + 3 );
+        index += 4;
+      }
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+    geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
+    geometry.setIndex( indices );
+
+    const tileIndices = [];
+
+    for ( let row = 0; row < 2; row ++ ) {
+      for ( let col = 0; col < 2; col ++ ) {
+        const nw = col;
+        const ne = ( col + 1 ) % 2;
+        const sw = col;
+        const se = ( col + 1 ) % 2;
+
+        for ( let i = 0; i < 4; i ++ ) {
+          tileIndices.push( nw, ne, sw, se );
+        }
+      }
+    }
+
+    geometry.setAttribute( 'tileIndex',  new THREE.Int32BufferAttribute( tileIndices, 4 ));
+
+    return geometry;
+  }
 
   function getBlendShader(
     tileIndex,

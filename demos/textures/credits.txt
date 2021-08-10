@@ -1,5 +1,8 @@
-dirt_tileable.png
+dirt.png
 Source: https://www.deviantart.com/fabooguy/art/Dirt-Ground-Texture-Tileable-2048x2048-441212191
 
-grass_tileable.png
+grass.png
 Source: https://www.deviantart.com/fabooguy/art/Grass-Texture-Tileable-2048x2048-432223599
+
+sand.jpg
+Source: https://www.deviantart.com/hhh316/art/Rough-Sand-Texture-Seamless-347828772
