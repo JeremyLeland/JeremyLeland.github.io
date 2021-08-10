@@ -67,7 +67,7 @@
   
   const dirt = getBlendShader( 0 );
   const grass = getBlendShader( 1 );
-  const grid = new THREE.MeshBasicMaterial({ wireframe: true, color: 'yellow' });
+  const grid = new THREE.MeshBasicMaterial({ wireframe: true, color: 'yellow', visible: false });
 
   const loader = new THREE.TextureLoader();
   loader.load('./textures/dirt_tileable.png', function( texture ) { 
@@ -103,6 +103,7 @@
   for ( let u in grass.uniforms ) {
     demo.addToGui( grass.uniforms[ u ] );
   }
+  demo.gui.add( grid, 'visible' ).name( 'Show Grid' ).onChange( () => demo.render() );
 
   function getBlendShader(
     tileIndex,

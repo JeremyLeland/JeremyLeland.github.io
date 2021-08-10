@@ -23,8 +23,8 @@ export class ThreeDemo {
 
     this.controls = new OrbitControls( this.camera, this.renderer.domElement );
     this.controls.addEventListener( 'change', () => this.render() );
-    this.controls.minDistance = 1;
-    this.controls.maxDistance = 10;
+    this.controls.minDistance = 0;
+    this.controls.maxDistance = 20;
 
     window.onresize = () => {
       this.camera.aspect = window.innerWidth / window.innerHeight;
