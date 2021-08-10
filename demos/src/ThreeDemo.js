@@ -2,7 +2,7 @@ import * as THREE from '../lib/three.module.js';
 export * as ShaderChunks from '../src/ShaderChunks.js';
 
 import Stats from '../lib/stats.module.js';
-import { GUI } from '../lib/dat.gui.module.js';
+import { gui, GUI } from '../lib/dat.gui.module.js';
 import { OrbitControls } from '../lib/OrbitControls.js';
 
 export class ThreeDemo {
@@ -51,6 +51,12 @@ export class ThreeDemo {
 
     this.renderer.render( this.scene, this.camera );
     this.stats.update();
+  }
+
+  addToGui(uniform) {
+    this.gui.add( uniform, 'value' ).
+      min( uniform.min ).max( uniform.max ).
+      name( uniform.name ).onChange( () => this.render() );
   }
 }
 

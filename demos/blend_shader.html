@@ -64,6 +64,8 @@
     uniforms: {
       diffuse: { value: null },
       currentTileIndex: { value: 1 },
+      minStep: { value: 0, min: 0, max: 1, name: 'Min Step' },
+      maxStep: { value: 1, min: 0, max: 1, name: 'Max Step' },
     },
     vertexShader: `
       in ivec4 tileIndex;
@@ -83,6 +85,8 @@
 
       uniform sampler2D diffuse;
       uniform int currentTileIndex;
+
+      uniform float minStep, maxStep;
 
       in vec2 v_uv;
       flat in ivec4 f_tileIndex;
@@ -120,9 +124,9 @@
         //float val = max( nw, max( ne, max( sw, se ) ) );
         //float val = max( n, max( w, max( e, s ) ) );
 
-        float a = mix( corners.x, corners.y, v_uv.x );
-        float b = mix( corners.z, corners.w, v_uv.x );
-        float c = mix( a, b, v_uv.y );
+        float a = mix( corners.x, corners.y, smoothstep( minStep, maxStep, v_uv.x ) );
+        float b = mix( corners.z, corners.w, smoothstep( minStep, maxStep, v_uv.x ) );
+        float c = mix( a, b, smoothstep( minStep, maxStep, v_uv.y ) );
 
         //outColor = vec3( nw, ne, sw );
 
@@ -143,5 +147,8 @@
   demo.controls.target.set( centerX, 0, centerZ * 1.5 );
   demo.controls.update();
   demo.render();
+  
+  demo.addToGui( material.uniforms.minStep );
+  demo.addToGui( material.uniforms.maxStep );
 
 </script>
