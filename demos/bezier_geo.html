@@ -18,7 +18,7 @@
   pathGeo.addGroup( 0, Infinity, 1 );
 
   const shader = getPathMaterial();
-  const grid = new THREE.MeshBasicMaterial({ wireframe: true, color: 'yellow' });
+  const grid = new THREE.MeshBasicMaterial({ wireframe: true, color: 'yellow', visible: false });
 
   const pathMesh = new THREE.Mesh( pathGeo, [ shader, grid ] );
 
@@ -28,6 +28,11 @@
   demo.camera.position.set( 0, 20, 0 );
   demo.controls.update();
   demo.render();
+
+  for ( let u in shader.uniforms ) {
+    demo.addToGui( shader.uniforms[ u ] );
+  }
+  demo.gui.add( grid, 'visible' ).name( 'Show Grid' ).onChange( () => demo.render() );
 
   function getPathGeometry() {
     const positions = [];
@@ -82,7 +87,8 @@
   function getPathMaterial() {
     return new THREE.ShaderMaterial({
       uniforms: {
-        currentTileIndex: { value: 1 },
+        minStep: { value: 0.1, min: 0, max: 1, name: 'Min Step' },
+        maxStep: { value: 0.9, min: 0, max: 1, name: 'Max Step' },
       },
       vertexShader: `
         in vec2 tileUV;
@@ -92,7 +98,6 @@
         out vec2 v_tileUV;
         //out vec3 v_pos;
         out float v_blendWeight;
-        //flat out ivec4 f_tileIndex;
         
         void main() {
           v_uv = uv;
@@ -105,18 +110,17 @@
         }
       `,
       fragmentShader: `        
-        uniform int currentTileIndex;
+        uniform float minStep, maxStep;
 
         in vec2 v_uv;
         in vec2 v_tileUV;
         //in vec3 v_pos;
         in float v_blendWeight;
-        //flat in ivec4 f_tileIndex;
         
         out vec3 outColor;
 
         void main() {
-          outColor = vec3( v_blendWeight );
+          outColor = vec3( smoothstep( minStep, maxStep, v_blendWeight ) );
         }
       `,
       glslVersion: THREE.GLSL3,
