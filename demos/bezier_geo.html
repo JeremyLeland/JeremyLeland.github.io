@@ -15,10 +15,12 @@
   const pathGeo = getPathGeometry();
   pathGeo.clearGroups();
   pathGeo.addGroup( 0, Infinity, 0 );
+  pathGeo.addGroup( 0, Infinity, 1 );
 
+  const shader = getPathMaterial();
   const grid = new THREE.MeshBasicMaterial({ wireframe: true, color: 'yellow' });
 
-  const pathMesh = new THREE.Mesh( pathGeo, [ grid ] );
+  const pathMesh = new THREE.Mesh( pathGeo, [ shader, grid ] );
 
   const demo = new ThreeDemo();
   demo.scene.add( pathMesh );
@@ -47,19 +49,19 @@
       const a = points[ i ], b = points[ i + 1 ];
       const na = normals[ i ], nb = normals[ i + 1 ];
 
-      positions.push( a.x, 0, a.y );
-      positions.push( a.x + na.x, 0, a.y + na.y );
-      positions.push( b.x, 0, b.y );
-      positions.push( b.x + nb.x, 0, b.y + nb.y );
+      positions.push( a.x, 0, a.y );                tileUVs.push( 1, 0 );
+      positions.push( a.x + na.x, 0, a.y + na.y );  tileUVs.push( 0, 0 );
+      positions.push( b.x, 0, b.y );                tileUVs.push( 1, 1 );
+      positions.push( b.x + nb.x, 0, b.y + nb.y );  tileUVs.push( 0, 1 );
 
       indices.push( index, index + 1, index + 2 );
       indices.push( index + 2, index + 1, index + 3 );
       index += 4;
 
-      positions.push( a.x - na.x, 0, a.y - na.y );
-      positions.push( a.x, 0, a.y );
-      positions.push( b.x - nb.x, 0, b.y - nb.y );
-      positions.push( b.x, 0, b.y );
+      positions.push( a.x - na.x, 0, a.y - na.y );  tileUVs.push( 1, 0 );
+      positions.push( a.x, 0, a.y );                tileUVs.push( 0, 0 );
+      positions.push( b.x - nb.x, 0, b.y - nb.y );  tileUVs.push( 1, 1 );
+      positions.push( b.x, 0, b.y );                tileUVs.push( 0, 1 );
 
       indices.push( index, index + 1, index + 2 );
       indices.push( index + 2, index + 1, index + 3 );
@@ -69,10 +71,51 @@
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
     //geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
-    //geometry.setAttribute( 'tileUV', new THREE.Float32BufferAttribute( tileUVs, 2 ) );
+    geometry.setAttribute( 'tileUV', new THREE.Float32BufferAttribute( tileUVs, 2 ) );
     geometry.setIndex( indices );
 
     return geometry;
+  }
+
+  function getPathMaterial() {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        currentTileIndex: { value: 1 },
+      },
+      vertexShader: `
+        in vec2 tileUV;
+        in ivec4 tileIndex;
+        
+        out vec2 v_uv;
+        out vec2 v_tileUV;
+        //out vec3 v_pos;
+        //flat out ivec4 f_tileIndex;
+        
+        void main() {
+          v_uv = uv;
+          v_tileUV = tileUV;
+          //v_pos = position;
+          //f_tileIndex = tileIndex;
+          
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `        
+        uniform int currentTileIndex;
+
+        in vec2 v_uv;
+        in vec2 v_tileUV;
+        //in vec3 v_pos;
+        //flat in ivec4 f_tileIndex;
+        
+        out vec4 outColor;
+
+        void main() {
+          outColor = vec4( v_tileUV, 0.0, 1.0 );
+        }
+      `,
+      glslVersion: THREE.GLSL3,
+    });
   }
 
 </script>
