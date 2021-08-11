@@ -1,0 +1,92 @@
+<link rel="stylesheet" href="./styles.css">
+<script type="module">
+  import * as THREE from './lib/three.module.js';
+  import { ThreeDemo } from './src/ThreeDemo.js';
+
+  import { Bezier } from './lib/bezier.js'
+
+  import * as ShaderChunks from './src/ShaderChunks.js';
+
+
+  //
+  // Geometry
+  //
+
+  const planeGeometry = new THREE.PlaneBufferGeometry( 4, 4, 20, 20 );
+
+  const geometry = getGrassGeometry();
+  geometry.clearGroups();
+  geometry.addGroup( 0, Infinity, 0 );
+  geometry.addGroup( 0, Infinity, 1 );
+
+  const material = new THREE.MeshBasicMaterial( { color: 'green', side: THREE.DoubleSide });
+  const grid = new THREE.MeshBasicMaterial({ wireframe: true, color: 'yellow', visible: true });
+
+  const mesh = new THREE.Mesh( geometry, [ material, grid ] );
+
+  const red = new THREE.MeshBasicMaterial({ wireframe: true, color: 'red' } );
+  const green = new THREE.MeshBasicMaterial({ wireframe: true, color: 'green' } );
+  const blue = new THREE.MeshBasicMaterial({ wireframe: true, color: 'blue' } );
+  
+  const x_axis = new THREE.Mesh( planeGeometry, red );
+  const y_axis = new THREE.Mesh( planeGeometry, green );
+  const z_axis = new THREE.Mesh( planeGeometry, blue );
+
+  x_axis.rotation.x = Math.PI / 2;
+  z_axis.rotation.y = Math.PI / 2;
+
+  const demo = new ThreeDemo();
+  demo.scene.add( mesh );
+  demo.scene.add( x_axis );
+  demo.scene.add( y_axis );
+  demo.scene.add( z_axis );
+
+  demo.camera.position.set( 0, 0, 3 );
+  demo.controls.update();
+  demo.render();
+
+  // for ( let u in shader.uniforms ) {
+  //   demo.addToGui( shader.uniforms[ u ] );
+  // }
+  demo.gui.add( grid, 'visible' ).name( 'Show Grid' ).onChange( () => demo.render() );
+
+  function getGrassGeometry() {
+    const positions = [];
+    const normals = [];
+    const indices = [];
+
+    //const bezier = new Bezier( 0,0,0  ,  0,1,0  ,  0.5, 1, 0.5 );
+    /*const outline = bezier.outline( 1 );
+
+    const leftCurve = outline.curves[ 0 ];
+    const rightCurve = outline.curves[ 1 ];
+    */
+
+    //const leftPoints = [], rightPoints = [];
+    // TODO: Normals
+
+    const a = -1, h = 1, k = 1;
+
+    const steps = 10;
+
+    for ( let x = 0; x <= 1; x += 1 / steps ) {
+      const y = a * Math.pow( x - h, 2 ) + k;
+      const z = 0.1 * ( 1 - x );
+
+      positions.push( x, y, -z );
+      positions.push( x, y,  z );
+    }
+
+    for ( let index = 0; index < steps * 2; index += 2 ) {
+      indices.push( index    , index + 1, index + 2 );
+      indices.push( index + 2, index + 1, index + 3 );
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+    geometry.setIndex( indices );
+
+    return geometry;
+  }
+
+</script>
