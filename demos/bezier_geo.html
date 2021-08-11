@@ -89,6 +89,10 @@
       uniforms: {
         minStep: { value: 0.1, min: 0, max: 1, name: 'Min Step' },
         maxStep: { value: 0.9, min: 0, max: 1, name: 'Max Step' },
+        noiseAmp: { value: 0.2, min: 0, max: 1, name: 'Noise Amp' },
+        noiseFreq: { value: 10, min: 0, max: 40, name: 'Noise Freq' },
+        noiseOffset: { value: 1, min: 0, max: 10, name: 'Noise Offset' },
+        noiseOctaves: { value: 1, min: 1, max: 10, step: 1, name: 'Noise Octaves' },
       },
       vertexShader: `
         in vec2 tileUV;
@@ -96,13 +100,13 @@
         
         out vec2 v_uv;
         out vec2 v_tileUV;
-        //out vec3 v_pos;
+        out vec3 v_pos;
         out float v_blendWeight;
         
         void main() {
           v_uv = uv;
           v_tileUV = tileUV;
-          //v_pos = position;
+          v_pos = position;
           v_blendWeight = blendWeight;
           //f_tileIndex = tileIndex;
           
@@ -111,16 +115,23 @@
       `,
       fragmentShader: `        
         uniform float minStep, maxStep;
+        uniform float noiseAmp, noiseFreq, noiseOffset;
+        uniform int noiseOctaves;
+
+        ${ ShaderChunks.OctaveNoise }
 
         in vec2 v_uv;
         in vec2 v_tileUV;
-        //in vec3 v_pos;
+        in vec3 v_pos;
         in float v_blendWeight;
         
         out vec3 outColor;
 
         void main() {
-          outColor = vec3( smoothstep( minStep, maxStep, v_blendWeight ) );
+
+          float noise = noiseAmp * octaveNoise( noiseFreq * v_pos + noiseOffset, noiseOctaves );
+
+          outColor = vec3( smoothstep( minStep, maxStep, v_blendWeight + noise ) );
         }
       `,
       glslVersion: THREE.GLSL3,
