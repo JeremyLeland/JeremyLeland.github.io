@@ -5,6 +5,18 @@
 
   import * as ShaderChunks from './src/ShaderChunks.js';
 
+  const cols = 6, rows = 7;
+  const tileMap = [
+    1, 0, 0, 0, 0, 1,
+    0, 0, 1, 1, 0, 0,
+    0, 0, 1, 1, 0, 0,
+    1, 0, 0, 0, 0, 1,
+    0, 1, 1, 1, 1, 0,
+    0, 0, 1, 1, 0, 0,
+    0, 1, 1, 1, 1, 0,
+  ];
+
+  /*
   const cols = 10, rows = 10;
   const tileMap = [
      0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 
@@ -18,6 +30,7 @@
      1, 0, 1, 0, 1, 0, 0, 1, 1, 1,
      1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
   ];
+  */
 
   //
   // Geometry
@@ -29,7 +42,7 @@
   geometry.addGroup( 0, Infinity, 1 );
   
   const blend = getBlendShader( 1 );
-  const grid = new THREE.MeshBasicMaterial({ wireframe: true, color: 'yellow', visible: false });
+  const grid = new THREE.MeshBasicMaterial({ wireframe: true, color: 'yellow', visible: true });
 
   const mesh = new THREE.Mesh( geometry, [ blend, grid ] );
 
@@ -38,8 +51,8 @@
 
   const centerX = (cols - 1) / 2;
   const centerZ = (rows - 1) / 2;
-  demo.camera.position.set( centerX, 3, centerZ * 3 );
-  demo.controls.target.set( centerX, 0, centerZ * 1.5 );
+  demo.camera.position.set( centerX, Math.max( cols, rows ), centerZ );
+  demo.controls.target.set( centerX, 0, centerZ );
   demo.controls.update();
   demo.render();
 
@@ -47,6 +60,7 @@
     demo.addToGui( blend.uniforms[ u ] );
   }
   demo.gui.add( grid, 'visible' ).name( 'Show Grid' ).onChange( () => demo.render() );
+  demo.gui.close();
 
 
   function getTerrainGeometry() {
@@ -59,13 +73,13 @@
     for ( let row = 0; row < rows - 1; row ++ ) {
       for ( let col = 0; col < cols - 1; col ++ ) {
         // Flipping the UV so my images will be right-side-up
-        for ( let v = 0; v <= 1; v++ ) {
-          for ( let u = 1; u >= 0; u-- ) {
+        [ 0, 1 ].forEach( v =>  {
+          [ 1, 0 ].forEach( u =>  {
             positions.push( col + u, 0, row + v );
             uvs.push( ( col + u ) / cols, ( row + v ) / rows );
             tileUVs.push( u, v );
-          }
-        }
+          });
+        });
 
         indices.push( index,     index + 1, index + 2 );
         indices.push( index + 2, index + 1, index + 3 );
@@ -105,7 +119,7 @@
   function getBlendShader(
     tileIndex,
     {
-      minStep = 0.5, maxStep = 0.5,
+      minStep = 0, maxStep = 1,
       noiseAmp = 0, noiseFreq = 10, noiseOffset = 1, noiseOctaves = 1
     } = {} 
   ) {
@@ -155,35 +169,72 @@
         
         out vec3 outColor;
 
-        const vec2 NW = vec2( 0.0, 0.0 );
-        const vec2 NE = vec2( 1.0, 0.0 );
-        const vec2 SW = vec2( 0.0, 1.0 );
-        const vec2 SE = vec2( 1.0, 1.0 );
+        const vec2 cornerNW = vec2( 0.0, 0.0 );
+        const vec2 cornerNE = vec2( 1.0, 0.0 );
+        const vec2 cornerSW = vec2( 0.0, 1.0 );
+        const vec2 cornerSE = vec2( 1.0, 1.0 );
 
-        const float N = 0.0;
-        const float W = 0.0;
-        const float E = 1.0;
-        const float S = 1.0;
+        const float edgeN = 0.0;
+        const float edgeW = 0.0;
+        const float edgeE = 1.0;
+        const float edgeS = 1.0;
+
+        const bvec4 EMPTY = bvec4( false, false, false, false );
+
+        const bvec4 NW = bvec4( true,  false, false, false );
+        const bvec4 NE = bvec4( false, true,  false, false );
+        const bvec4 SW = bvec4( false, false, true,  false );
+        const bvec4 SE = bvec4( false, false, false, true  );
+
+        const bvec4 N = bvec4( true,  true,  false, false );
+        const bvec4 W = bvec4( true,  false, true,  false );
+        const bvec4 E = bvec4( false, true,  false, true  );
+        const bvec4 S = bvec4( false, false, true,  true  );
+
+        const bvec4 NW_SE = bvec4( true,  false, false, true  );
+        const bvec4 NE_SW = bvec4( false, true,  true,  false );
+
+        const bvec4 N_W = bvec4( true,  true,  true,  false );
+        const bvec4 N_E = bvec4( true,  true,  false, true  );
+        const bvec4 S_W = bvec4( true,  false, true,  true  );
+        const bvec4 S_E = bvec4( false, true,  true,  true  );
+
+        const bvec4 SOLID = bvec4( true, true, true, true );
 
         float blend2() {
-        	// NW, NE, SW, SE
-          vec4 corners = vec4( greaterThanEqual( f_tileIndex, ivec4( currentTileIndex ) ) );
+          bvec4 corners = equal( f_tileIndex, ivec4( currentTileIndex ) );
 
-          // N, W, E, S
-          vec4 edges = corners.xxyz * corners.yzww;
+          float dist = 1.0;
 
-          float nw = corners.x * distance( v_tileUV, NW );
-          float ne = corners.y * distance( v_tileUV, NE );
-          float sw = corners.z * distance( v_tileUV, SW );
-          float se = corners.w * distance( v_tileUV, SE );
+          float nw = distance( v_tileUV, cornerNW );
+          float ne = distance( v_tileUV, cornerNE );
+          float sw = distance( v_tileUV, cornerSW );
+          float se = distance( v_tileUV, cornerSE );
 
-          float n = edges.x * distance( v_tileUV.y, N );
-          float w = edges.y * distance( v_tileUV.x, W );
-          float e = edges.z * distance( v_tileUV.x, E );
-          float s = edges.w * distance( v_tileUV.x, S );
+          if      ( corners == EMPTY )  dist = 1.0;
 
-          // TODO: Still working on this one...
-          return 0.0;
+          else if ( corners == NW )     dist = nw;
+          else if ( corners == NE )     dist = ne;
+          else if ( corners == SW )     dist = sw;
+          else if ( corners == SE )     dist = se;
+
+          else if ( corners == N )      dist = distance( v_tileUV.y, edgeN );
+          else if ( corners == W )      dist = distance( v_tileUV.x, edgeW );
+          else if ( corners == E )      dist = distance( v_tileUV.x, edgeE );
+          else if ( corners == S )      dist = distance( v_tileUV.y, edgeS );
+
+          else if ( corners == NW_SE )  dist = max( 1.0 - ne, 1.0 - sw );
+          else if ( corners == NE_SW )  dist = max( 1.0 - nw, 1.0 - se );
+
+          else if ( corners == N_W )    dist = 1.0 - se;
+          else if ( corners == N_E )    dist = 1.0 - sw;
+          else if ( corners == S_W )    dist = 1.0 - ne;
+          else if ( corners == S_E )    dist = 1.0 - nw;
+
+          else if ( corners == SOLID )  dist = 0.0;
+          
+          float val = clamp( 1.0 - dist, 0.0, 1.0 );
+          return smoothstep( minStep, maxStep, val );
         }
 
         float simpleBlend() {
@@ -196,7 +247,8 @@
         }
 
         void main() {
-          outColor = vec3( simpleBlend() );
+          //outColor = vec3( simpleBlend(), blend2(), 0.0 );
+          outColor = vec3( blend2() );
         }
       `,
       glslVersion: THREE.GLSL3,
