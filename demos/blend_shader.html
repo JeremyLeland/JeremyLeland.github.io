@@ -5,58 +5,36 @@
 
   import * as ShaderChunks from './src/ShaderChunks.js';
 
-  const cols = 6, rows = 6;
-  const groundMap = [
-    0, 0, 0, 2, 1, 2,
-    0, 2, 2, 2, 1, 0,
-    0, 2, 0, 2, 1, 0,
-    0, 2, 2, 2, 1, 2,
-    2, 0, 1, 1, 1, 2,
-    2, 0, 0, 2, 1, 2, 
+  const cols = 10, rows = 10;
+  const tileMap = [
+     0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 
+     0, 0, 0, 0, 0, 0, 0, 1, 1, 1,
+     0, 1, 0, 0, 0, 0, 0, 1, 0, 1,
+     0, 0, 0, 1, 1, 0, 0, 1, 1, 1,
+     1, 0, 0, 1, 1, 0, 0, 0, 0, 0,
+     1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     1, 0, 1, 0, 1, 0, 0, 1, 1, 1,
+     0, 0, 0, 1, 0, 0, 0, 1, 0, 1,
+     1, 0, 1, 0, 1, 0, 0, 1, 1, 1,
+     1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
   ];
 
   //
   // Geometry
   //
 
-  const groundGeo = getTerrainGeometry();
-  groundGeo.clearGroups();
-  groundGeo.addGroup( 0, Infinity, 0 );
-  groundGeo.addGroup( 0, Infinity, 1 );
-  groundGeo.addGroup( 0, Infinity, 2 );
-  groundGeo.addGroup( 0, Infinity, 3 );
-
-
-  // Sand (smooth): step 0.4-0.6, noise 0.25, 2, 1
-  // Dirt (grainy): step 0.25-0.75, noise 0.35, 35, 1
+  const geometry = getTerrainGeometry();
+  geometry.clearGroups();
+  geometry.addGroup( 0, Infinity, 0 );
+  geometry.addGroup( 0, Infinity, 1 );
   
-  const dirt = getBaseShader();
-  const sand = getBlendShader( 1, { minStep: 0.4, maxStep: 0.6, noiseAmp: 0.25, noiseFreq: 2 } );
-  const grass = getBlendShader( 2 );
+  const blend = getBlendShader( 1 );
   const grid = new THREE.MeshBasicMaterial({ wireframe: true, color: 'yellow', visible: false });
 
-  const loader = new THREE.TextureLoader();
-  loader.load('./textures/dirt.png', function( texture ) { 
-    dirt.uniforms.diffuse.value = texture;
-    dirt.needsUpdate = true;
-    demo.render();
-  });
-  loader.load('./textures/grass.png', function( texture ) { 
-    grass.uniforms.diffuse.value = texture;
-    grass.needsUpdate = true;
-    demo.render();
-  });
-  loader.load('./textures/sand.jpg', function( texture ) { 
-    sand.uniforms.diffuse.value = texture;
-    sand.needsUpdate = true;
-    demo.render();
-  });
-
-
-  const groundMesh = new THREE.Mesh( groundGeo, [ dirt, sand, grass, grid ] );
+  const mesh = new THREE.Mesh( geometry, [ blend, grid ] );
 
   const demo = new ThreeDemo();
-  demo.scene.add( groundMesh );
+  demo.scene.add( mesh );
 
   const centerX = (cols - 1) / 2;
   const centerZ = (rows - 1) / 2;
@@ -65,8 +43,8 @@
   demo.controls.update();
   demo.render();
 
-  for ( let u in grass.uniforms ) {
-    demo.addToGui( grass.uniforms[ u ] );
+  for ( let u in blend.uniforms ) {
+    demo.addToGui( blend.uniforms[ u ] );
   }
   demo.gui.add( grid, 'visible' ).name( 'Show Grid' ).onChange( () => demo.render() );
 
@@ -108,10 +86,10 @@
         const wCol = Math.max(0, col), eCol = Math.min(col + 1, cols - 1);
         const nRow = Math.max(0, row), sRow = Math.min(row + 1, rows - 1);
 
-        const nw = groundMap[ wCol + nRow * cols ];
-        const ne = groundMap[ eCol + nRow * cols ];
-        const sw = groundMap[ wCol + sRow * cols ];
-        const se = groundMap[ eCol + sRow * cols ];
+        const nw = tileMap[ wCol + nRow * cols ];
+        const ne = tileMap[ eCol + nRow * cols ];
+        const sw = tileMap[ wCol + sRow * cols ];
+        const se = tileMap[ eCol + sRow * cols ];
 
         for ( let i = 0; i < 4; i ++ ) {
           tileIndices.push( nw, ne, sw, se );
@@ -124,45 +102,15 @@
     return geometry;
   }
 
-  function getBaseShader() {
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        diffuse: { value: null, showInGUI: false },
-      },
-      vertexShader: `
-        in vec2 tileUV;
-        out vec2 v_uv;
-        
-        void main() {
-          v_uv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform sampler2D diffuse;
-
-        in vec2 v_uv;
-        out vec4 outColor;
-
-        void main() {
-          outColor = texture2D( diffuse, v_uv );
-        }
-      `,
-      glslVersion: THREE.GLSL3,
-      transparent: true,
-    });
-  }
-
   function getBlendShader(
     tileIndex,
     {
-      minStep = 0.25, maxStep = 0.75,
-      noiseAmp = 0.2, noiseFreq = 10, noiseOffset = 1, noiseOctaves = 1
+      minStep = 0.5, maxStep = 0.5,
+      noiseAmp = 0, noiseFreq = 10, noiseOffset = 1, noiseOctaves = 1
     } = {} 
   ) {
     return new THREE.ShaderMaterial({
       uniforms: {
-        diffuse: { value: null, showInGUI: false },
         currentTileIndex: { value: tileIndex, showInGUI: false },
         minStep: { value: minStep, min: 0, max: 1, name: 'Min Step' },
         maxStep: { value: maxStep, min: 0, max: 1, name: 'Max Step' },
@@ -194,7 +142,6 @@
 
         ${ ShaderChunks.OctaveNoise }
 
-        uniform sampler2D diffuse;
         uniform int currentTileIndex;
 
         uniform float minStep, maxStep;
@@ -206,7 +153,7 @@
         in vec3 v_pos;
         flat in ivec4 f_tileIndex;
         
-        out vec4 outColor;
+        out vec3 outColor;
 
         const vec2 NW = vec2( 0.0, 0.0 );
         const vec2 NE = vec2( 1.0, 0.0 );
@@ -249,11 +196,10 @@
         }
 
         void main() {
-          outColor = vec4( texture2D( diffuse, v_uv ).rgb, simpleBlend() );
+          outColor = vec3( simpleBlend() );
         }
       `,
       glslVersion: THREE.GLSL3,
-      transparent: true,
     });
   }
 
