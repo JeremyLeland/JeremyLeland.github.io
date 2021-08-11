@@ -1,0 +1,260 @@
+<link rel="stylesheet" href="../styles.css">
+<script type="module">
+  import * as THREE from '../lib/three.module.js';
+  import { ThreeDemo } from './src/ThreeDemo.js';
+
+  import * as ShaderChunks from './src/ShaderChunks.js';
+
+  const cols = 6, rows = 6;
+  const groundMap = [
+    0, 0, 0, 2, 1, 2,
+    0, 2, 2, 2, 1, 0,
+    0, 2, 0, 2, 1, 0,
+    0, 2, 2, 2, 1, 2,
+    2, 0, 1, 1, 1, 2,
+    2, 0, 0, 2, 1, 2, 
+  ];
+
+  //
+  // Geometry
+  //
+
+  const groundGeo = getTerrainGeometry();
+  groundGeo.clearGroups();
+  groundGeo.addGroup( 0, Infinity, 0 );
+  groundGeo.addGroup( 0, Infinity, 1 );
+  groundGeo.addGroup( 0, Infinity, 2 );
+  groundGeo.addGroup( 0, Infinity, 3 );
+
+
+  // Sand (smooth): step 0.4-0.6, noise 0.25, 2, 1
+  // Dirt (grainy): step 0.25-0.75, noise 0.35, 35, 1
+  
+  const dirt = getBaseShader();
+  const sand = getBlendShader( 1, { minStep: 0.4, maxStep: 0.6, noiseAmp: 0.25, noiseFreq: 2 } );
+  const grass = getBlendShader( 2 );
+  const grid = new THREE.MeshBasicMaterial({ wireframe: true, color: 'yellow', visible: false });
+
+  const loader = new THREE.TextureLoader();
+  loader.load('./textures/dirt.png', function( texture ) { 
+    dirt.uniforms.diffuse.value = texture;
+    dirt.needsUpdate = true;
+    demo.render();
+  });
+  loader.load('./textures/grass.png', function( texture ) { 
+    grass.uniforms.diffuse.value = texture;
+    grass.needsUpdate = true;
+    demo.render();
+  });
+  loader.load('./textures/sand.jpg', function( texture ) { 
+    sand.uniforms.diffuse.value = texture;
+    sand.needsUpdate = true;
+    demo.render();
+  });
+
+
+  const groundMesh = new THREE.Mesh( groundGeo, [ dirt, sand, grass, grid ] );
+
+  const demo = new ThreeDemo();
+  demo.scene.add( groundMesh );
+
+  const centerX = (cols - 1) / 2;
+  const centerZ = (rows - 1) / 2;
+  demo.camera.position.set( centerX, 3, centerZ * 3 );
+  demo.controls.target.set( centerX, 0, centerZ * 1.5 );
+  demo.controls.update();
+  demo.render();
+
+  for ( let u in grass.uniforms ) {
+    demo.addToGui( grass.uniforms[ u ] );
+  }
+  demo.gui.add( grid, 'visible' ).name( 'Show Grid' ).onChange( () => demo.render() );
+
+
+  function getTerrainGeometry() {
+    const positions = [];
+    const uvs = [];
+    const tileUVs = [];
+    const indices = [];
+    
+    let index = 0;
+    for ( let row = 0; row < rows - 1; row ++ ) {
+      for ( let col = 0; col < cols - 1; col ++ ) {
+        // Flipping the UV so my images will be right-side-up
+        for ( let v = 0; v <= 1; v++ ) {
+          for ( let u = 1; u >= 0; u-- ) {
+            positions.push( col + u, 0, row + v );
+            uvs.push( ( col + u ) / cols, ( row + v ) / rows );
+            tileUVs.push( u, v );
+          }
+        }
+
+        indices.push( index,     index + 1, index + 2 );
+        indices.push( index + 2, index + 1, index + 3 );
+        index += 4;
+      }
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+    geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
+    geometry.setAttribute( 'tileUV', new THREE.Float32BufferAttribute( tileUVs, 2 ) );
+    geometry.setIndex( indices );
+
+    const tileIndices = [];
+
+    for ( let row = 0; row < rows - 1; row ++ ) {
+      for ( let col = 0; col < cols - 1; col ++ ) {
+        const wCol = Math.max(0, col), eCol = Math.min(col + 1, cols - 1);
+        const nRow = Math.max(0, row), sRow = Math.min(row + 1, rows - 1);
+
+        const nw = groundMap[ wCol + nRow * cols ];
+        const ne = groundMap[ eCol + nRow * cols ];
+        const sw = groundMap[ wCol + sRow * cols ];
+        const se = groundMap[ eCol + sRow * cols ];
+
+        for ( let i = 0; i < 4; i ++ ) {
+          tileIndices.push( nw, ne, sw, se );
+        }
+      }
+    }
+
+    geometry.setAttribute( 'tileIndex',  new THREE.Int32BufferAttribute( tileIndices, 4 ));
+
+    return geometry;
+  }
+
+  function getBaseShader() {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        diffuse: { value: null, showInGUI: false },
+      },
+      vertexShader: `
+        in vec2 tileUV;
+        out vec2 v_uv;
+        
+        void main() {
+          v_uv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D diffuse;
+
+        in vec2 v_uv;
+        out vec4 outColor;
+
+        void main() {
+          outColor = texture2D( diffuse, v_uv );
+        }
+      `,
+      glslVersion: THREE.GLSL3,
+      transparent: true,
+    });
+  }
+
+  function getBlendShader(
+    tileIndex,
+    {
+      minStep = 0.25, maxStep = 0.75,
+      noiseAmp = 0.2, noiseFreq = 10, noiseOffset = 1, noiseOctaves = 1
+    } = {} 
+  ) {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        diffuse: { value: null, showInGUI: false },
+        currentTileIndex: { value: tileIndex, showInGUI: false },
+        minStep: { value: minStep, min: 0, max: 1, name: 'Min Step' },
+        maxStep: { value: maxStep, min: 0, max: 1, name: 'Max Step' },
+        noiseAmp: { value: noiseAmp, min: 0, max: 1, name: 'Noise Amp' },
+        noiseFreq: { value: noiseFreq, min: 0, max: 40, name: 'Noise Freq' },
+        noiseOffset: { value: noiseOffset, min: 0, max: 10, name: 'Noise Offset' },
+        noiseOctaves: { value: noiseOctaves, min: 1, max: 10, step: 1, name: 'Noise Octaves' },
+      },
+      vertexShader: `
+        in vec2 tileUV;
+        in ivec4 tileIndex;
+        
+        out vec2 v_uv;
+        out vec2 v_tileUV;
+        out vec3 v_pos;
+        flat out ivec4 f_tileIndex;
+        
+        void main() {
+          v_uv = uv;
+          v_tileUV = tileUV;
+          v_pos = position;
+          f_tileIndex = tileIndex;
+          
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        // TODO: Do we want higher precision for anything?
+
+        ${ ShaderChunks.OctaveNoise }
+
+        uniform sampler2D diffuse;
+        uniform int currentTileIndex;
+
+        uniform float minStep, maxStep;
+        uniform float noiseAmp, noiseFreq, noiseOffset;
+        uniform int noiseOctaves;
+
+        in vec2 v_uv;
+        in vec2 v_tileUV;
+        in vec3 v_pos;
+        flat in ivec4 f_tileIndex;
+        
+        out vec4 outColor;
+
+        const vec2 NW = vec2( 0.0, 0.0 );
+        const vec2 NE = vec2( 1.0, 0.0 );
+        const vec2 SW = vec2( 0.0, 1.0 );
+        const vec2 SE = vec2( 1.0, 1.0 );
+
+        const float N = 0.0;
+        const float W = 0.0;
+        const float E = 1.0;
+        const float S = 1.0;
+
+        float blend2() {
+        	// NW, NE, SW, SE
+          vec4 corners = vec4( greaterThanEqual( f_tileIndex, ivec4( currentTileIndex ) ) );
+
+          // N, W, E, S
+          vec4 edges = corners.xxyz * corners.yzww;
+
+          float nw = corners.x * distance( v_tileUV, NW );
+          float ne = corners.y * distance( v_tileUV, NE );
+          float sw = corners.z * distance( v_tileUV, SW );
+          float se = corners.w * distance( v_tileUV, SE );
+
+          float n = edges.x * distance( v_tileUV.y, N );
+          float w = edges.y * distance( v_tileUV.x, W );
+          float e = edges.z * distance( v_tileUV.x, E );
+          float s = edges.w * distance( v_tileUV.x, S );
+
+          // TODO: Still working on this one...
+          return 0.0;
+        }
+
+        float simpleBlend() {
+          // NW, NE, SW, SE
+          vec4 corners = vec4( equal( f_tileIndex, ivec4( currentTileIndex ) ) );
+          float noise = noiseAmp * octaveNoise( noiseFreq * v_pos + noiseOffset, noiseOctaves );
+
+          vec2 horiz = mix( corners.xz, corners.yw, smoothstep( minStep, maxStep, v_tileUV.x + noise ) );
+          return mix( horiz.x, horiz.y, smoothstep( minStep, maxStep, v_tileUV.y + noise ) );
+        }
+
+        void main() {
+          outColor = vec4( texture2D( diffuse, v_uv ).rgb, simpleBlend() );
+        }
+      `,
+      glslVersion: THREE.GLSL3,
+      transparent: true,
+    });
+  }
+
+</script>
