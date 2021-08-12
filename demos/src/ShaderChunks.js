@@ -206,6 +206,20 @@ float octaveNoise( vec3 pos, NoiseParams params ) {
   return params.amplitude * total / maxValue;
 }
 
+vec3 octaveNoiseNormal( vec3 pos, float sampleDistance, NoiseParams params ) {
+  float L = octaveNoise( vec3( pos.x - sampleDistance, pos.y, 0.0 ), params );
+  float R = octaveNoise( vec3( pos.x + sampleDistance, pos.y, 0.0 ), params );
+  float T = octaveNoise( vec3( pos.x, pos.y - sampleDistance, 0.0 ), params );
+  float B = octaveNoise( vec3( pos.x, pos.y + sampleDistance, 0.0 ), params );
+
+  vec3 norm = vec3( 
+    ( R - L ) / ( 2.0 * sampleDistance ), 
+    ( B - T ) / ( 2.0 * sampleDistance ), 
+    1.0
+  );
+  return normalize( norm );
+}
+
 float octaveNoise( vec3 pos ) {
   NoiseParams params;
   params.amplitude = 1.0;

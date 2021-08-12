@@ -47,6 +47,7 @@
         ${ ShaderChunks.OctaveNoise }
 
         uniform NoiseParams u_noise;
+        uniform float D;
 
         out vec2 v_uv;
         out vec3 v_pos;
@@ -74,14 +75,8 @@
         out vec3 outColor;
 
         void main() {
-          float L = octaveNoise( vec3( v_pos.x - D, v_pos.y, 0.0 ), u_noise );
-          float R = octaveNoise( vec3( v_pos.x + D, v_pos.y, 0.0 ), u_noise );
-          float T = octaveNoise( vec3( v_pos.x, v_pos.y - D, 0.0 ), u_noise );
-          float B = octaveNoise( vec3( v_pos.x, v_pos.y + D, 0.0 ), u_noise );
-
-          vec3 norm = vec3( ( R - L ) / ( 2.0 * D ), ( B - T ) / ( 2.0 * D ), 1.0 );
-          norm = normalize( norm );
-
+          vec3 norm = octaveNoiseNormal( v_pos, D, u_noise );
+          
           vec3 lightColor = vec3( 1.0, 1.0, 1.0 );
 
           vec3 lightDir = normalize( lightPos - v_pos );
