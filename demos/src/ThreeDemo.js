@@ -40,15 +40,22 @@ export class ThreeDemo {
     document.body.appendChild( this.stats.dom );
     
     this.gui = new GUI();
+    
+    this.update = ( dt ) => {};
   }
 
   render() {
     requestAnimationFrame( ( ) => this.draw() );
   }
 
-  animate( time ) {
-    requestAnimationFrame( ( time ) => this.animate( time ) );
+  animate( now ) {
+    this.lastTime ??= now;  // for first call only
+    this.update( now - this.lastTime );
+    this.lastTime = now;
+
     this.draw();
+
+    requestAnimationFrame( ( time ) => this.animate( time ) );
   }
 
   draw() {
@@ -59,7 +66,12 @@ export class ThreeDemo {
 
   addToGui(uniform) {
     if ( uniform.value != null && ( uniform.showInGUI ?? true ) ) {
-      if ( uniform.value instanceof Object ) {
+      if ( uniform.value instanceof THREE.Vector3 ) {
+        [ 'x', 'y', 'z' ].forEach( e => {
+          this.gui.add( uniform.value, e ).min( -10 ).max( 10 ).name( e ).onChange( () => this.render() );
+        });
+      }
+      else if ( uniform.value instanceof Object ) {
         for ( let e in uniform.value ) {
           this.gui.add( uniform.value, e ).min( -10 ).max( 10 ).name( e ).onChange( () => this.render() );
         }

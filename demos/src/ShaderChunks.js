@@ -184,6 +184,7 @@ struct NoiseParams {
   float amplitude;
   float frequency;
   float offset;
+  int octaves;
 };
 
 float octaveNoise( vec3 pos, NoiseParams params ) {
@@ -194,8 +195,7 @@ float octaveNoise( vec3 pos, NoiseParams params ) {
 
   vec3 fixedPos = pos * params.frequency + params.offset;
 
-  const int octaves = 10;
-  for (int i = 0; i < octaves; i++) {
+  for (int i = 0; i < params.octaves; i++) {
     total += snoise( fixedPos * frequency ) * amplitude;
 
     maxValue += amplitude;
@@ -211,6 +211,7 @@ float octaveNoise( vec3 pos ) {
   params.amplitude = 1.0;
   params.frequency = 1.0;
   params.offset = 0.0;
+  params.octaves = 6;
 
   return octaveNoise( pos, params );
 }

@@ -9,7 +9,7 @@
   // Geometry
   //
 
-  const geometry = new THREE.PlaneBufferGeometry( 1, 1, 20, 20 );
+  const geometry = new THREE.PlaneBufferGeometry( 10, 1, 200, 20 );
   geometry.clearGroups();
   geometry.addGroup( 0, Infinity, 0 );
   geometry.addGroup( 0, Infinity, 1 );
@@ -22,7 +22,11 @@
   const demo = new ThreeDemo();
   demo.scene.add( mesh );
 
-  //demo.render();
+  demo.update = ( dt ) => {
+   // mesh.rotation.y += dt * 0.1;
+  }
+
+  demo.animate();
 
   for ( let u in shader.uniforms ) {
     demo.addToGui( shader.uniforms[ u ] );
@@ -34,9 +38,9 @@
     return new THREE.ShaderMaterial({
       uniforms: {
         u_noise: {
-          value: { amplitude: 0.25, frequency: 1, offset: 1 }
+          value: { amplitude: 0.25, frequency: 1, offset: 1, octaves: 7 }
         },
-        D: { value: 0.0001 },
+        D: { value: 0.001, min: 0.0001, max: 0.1 },
         lightPos: { value: new THREE.Vector3( 0, 0, 1 ) },
       },
       vertexShader: `
