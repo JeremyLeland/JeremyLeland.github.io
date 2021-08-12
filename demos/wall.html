@@ -22,8 +22,6 @@
   const demo = new ThreeDemo();
   demo.scene.add( mesh );
 
-  //demo.controls.autoRotate = true;
-  //demo.controls.autoRotateSpeed = 0.5;
   //demo.render();
 
   for ( let u in shader.uniforms ) {
@@ -36,9 +34,10 @@
     return new THREE.ShaderMaterial({
       uniforms: {
         u_noise: {
-          value: { amplitude: 0.5, frequency: 1, offset: 1 }
+          value: { amplitude: 0.25, frequency: 1, offset: 1 }
         },
-        lightPos: { value: new THREE.Vector3( 0, 0, 1 ) }
+        D: { value: 0.0001 },
+        lightPos: { value: new THREE.Vector3( 0, 0, 1 ) },
       },
       vertexShader: `
         ${ ShaderChunks.OctaveNoise }
@@ -63,13 +62,14 @@
         uniform NoiseParams u_noise;
         uniform vec3 lightPos;
 
+        uniform float D;
+
         in vec2 v_uv;
         in vec3 v_pos;
         
         out vec3 outColor;
 
         void main() {
-          const float D = 0.1;
           float L = octaveNoise( vec3( v_pos.x - D, v_pos.y, 0.0 ), u_noise );
           float R = octaveNoise( vec3( v_pos.x + D, v_pos.y, 0.0 ), u_noise );
           float T = octaveNoise( vec3( v_pos.x, v_pos.y - D, 0.0 ), u_noise );
