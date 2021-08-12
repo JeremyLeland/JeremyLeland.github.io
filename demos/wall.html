@@ -36,7 +36,7 @@
     return new THREE.ShaderMaterial({
       uniforms: {
         u_noise: {
-          value: { amplitude: 0.1, frequency: 1, offset: 1 }
+          value: { amplitude: 0.5, frequency: 1, offset: 1 }
         }
       },
       vertexShader: `
@@ -45,26 +45,14 @@
         uniform NoiseParams u_noise;
 
         out vec2 v_uv;
-        out vec3 v_norm;
         out vec3 v_pos;
         
         void main() {
           v_uv = uv;
 
-
-          const float D = 0.1;
-          float C = octaveNoise( position, u_noise );
-          float L = octaveNoise( position + vec3( -D,  0,  0 ), u_noise );
-          float R = octaveNoise( position + vec3(  D,  0,  0 ), u_noise );
-          float T = octaveNoise( position + vec3(  0, -D,  0 ), u_noise );
-          float B = octaveNoise( position + vec3(  0,  D,  0 ), u_noise );
-
           v_pos = position;
-          v_pos.z = C;
+          v_pos.z = octaveNoise( v_pos, u_noise );
 
-          v_norm = vec3( ( R - L ) / ( 2.0 * D ), ( B - T ) / ( 2.0 * D ), 1.0 );
-          //v_norm = normalize( v_norm );
-          
           gl_Position = projectionMatrix * modelViewMatrix * vec4( v_pos, 1.0 );
         }
       `,
@@ -75,13 +63,18 @@
 
         in vec2 v_uv;
         in vec3 v_pos;
-        in vec3 v_norm;
         
         out vec3 outColor;
 
         void main() {
+          const float D = 0.1;
+          float L = octaveNoise( vec3( v_pos.x - D, v_pos.y, 0.0 ), u_noise );
+          float R = octaveNoise( vec3( v_pos.x + D, v_pos.y, 0.0 ), u_noise );
+          float T = octaveNoise( vec3( v_pos.x, v_pos.y - D, 0.0 ), u_noise );
+          float B = octaveNoise( vec3( v_pos.x, v_pos.y + D, 0.0 ), u_noise );
 
-          vec3 norm = normalize( v_norm );
+          vec3 norm = vec3( ( R - L ) / ( 2.0 * D ), ( B - T ) / ( 2.0 * D ), 1.0 );
+          norm = normalize( norm );
 
           vec3 lightPos = vec3( 0.0, 0.0, 1.0 );
           vec3 lightColor = vec3( 1.0, 1.0, 1.0 );

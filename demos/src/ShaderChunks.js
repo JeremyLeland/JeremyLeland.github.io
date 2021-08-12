@@ -194,7 +194,7 @@ float octaveNoise( vec3 pos, NoiseParams params ) {
 
   vec3 fixedPos = pos * params.frequency + params.offset;
 
-  const int octaves = 6;
+  const int octaves = 10;
   for (int i = 0; i < octaves; i++) {
     total += snoise( fixedPos * frequency ) * amplitude;
 
