@@ -19,7 +19,7 @@
   geometry.addGroup( 0, Infinity, 0 );
   geometry.addGroup( 0, Infinity, 1 );
 
-  const material = new THREE.MeshBasicMaterial( { color: 'green', side: THREE.DoubleSide });
+  const material = new THREE.MeshLambertMaterial( { color: 'green', side: THREE.DoubleSide });
   const grid = new THREE.MeshBasicMaterial({ wireframe: true, color: 'yellow', visible: true });
 
   const mesh = new THREE.Mesh( geometry, [ material, grid ] );
@@ -37,9 +37,12 @@
 
   const demo = new ThreeDemo();
   demo.scene.add( mesh );
+  demo.scene.add( getNormals() );
   demo.scene.add( x_axis );
   demo.scene.add( y_axis );
   demo.scene.add( z_axis );
+
+  demo.light.position.set( 0, 4, 0 );
 
   demo.camera.position.set( 0, 0, 3 );
   demo.controls.update();
@@ -49,6 +52,33 @@
   //   demo.addToGui( shader.uniforms[ u ] );
   // }
   demo.gui.add( grid, 'visible' ).name( 'Show Grid' ).onChange( () => demo.render() );
+
+  function getNormals() {
+    const positions = [];
+
+    const points = [
+      { x: 0, y: 0 },   // start
+      { x: 0, y: 1 },   // control
+      { x: 1, y: 1 },   // end
+    ];
+
+    const steps = 10;
+
+    for ( let t = 0; t <= 1; t += 1 / steps ) {
+      const pos = getCurvePosition( points, t );
+      const norm = getCurveNormal( points, t );
+
+      positions.push( pos.x, pos.y, 0 );
+      positions.push( pos.x + norm.x, pos.y + norm.y, 0 );
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    const material = new THREE.LineBasicMaterial( { color: 'white' } );
+
+    geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+
+    return new THREE.Line( geometry, material );
+  }
 
   function getGrassGeometry() {
     const positions = [];
@@ -65,16 +95,25 @@
     //const leftPoints = [], rightPoints = [];
     // TODO: Normals
 
-    const a = -1, h = 1, k = 1;
+    const points = [
+      { x: 0, y: 0 },   // start
+      { x: 0, y: 1 },   // control
+      { x: 1, y: 1 },   // end
+    ];
 
     const steps = 10;
 
-    for ( let x = 0; x <= 1; x += 1 / steps ) {
-      const y = a * Math.pow( x - h, 2 ) + k;
-      const z = 0.1 * ( 1 - x );
+    for ( let t = 0; t <= 1; t += 1 / steps ) {
+      const pos = getCurvePosition( points, t );
+      const norm = getCurveNormal( points, t );
 
-      positions.push( x, y, -z );
-      positions.push( x, y,  z );
+      const width = 0.1 * (1 - t);
+
+      positions.push( pos.x, pos.y, -width );
+      positions.push( pos.x, pos.y,  width );
+
+      normals.push( norm.x, norm.y, 0 );
+      normals.push( norm.x, norm.y, 0 );
     }
 
     for ( let index = 0; index < steps * 2; index += 2 ) {
@@ -84,9 +123,37 @@
 
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+    geometry.setAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
     geometry.setIndex( indices );
 
     return geometry;
   }
+
+  function getCurvePosition( points, t ) {
+    const x = (1-t) * (1-t) * points[ 0 ].x +
+              2 * t * (1-t) * points[ 1 ].x + 
+              t * t * points[ 2 ].x;
+
+    const y = (1-t) * (1-t) * points[ 0 ].y +
+              2 * t * (1-t) * points[ 1 ].y + 
+              t * t * points[ 2 ].y;
+
+    return { x: x, y: y };
+  }
+
+  // See: https://pomax.github.io/bezierinfo/#derivatives
+  function getCurveNormal( points, t ) {
+    const x = 2 * (1-t) * ( points[ 1 ].x - points[ 0 ].x ) +
+              2 *    t  * ( points[ 2 ].x - points[ 1 ].x );
+
+    const y = 2 * (1-t) * ( points[ 1 ].y - points[ 0 ].y ) +
+              2 *    t  * ( points[ 2 ].y - points[ 1 ].y );
+
+    // normal = -y,x of tangent
+    // also, normalize it
+    const dist = Math.hypot( x, y );
+    return { x: -y / dist, y: x / dist };
+  }
+
 
 </script>
