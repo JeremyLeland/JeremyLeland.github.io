@@ -22,8 +22,8 @@
   const demo = new ThreeDemo();
   demo.scene.add( mesh );
 
-  demo.controls.autoRotate = true;
-  demo.controls.autoRotateSpeed = 0.5;
+  //demo.controls.autoRotate = true;
+  //demo.controls.autoRotateSpeed = 0.5;
   //demo.render();
 
   for ( let u in shader.uniforms ) {
@@ -77,8 +77,10 @@
               vec2 diff = neighbor + point - f_st;
               float dist = length( diff );
 
+              float ang = atan( diff.y, diff.x );
+
               // Why does the size of 1.0 change with scale?
-              if ( dist < 1.0 ) {
+              if ( dist < abs( sin( 6.0 * ang ) ) ) {
                 val = ( i_st + neighbor ) / scale;
               }
             }
