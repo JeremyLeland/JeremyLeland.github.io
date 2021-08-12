@@ -30,11 +30,13 @@
     demo.addToGui( shader.uniforms[ u ] );
   }
   demo.gui.add( grid, 'visible' ).name( 'Show Grid' ).onChange( () => demo.render() );
-  demo.gui.close();
+  //demo.gui.close();
 
   function getShader() {
     return new THREE.ShaderMaterial({
       uniforms: {
+        u_frequency: { value: 6.0, max: 10, step: 1, name: 'Frequency' },
+        u_scale: { value: 8.0, max: 20, name: 'Scale' },
       },
       vertexShader: `
         out vec2 v_uv;
@@ -50,10 +52,17 @@
       fragmentShader: `
         ${ ShaderChunks.Noise3D }
 
+        uniform float u_frequency;
+        uniform float u_scale;
+
         in vec2 v_uv;
         in vec3 v_pos;
         
         out vec3 outColor;
+
+        float random (vec2 st) {
+          return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+        }
 
         vec2 random2( vec2 p ) {
           return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);
@@ -61,14 +70,16 @@
 
         void main() {
           // Scale
-          float scale = 8.0;
-          vec2 st = v_uv * scale;
+          vec2 st = v_uv * u_scale;
 
           // Tile the space
           vec2 i_st = floor( st );
           vec2 f_st = fract( st );
 
           vec2 val = vec2( 0.0, 0.0 );
+          vec3 color = vec3( 0.0, 0.0, 0.0 );
+
+          float bestZ = 0.0;
 
           for (int y= -1; y <= 1; y++) {
             for (int x= -1; x <= 1; x++) {
@@ -79,14 +90,18 @@
 
               float ang = atan( diff.y, diff.x );
 
+              float z = random( point );
+
               // Why does the size of 1.0 change with scale?
-              if ( dist < abs( sin( 6.0 * ang ) ) ) {
-                val = ( i_st + neighbor ) / scale;
+              if ( dist < abs( sin( u_frequency * ang ) ) && z > bestZ ) {
+                val = ( i_st + neighbor ) / u_scale;
+                color = vec3( sin( point ), 0.0 );
+                bestZ = z;
               }
             }
           }
 
-          outColor = vec3( val, 0.0 );
+          outColor = color;
         }
       `,
       glslVersion: THREE.GLSL3,
