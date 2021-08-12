@@ -103,22 +103,43 @@
 
     const steps = 10;
 
-    for ( let t = 0; t <= 1; t += 1 / steps ) {
-      const pos = getCurvePosition( points, t );
-      const norm = getCurveNormal( points, t );
+    let index = 0;
+    for ( let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4 ) {
+      for ( let t = 0; t <= 1; t += 1 / steps ) {
+        const pos = getCurvePosition( points, t );
+        const norm = getCurveNormal( points, t );
+        
+        const x = pos.x;
+        const y = pos.y;
 
-      const width = 0.1 * (1 - t);
+        const width = 0.1 * (1 - t);
+        [ -width, width ].forEach( z => {
+          positions.push(
+            x * Math.cos( angle ) - z * Math.sin( angle ),
+            y,
+            x * Math.sin( angle ) + z * Math.cos( angle )
+          );
+        });
 
-      positions.push( pos.x, pos.y, -width );
-      positions.push( pos.x, pos.y,  width );
+        const nx = norm.x;
+        const ny = norm.y;
+        const nz = 0;
 
-      normals.push( norm.x, norm.y, 0 );
-      normals.push( norm.x, norm.y, 0 );
-    }
+        for ( let n = 0; n < 2; n ++ ) {
+          normals.push(
+            nx * Math.cos( angle ) - nz * Math.sin( angle ),
+            ny,
+            nx * Math.sin( angle ) + nz * Math.cos( angle )
+          );
+        }
+      }
 
-    for ( let index = 0; index < steps * 2; index += 2 ) {
-      indices.push( index    , index + 1, index + 2 );
-      indices.push( index + 2, index + 1, index + 3 );
+      for ( let i = 0; i < steps; i ++ ) {
+        indices.push( index    , index + 1, index + 2 );
+        indices.push( index + 2, index + 1, index + 3 );
+        index += 2;
+      }
+      index += 2;   // or more? get us to the next set of triangles...
     }
 
     const geometry = new THREE.BufferGeometry();
