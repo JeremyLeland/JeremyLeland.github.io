@@ -14,23 +14,28 @@ export const UVOut = `
   }
 `;
 
-export const Noise2D = `
+export const SimplexNoise = `
 //
-// Description : Array and textureless GLSL 2D simplex noise function.
+// Description : Array and textureless GLSL 2D/3D/4D simplex 
+//               noise functions.
 //      Author : Ian McEwan, Ashima Arts.
 //  Maintainer : stegu
-//     Lastmod : 20110822 (ijm)
+//     Lastmod : 20201014 (stegu)
 //     License : Copyright (C) 2011 Ashima Arts. All rights reserved.
 //               Distributed under the MIT License. See LICENSE file.
 //               https://github.com/ashima/webgl-noise
 //               https://github.com/stegu/webgl-noise
 // 
 
+vec2 mod289(vec2 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+
 vec3 mod289(vec3 x) {
   return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
 
-vec2 mod289(vec2 x) {
+vec4 mod289(vec4 x) {
   return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
 
@@ -38,8 +43,17 @@ vec3 permute(vec3 x) {
   return mod289(((x*34.0)+10.0)*x);
 }
 
+vec4 permute(vec4 x) {
+     return mod289(((x*34.0)+10.0)*x);
+}
+
+vec4 taylorInvSqrt(vec4 r)
+{
+  return 1.79284291400159 - 0.85373472095314 * r;
+}
+
 float snoise(vec2 v)
-  {
+{
   const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
                       0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
                      -0.577350269189626,  // -1.0 + 2.0 * C.x
@@ -85,37 +99,6 @@ float snoise(vec2 v)
   g.x  = a0.x  * x0.x  + h.x  * x0.y;
   g.yz = a0.yz * x12.xz + h.yz * x12.yw;
   return 130.0 * dot(m, g);
-}
-`;
-
-export const Noise3D = `
-//
-// Description : Array and textureless GLSL 2D/3D/4D simplex 
-//               noise functions.
-//      Author : Ian McEwan, Ashima Arts.
-//  Maintainer : stegu
-//     Lastmod : 20201014 (stegu)
-//     License : Copyright (C) 2011 Ashima Arts. All rights reserved.
-//               Distributed under the MIT License. See LICENSE file.
-//               https://github.com/ashima/webgl-noise
-//               https://github.com/stegu/webgl-noise
-// 
-
-vec3 mod289(vec3 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
-
-vec4 mod289(vec4 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
-}
-
-vec4 permute(vec4 x) {
-     return mod289(((x*34.0)+10.0)*x);
-}
-
-vec4 taylorInvSqrt(vec4 r)
-{
-  return 1.79284291400159 - 0.85373472095314 * r;
 }
 
 float snoise(vec3 v)
@@ -195,33 +178,40 @@ float snoise(vec3 v)
 `;
 
 export const OctaveNoise = `
-${ Noise3D }
+${ SimplexNoise }
 
-// TODO: Is it faster if we hardcode octaves? (for loop unrolling)
-float octaveNoise( vec3 pos, int octaves, bool ridged ) {
+struct NoiseParams {
+  float amplitude;
+  float frequency;
+  float offset;
+};
+
+float octaveNoise( vec3 pos, NoiseParams params ) {
   float total = 0.0;
   float frequency = 1.0;
   float amplitude = 1.0;
   float maxValue = 0.0;
 
+  vec3 fixedPos = pos * params.frequency + params.offset;
+
+  const int octaves = 6;
   for (int i = 0; i < octaves; i++) {
-    total += snoise( pos * frequency ) * amplitude;
+    total += snoise( fixedPos * frequency ) * amplitude;
 
     maxValue += amplitude;
     amplitude *= 0.5;
     frequency *= 2.0;
   }
 
-  float val = total / maxValue;
-
-  return ridged ? abs( val ) : val;
-}
-
-float octaveNoise( vec3 pos, int octaves ) {
-  return octaveNoise( pos, octaves, false );
+  return params.amplitude * total / maxValue;
 }
 
 float octaveNoise( vec3 pos ) {
-  return octaveNoise( pos, 6, false );
+  NoiseParams params;
+  params.amplitude = 1.0;
+  params.frequency = 1.0;
+  params.offset = 0.0;
+
+  return octaveNoise( pos, params );
 }
 `;
