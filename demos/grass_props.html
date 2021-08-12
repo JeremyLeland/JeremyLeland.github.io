@@ -37,9 +37,9 @@
 
   const demo = new ThreeDemo();
   demo.scene.add( mesh );
-  demo.scene.add( x_axis );
-  demo.scene.add( y_axis );
-  demo.scene.add( z_axis );
+  // demo.scene.add( x_axis );
+  // demo.scene.add( y_axis );
+  // demo.scene.add( z_axis );
 
   demo.light.position.set( 0, 4, 0 );
 
@@ -58,7 +58,7 @@
     const indices = [];
 
     let index = 0;
-    for ( let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8 + Math.random() * Math.PI / 4 ) {
+    for ( let angle = 0; angle < Math.PI * 4; angle += Math.PI / 8 + Math.random() * Math.PI / 4 ) {
       const points = [
         { x: Math.random() * 0.1, y: 0 },   // start
         { x: -0.1 + Math.random() * 0.4, y: 0.5 + Math.random() * 0.5 },   // control
