@@ -59,12 +59,19 @@ export class ThreeDemo {
 
   addToGui(uniform) {
     if ( uniform.value != null && ( uniform.showInGUI ?? true ) ) {
-      this.gui.add( uniform, 'value' ).
-        min( uniform.min ?? 0 ).
-        max( uniform.max ?? Math.pow( 10, Math.ceil( Math.log10( uniform.value ) ) ) * 0.5 ).
-        step( uniform.step ?? 0.01 ).
-        name( uniform.name ?? 'moo' ).
-        onChange( () => this.render() );
+      if ( uniform.value instanceof Object ) {
+        for ( let e in uniform.value ) {
+          this.gui.add( uniform.value, e ).min( -10 ).max( 10 ).name( e ).onChange( () => this.render() );
+        }
+      }
+      else {
+        this.gui.add( uniform, 'value' ).
+          min( uniform.min ?? 0 ).
+          max( uniform.max ?? Math.pow( 10, Math.ceil( Math.log10( uniform.value ) ) ) * 0.5 ).
+          step( uniform.step ?? 0.01 ).
+          name( uniform.name ?? 'moo' ).
+          onChange( () => this.render() );
+      }
     }
   }
 }

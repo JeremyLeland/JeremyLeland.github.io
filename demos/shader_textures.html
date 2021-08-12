@@ -37,6 +37,9 @@
       uniforms: {
         u_frequency: { value: 6.0, max: 10, step: 1, name: 'Frequency' },
         u_scale: { value: 8.0, max: 20, name: 'Scale' },
+        u_noise: {
+          value: { amplitude: 1, frequency: 1, offset: 1 }
+        }
       },
       vertexShader: `
         out vec2 v_uv;
@@ -50,10 +53,18 @@
         }
       `,
       fragmentShader: `
-        ${ ShaderChunks.Noise3D }
+        ${ ShaderChunks.Noise2D }
 
         uniform float u_frequency;
         uniform float u_scale;
+
+        struct Noise {
+          float amplitude;
+          float frequency;
+          float offset;
+        };
+
+        uniform Noise u_noise;
 
         in vec2 v_uv;
         in vec3 v_pos;
@@ -85,7 +96,10 @@
             for (int x= -1; x <= 1; x++) {
               vec2 neighbor = vec2( float( x ), float( y ) );
               vec2 point = random2( i_st + neighbor );
-              vec2 diff = neighbor + point - f_st;
+
+              // Note: Putting noise here makes for a "water distortion" sort of effect
+              vec2 diff = neighbor + point - f_st;// + u_noise.amplitude * snoise( u_noise.frequency * v_uv + u_noise.offset );
+
               float dist = length( diff );
 
               float ang = atan( diff.y, diff.x );
