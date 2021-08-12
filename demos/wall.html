@@ -1,0 +1,84 @@
+<link rel="stylesheet" href="../styles.css">
+<script type="module">
+  import * as THREE from '../lib/three.module.js';
+  import { ThreeDemo } from './src/ThreeDemo.js';
+
+  import * as ShaderChunks from './src/ShaderChunks.js';
+
+  //
+  // Geometry
+  //
+
+  const geometry = new THREE.BoxBufferGeometry( 1, 1, 1, 10, 10, 10 );
+  geometry.clearGroups();
+  geometry.addGroup( 0, Infinity, 0 );
+  geometry.addGroup( 0, Infinity, 1 );
+  
+  const shader = getShader();
+  const grid = new THREE.MeshBasicMaterial({ wireframe: true, color: 'yellow', visible: true });
+
+  const mesh = new THREE.Mesh( geometry, [ shader, grid ] );
+
+  const demo = new ThreeDemo();
+  demo.scene.add( mesh );
+
+  //demo.controls.autoRotate = true;
+  //demo.controls.autoRotateSpeed = 0.5;
+  //demo.render();
+
+  for ( let u in shader.uniforms ) {
+    demo.addToGui( shader.uniforms[ u ] );
+  }
+  demo.gui.add( grid, 'visible' ).name( 'Show Grid' ).onChange( () => demo.render() );
+  //demo.gui.close();
+
+  function getShader() {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        u_scale: { value: 0.5, min: 0.1, max: 1, name: 'Scale' },
+        u_noise: {
+          value: { amplitude: 0, frequency: 1, offset: 0 }
+        }
+      },
+      vertexShader: `
+        ${ ShaderChunks.OctaveNoise }
+
+        uniform float u_scale;
+
+        out vec2 v_uv;
+        out vec3 v_pos;
+        
+        void main() {
+          v_uv = uv;
+          v_pos = position;
+
+          v_pos.z += u_scale * octaveNoise( v_pos );
+          
+          gl_Position = projectionMatrix * modelViewMatrix * vec4( v_pos, 1.0 );
+        }
+      `,
+      fragmentShader: `
+        ${ ShaderChunks.OctaveNoise }
+
+        struct Noise {
+          float amplitude;
+          float frequency;
+          float offset;
+        };
+
+        uniform Noise u_noise;
+
+        in vec2 v_uv;
+        in vec3 v_pos;
+        
+        out vec3 outColor;
+
+        void main() {
+          outColor = v_pos;
+        }
+      `,
+      glslVersion: THREE.GLSL3,
+    });
+  }
+
+</script>

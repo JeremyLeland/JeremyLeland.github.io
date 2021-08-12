@@ -197,6 +197,7 @@ float snoise(vec3 v)
 export const OctaveNoise = `
 ${ Noise3D }
 
+// TODO: Is it faster if we hardcode octaves? (for loop unrolling)
 float octaveNoise( vec3 pos, int octaves, bool ridged ) {
   float total = 0.0;
   float frequency = 1.0;
