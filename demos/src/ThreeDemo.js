@@ -43,12 +43,16 @@ export class ThreeDemo {
   }
 
   render() {
-    requestAnimationFrame( ( time ) => this.animate( time ) );
+    requestAnimationFrame( ( ) => this.draw() );
   }
 
   animate( time ) {
-    // requestAnimationFrame( this.animate );
+    requestAnimationFrame( ( time ) => this.animate( time ) );
+    this.draw();
+  }
 
+  draw() {
+    this.controls.update();
     this.renderer.render( this.scene, this.camera );
     this.stats.update();
   }

@@ -1,0 +1,94 @@
+<link rel="stylesheet" href="../styles.css">
+<script type="module">
+  import * as THREE from '../lib/three.module.js';
+  import { ThreeDemo } from './src/ThreeDemo.js';
+
+  import * as ShaderChunks from './src/ShaderChunks.js';
+
+  //
+  // Geometry
+  //
+
+  const geometry = new THREE.BoxBufferGeometry();
+  geometry.clearGroups();
+  geometry.addGroup( 0, Infinity, 0 );
+  geometry.addGroup( 0, Infinity, 1 );
+  
+  const shader = getShader();
+  const grid = new THREE.MeshBasicMaterial({ wireframe: true, color: 'yellow', visible: false });
+
+  const mesh = new THREE.Mesh( geometry, [ shader, grid ] );
+
+  const demo = new ThreeDemo();
+  demo.scene.add( mesh );
+
+  demo.controls.autoRotate = true;
+  demo.controls.autoRotateSpeed = 0.5;
+  //demo.render();
+
+  for ( let u in shader.uniforms ) {
+    demo.addToGui( shader.uniforms[ u ] );
+  }
+  demo.gui.add( grid, 'visible' ).name( 'Show Grid' ).onChange( () => demo.render() );
+  demo.gui.close();
+
+  function getShader() {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+      },
+      vertexShader: `
+        out vec2 v_uv;
+        out vec3 v_pos;
+        
+        void main() {
+          v_uv = uv;
+          v_pos = position;
+          
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        ${ ShaderChunks.Noise3D }
+
+        in vec2 v_uv;
+        in vec3 v_pos;
+        
+        out vec3 outColor;
+
+        vec2 random2( vec2 p ) {
+          return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);
+        }
+
+        void main() {
+          // Scale
+          float scale = 8.0;
+          vec2 st = v_uv * scale;
+
+          // Tile the space
+          vec2 i_st = floor( st );
+          vec2 f_st = fract( st );
+
+          vec2 val = vec2( 0.0, 0.0 );
+
+          for (int y= -1; y <= 1; y++) {
+            for (int x= -1; x <= 1; x++) {
+              vec2 neighbor = vec2( float( x ), float( y ) );
+              vec2 point = random2( i_st + neighbor );
+              vec2 diff = neighbor + point - f_st;
+              float dist = length( diff );
+
+              // Why does the size of 1.0 change with scale?
+              if ( dist < 1.0 ) {
+                val = ( i_st + neighbor ) / scale;
+              }
+            }
+          }
+
+          outColor = vec3( val, 0.0 );
+        }
+      `,
+      glslVersion: THREE.GLSL3,
+    });
+  }
+
+</script>
