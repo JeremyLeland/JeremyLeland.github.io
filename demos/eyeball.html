@@ -1,0 +1,201 @@
+<link rel="stylesheet" href="../styles.css">
+<div id="ui" style="position: absolute; right: 0; text-align: right"></div>
+<script type="module">
+  import * as THREE from 'https://unpkg.com/three/build/three.module.js?module';
+  import Stats from 'https://unpkg.com/three/examples/jsm/libs/stats.module.js?module';
+  import { GUI } from 'https://unpkg.com/three/examples/jsm/libs/dat.gui.module.js?module';
+  import { OrbitControls } from 'https://unpkg.com/three/examples/jsm/controls/OrbitControls.js?module';
+  
+  import * as Shaders from '../lib/Shaders.js';
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color( 0x222255 );
+
+  const geometry = new THREE.SphereGeometry( 1, 32, 16 );
+  
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      scleraColor: { hex: '#ffffff', value: new THREE.Vector3( 1, 1, 1 ) },
+      irisColor: { hex: '#ff8800', value: new THREE.Vector3( 1, 0.5, 0 ) },
+      irisZ: { value: 0.85 },
+      irisFrequency: { value: 8.0 },
+      pupilColor: { hex: '#000000', value: new THREE.Vector3( 0, 0, 0 ) },
+      pupilZ: { value: 0.95 },
+      veinColor: { hex: '#ff0000', value: new THREE.Vector3(1, 0, 0) },
+      veinCount: { value: 5.0 },
+      veinWidth: { value: 0.25 },
+      veinBranchWidth: { value: 1.2 },
+      veinShrinkRate: { value: 2.0 },
+      veinWaveAmplitude: { value: 0.5 },
+      veinWaveFrequency: { value: 1.5 },
+      veinWaveOffset: { value: 2.0 },
+      ambientStrength: { value: 0.1 },
+      lightPos: { value: new THREE.Vector3( 2, 2, 2 ) },
+      lightColor: { value: new THREE.Vector3( 1, 1, 1 ) },
+    },
+    vertexShader: `
+      out vec3 v_pos;
+      out vec3 v_norm;
+
+      void main() {
+        v_pos = position;
+        v_norm = normal;    // TODO: Use normalMatrix to fix this for rotation?
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      ${ Shaders.Noise2D }
+
+      uniform float irisZ, pupilZ;
+      uniform float irisFrequency;
+      uniform vec3 scleraColor, irisColor, pupilColor;
+
+      uniform vec3 veinColor;
+      uniform float veinCount, veinWidth, veinBranchWidth, veinShrinkRate;
+      uniform float veinWaveAmplitude, veinWaveFrequency, veinWaveOffset;
+
+      uniform float ambientStrength;
+      uniform vec3 lightPos, lightColor;
+
+      in vec3 v_pos;
+      in vec3 v_norm;
+      out vec4 outColor;
+      
+      void main() {
+        vec3 normPos = normalize( v_pos );
+        vec3 color;
+
+        float angle = atan( normPos.y, normPos. x );
+
+        float vein = abs( sin( veinCount * angle + veinWaveAmplitude * snoise( veinWaveFrequency * normPos.zz + veinWaveOffset ) ) );
+
+        float branchInner = max( 0.0, normPos.z * veinBranchWidth );
+        float gapWidth = max( 0.0, normPos.z );
+        float branchOuter = branchInner + veinWidth * cos( gapWidth * veinShrinkRate );
+
+        vec3 norm = normalize( v_norm );
+
+        if ( normPos.z > pupilZ ) {
+          color = pupilColor;
+        }
+        else if ( normPos.z > irisZ ) {
+          color = irisColor * abs( sin ( irisFrequency * angle ) );
+        }
+        else if ( branchInner < vein && vein < branchOuter ) {
+          color = veinColor;
+
+          // TODO: Figure out math from https://learnopengl.com/Advanced-Lighting/Normal-Mapping
+          //       Need to break this into simpler parts to try to figure out before I try it here
+
+          // Also look through https://en.wikipedia.org/wiki/Normal_mapping
+          // and https://en.wikipedia.org/wiki/Bump_mapping to make sure I'm not missing something simpler
+
+          float rise = min( branchOuter - vein, gapWidth == 0.0 ? 1.0 : vein - branchInner );
+          float run = ( branchOuter - branchInner ) * ( gapWidth == 0.0 ? 1.0 : 0.5 );
+          float val = rise / run;
+
+          norm.x = cos( val );
+          norm.y = sin( val );
+          norm = normalize( norm );
+        }
+        else {
+          color = scleraColor;
+        }
+
+        vec3 ambient = ambientStrength * lightColor;
+
+        vec3 lightDir = normalize( lightPos - v_pos );
+        float diff = max( dot( norm, lightDir ), 0.0 );
+        vec3 diffuse = diff * lightColor;
+
+        vec3 result = ( ambient + diffuse ) * color;
+        outColor = vec4( result, 1.0 );
+
+        outColor = vec4( norm, 1.0 );
+      }
+    `,
+    glslVersion: THREE.GLSL3,
+  });
+  
+  const mesh = new THREE.Mesh( geometry, material );
+  scene.add( mesh );
+
+  const light = new THREE.DirectionalLight( 0xffffff );
+  light.position.set( 0, 1.0, 0.5 );
+  light.target.position.set( 0, 0, 0 );
+  scene.add( light );
+
+  const camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1000 );
+  camera.position.set( 2, 2, 2 );
+  camera.lookAt( 0, 0, 0 );
+
+  const renderer = new THREE.WebGLRenderer();
+  document.body.appendChild( renderer.domElement );
+
+  const stats = new Stats();
+  document.body.appendChild( stats.dom );
+
+  
+  function addGuiColor( part, gui ) {
+    const uniform = material.uniforms[`${part}Color`];
+    gui.addColor( uniform, 'hex' ).name( `Color` ).onChange( ( hexColor ) => {
+      uniform.value.set( ...hexToRgb( hexColor ) );
+      render();
+    });
+  }
+
+  const gui = new GUI();
+
+  const scleraFolder = gui.addFolder( 'Sclera' );
+  addGuiColor( 'sclera', scleraFolder );
+
+  const irisFolder = gui.addFolder( 'Iris' );
+  addGuiColor( 'iris', irisFolder );
+  irisFolder.add( material.uniforms.irisZ, 'value' ).min( 0.5 ).max( 1 ).name( 'Z' ).onChange( render );
+  irisFolder.add( material.uniforms.irisFrequency, 'value' ).min( 1 ).max( 20 ).step( 1 ).name( 'Freq' ).onChange( render );
+
+  const pupilFolder = gui.addFolder( 'Pupil' );
+  addGuiColor( 'pupil', pupilFolder );
+  pupilFolder.add( material.uniforms.pupilZ, 'value' ).min( 0.75 ).max ( 1 ).name( 'Z' ).onChange( render );
+
+  const veinFolder = gui.addFolder( 'Veins' );
+  addGuiColor( 'vein', veinFolder );
+  veinFolder.add( material.uniforms.veinCount, 'value' ).min( 1 ).max( 10 ).step( 1 ).name( 'Count' ).onChange( render );
+  veinFolder.add( material.uniforms.veinWidth, 'value' ).min( 0 ).max( 1 ).name( 'Width' ).onChange( render );
+  veinFolder.add( material.uniforms.veinBranchWidth, 'value' ).min( 0 ).max( 1.3 ).name( 'Branch Width' ).onChange( render );
+  veinFolder.add( material.uniforms.veinShrinkRate, 'value' ).min( 1 ).max( 3 ).name( 'Shrink Rate' ).onChange( render );
+  veinFolder.add( material.uniforms.veinWaveAmplitude, 'value' ).min( -3 ).max( 3 ).name( 'Wave Amplitude' ).onChange( render );
+  veinFolder.add( material.uniforms.veinWaveFrequency, 'value' ).min( 0 ).max( 3 ).name( 'Wave Frequency' ).onChange( render );
+  veinFolder.add( material.uniforms.veinWaveOffset, 'value' ).min( -10 ).max( 10 ).name( 'Wave Offset' ).onChange( render );
+
+  window.onresize = () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    requestAnimationFrame( animate );
+  }
+  window.onresize();
+
+  const controls = new OrbitControls( camera, renderer.domElement );
+	controls.addEventListener( 'change', render );
+	controls.minDistance = 1;
+	controls.maxDistance = 10;
+
+  function render() {
+    requestAnimationFrame( animate );
+  }
+
+  function animate( time ) {
+    //requestAnimationFrame( animate );
+
+    renderer.render( scene, camera );
+    stats.update();
+  }
+
+  function hexToRgb(hex) {
+    return [ hex.slice(1,3), hex.slice(3,5), hex.slice(5,7) ].map( e => parseInt(e, 16) / 255 );
+  }
+
+</script>

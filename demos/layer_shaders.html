@@ -1,0 +1,194 @@
+<link rel="stylesheet" href="../styles.css">
+<div id="ui" style="position: absolute; right: 0; text-align: right"></div>
+<script type="module">
+  import * as THREE from 'https://unpkg.com/three/build/three.module.js?module';
+  import Stats from 'https://unpkg.com/three/examples/jsm/libs/stats.module.js?module';
+  import { GUI } from 'https://unpkg.com/three/examples/jsm/libs/dat.gui.module.js?module';
+  import { OrbitControls } from 'https://unpkg.com/three/examples/jsm/controls/OrbitControls.js?module';
+  
+  import * as Shaders from '../lib/Shaders.js';
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color( 0x222255 );
+
+  const geometry = new THREE.BoxBufferGeometry();
+  
+  geometry.clearGroups();
+  geometry.addGroup( 0, Infinity, 0 );
+  geometry.addGroup( 0, Infinity, 1 );
+  geometry.addGroup( 0, Infinity, 2 );
+
+  const vertexShader = `
+    out vec2 v_uv;
+    out vec3 v_pos;
+    void main() {
+      v_uv = uv;
+      v_pos = position;
+
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `;
+  
+  const materials = [
+    new THREE.ShaderMaterial({
+      uniforms: {
+        u_tex1: { value: null },
+      },
+      vertexShader: vertexShader,
+      fragmentShader: `
+        uniform sampler2D u_tex1;
+        
+        in vec2 v_uv;
+        in vec3 v_pos;
+        out vec4 outColor;
+        
+        void main() {
+
+          outColor = texture2D( u_tex1, v_uv );
+        }
+      `,
+      glslVersion: THREE.GLSL3,
+    }),
+    new THREE.ShaderMaterial({
+      uniforms: {
+        u_tex1: { value: null },
+        noiseScale: { value: 4 },
+        blendStepMin: { value: 0.35 },
+        blendStepMax: { value: 0.75 },
+      },
+      vertexShader: vertexShader,
+      fragmentShader: `
+        ${ Shaders.OctaveNoise }
+
+        uniform sampler2D u_tex1;
+
+        uniform float noiseScale;
+        uniform float blendStepMin, blendStepMax;
+
+        in vec2 v_uv;
+        in vec3 v_pos;
+        out vec4 outColor;
+
+        void main() {
+          float val = 0.5 + 0.5 * octaveNoise( v_pos * noiseScale );
+          outColor = vec4( texture2D( u_tex1, v_uv ).rgb, smoothstep( blendStepMin, blendStepMax, val ) );
+        }
+      `,
+      glslVersion: THREE.GLSL3,
+      transparent: true,
+    }),
+    new THREE.ShaderMaterial({
+      uniforms: {
+        u_tex1: { value: null },
+        noiseScale: { value: 10 },
+        blendStepMin: { value: 0.25 },
+        blendStepMax: { value: 0.75 },
+      },
+      vertexShader: vertexShader,
+      fragmentShader: `
+        ${ Shaders.OctaveNoise }
+
+        uniform sampler2D u_tex1;
+
+        uniform float noiseScale;
+        uniform float blendStepMin, blendStepMax;
+
+        in vec2 v_uv;
+        in vec3 v_pos;
+        out vec4 outColor;
+
+        void main() {
+          
+          float amplitude = 2.0;
+          float frequency = 10.0;
+          float pathWidth = 2.0;
+          float zScale = 10.0;
+          float noiseSize = 1.2;
+
+          float noise = noiseSize * octaveNoise( v_pos * noiseScale );
+
+          float val = 1.0 - ( 1.0 / pathWidth ) * abs( amplitude * sin( v_pos.x * frequency ) - zScale * v_pos.z - noise );
+          outColor = vec4( texture2D( u_tex1, v_uv ).rgb, smoothstep( blendStepMin, blendStepMax, val ) );
+        }
+      `,
+      glslVersion: THREE.GLSL3,
+      transparent: true,
+    }),
+  ];
+
+  const loader = new THREE.TextureLoader();
+  const texture1 = loader.load('../textures/dirt.png', function() { 
+    materials[ 0 ].uniforms.u_tex1.value = texture1; 
+    render();
+  });
+  const texture2 = loader.load('../textures/grass_overcast.png', function() { 
+    materials[ 1 ].uniforms.u_tex1.value = texture2;
+    render();
+  });
+  const texture3 = loader.load('../textures/sand.png', function() { 
+    materials[ 2 ].uniforms.u_tex1.value = texture3;
+    render();
+  });
+  
+  const mesh = new THREE.Mesh( geometry, materials );
+  scene.add( mesh );
+
+  const light = new THREE.DirectionalLight( 0xffffff );
+  light.position.set( 0, 1.0, 0.5 );
+  light.target.position.set( 0, 0, 0 );
+  scene.add( light );
+
+  const camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1000 );
+  camera.position.set( -1, 1.5, 1 );
+  camera.lookAt( 0, 0, 0 );
+
+  const renderer = new THREE.WebGLRenderer();
+  document.body.appendChild( renderer.domElement );
+
+  const stats = new Stats();
+  document.body.appendChild( stats.dom );
+
+  const gui = new GUI();
+  const pathFolder = gui.addFolder( 'Path' );
+  pathFolder.add( materials[ 2 ].uniforms.noiseScale, 'value', 1, 50 ).name( 'Noise scale' ).onChange( render );
+  pathFolder.add( materials[ 2 ].uniforms.blendStepMin, 'value', 0, 1 ).name( 'Blend step min' ).onChange( render );
+  pathFolder.add( materials[ 2 ].uniforms.blendStepMax, 'value', 0, 1 ).name( 'Blend step max' ).onChange( render );
+  pathFolder.open();
+  const grassFolder = gui.addFolder( 'Grass' );
+  grassFolder.add( materials[ 1 ].uniforms.noiseScale, 'value', 1, 50 ).name( 'Noise scale' ).onChange( render );
+  grassFolder.add( materials[ 1 ].uniforms.blendStepMin, 'value', 0, 1 ).name( 'Blend step min' ).onChange( render );
+  grassFolder.add( materials[ 1 ].uniforms.blendStepMax, 'value', 0, 1 ).name( 'Blend step max' ).onChange( render );
+  grassFolder.open();
+
+  window.onresize = () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    requestAnimationFrame( animate );
+  }
+  window.onresize();
+
+  const controls = new OrbitControls( camera, renderer.domElement );
+	controls.addEventListener( 'change', render );
+	controls.minDistance = 1;
+	controls.maxDistance = 10;
+
+  function render() {
+    requestAnimationFrame( animate );
+  }
+
+  function animate( time ) {
+    //requestAnimationFrame( animate );
+
+    // mesh.rotation.x += 0.002;
+    // mesh.rotation.y += 0.002;
+
+    // To fix normals after rotation, see: https://github.com/mrdoob/three.js/issues/1954
+    // Something like: var normalWorld = new THREE.Matrix().extractRotation( object.matrixWorld ).multiplyVector3( normal.clone() );
+
+    renderer.render( scene, camera );
+    stats.update();
+  }
+
+</script>

@@ -1,0 +1,258 @@
+<link rel="stylesheet" href="../styles.css">
+<script type="module">
+  import * as THREE from '../lib/three.module.js';
+  import Stats from '../lib/stats.module.js';
+  import { GUI } from '../lib/dat.gui.module.js';
+  import { OrbitControls } from '../lib/OrbitControls.js';
+  
+  import * as BlendTiles from '../src/BlendTiles.js';
+  
+  const cols = 6, rows = 6;
+  const tileMap = [
+    0, 0, 2, 2, 0, 0,
+    0, 1, 0, 1, 1, 1,
+    0, 0, 0, 1, 3, 1,
+    1, 0, 1, 0, 2, 1,
+    0, 1, 0, 1, 1, 0,
+    1, 0, 1, 0, 0, 0,
+  ];
+  
+
+  //
+  // Geometry
+  //
+
+  const positions = [];
+  const uvs = [];
+  const indices = [];
+  
+  let index = 0;
+  for ( let row = 0; row < rows - 1; row ++ ) {
+    for ( let col = 0; col < cols - 1; col ++ ) {
+      // Flipping the UV so my images will be right-side-up
+      positions.push( col + 1, 0, row     );  uvs.push( 1, 0 );
+      positions.push( col,     0, row     );  uvs.push( 0, 0 );
+      positions.push( col + 1, 0, row + 1 );  uvs.push( 1, 1 );
+      positions.push( col,     0, row + 1 );  uvs.push( 0, 1 );
+      indices.push( index,     index + 1, index + 2 );
+      indices.push( index + 2, index + 1, index + 3 );
+      index += 4;
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute( positions, 3 ));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute( uvs, 2 ));
+  geometry.setIndex(indices);
+
+
+  const tileIndices = [];
+  const blendIndices = [];
+
+  for ( let row = 0; row < rows - 1; row ++ ) {
+    for ( let col = 0; col < cols - 1; col ++ ) {
+      const wCol = Math.max(0, col), eCol = Math.min(col + 1, cols - 1);
+      const nRow = Math.max(0, row), sRow = Math.min(row + 1, rows - 1);
+
+      const nwTile = tileMap[ wCol + nRow * cols ];
+      const neTile = tileMap[ eCol + nRow * cols ];
+      const swTile = tileMap[ wCol + sRow * cols ];
+      const seTile = tileMap[ eCol + sRow * cols ];
+
+      const vertexTileIndices  = [ 0, 0, 0, 0 ];
+      const vertexBlendIndices = [ 0, 0, 0, 0 ];
+      
+      let index = 0;
+      new Set( [ nwTile, neTile, swTile, seTile ].sort() ).forEach(tile => {
+        const nw = nwTile === tile ? 1 : 0;
+        const ne = neTile === tile ? 1 : 0;
+        const sw = swTile === tile ? 1 : 0;
+        const se = seTile === tile ? 1 : 0;
+
+        vertexTileIndices[ index ] = tile;
+        vertexBlendIndices[ index ] = nw * 8 + ne * 4 + sw * 2 + se;
+
+        index ++;
+      });
+      
+      for ( let i = 0; i < 4; i ++ ) {
+        tileIndices.push( ...vertexTileIndices );
+        blendIndices.push( ...vertexBlendIndices );
+      }
+    }
+  }
+
+  // function chooseRandom(array) {
+  //   return array[Math.floor(Math.random() * array.length)];
+  // }
+  
+  geometry.setAttribute( 'tileIndex',  new THREE.Int32BufferAttribute( tileIndices, 4 ));
+  geometry.setAttribute( 'blendIndex', new THREE.Int32BufferAttribute( blendIndices, 4 ));
+  
+  //
+  // Materials
+  //
+
+  // Terrain tiles
+  const TERRAIN_SIZE = 256;
+  const terrainColors = [ 'saddlebrown', 'green', 'yellow', 'white' ];
+
+  const terrainCanvas = document.createElement('canvas' );
+  terrainCanvas.width = TERRAIN_SIZE;
+  terrainCanvas.height = TERRAIN_SIZE * terrainColors.length;
+  const terrainCtx = terrainCanvas.getContext( '2d' );
+
+  terrainColors.forEach( ( color, index ) => {
+    terrainCtx.fillStyle = color;
+    terrainCtx.fillRect(0, index * TERRAIN_SIZE, TERRAIN_SIZE, TERRAIN_SIZE );
+  });
+
+  const tiles = textureArrayFromCanvas( terrainCanvas );
+  
+  // Blend tiles
+  const BLEND_SIZE = 256;
+  const blends = textureArrayFromCanvas( BlendTiles.create( BLEND_SIZE ) );
+
+  function textureArrayFromCanvas( canvas ) {
+    const size = canvas.width, num = canvas.height / canvas.width;
+    const imageData = canvas.getContext( '2d' ).getImageData(
+      0, 0, canvas.width, canvas.height
+    );
+    const textures = new THREE.DataTexture2DArray( imageData.data, size, size, num );
+    textures.format = THREE.RGBAFormat;
+    textures.type = THREE.UnsignedByteType;
+    return textures;
+  }
+
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      tiles:  { value: tiles },
+      blends: { value: blends },
+    },
+    vertexShader: `
+      in ivec4 tileIndex;
+      in ivec4 blendIndex;
+      
+      out vec2 v_uv;
+      flat out ivec4 f_tileIndex;
+      flat out ivec4 f_blendIndex;
+      
+      void main() {
+        v_uv = uv;
+        f_tileIndex = tileIndex;
+        f_blendIndex = blendIndex;
+        
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      // do we need these?
+      precision highp float;
+      precision highp int;
+      precision highp sampler2DArray;
+
+      uniform sampler2DArray tiles;
+      uniform sampler2DArray blends;
+
+      in vec2 v_uv;
+      flat in ivec4 f_tileIndex;
+      flat in ivec4 f_blendIndex;
+      
+      out vec4 outColor;
+
+      void main() {
+        vec4[] color = vec4[](
+          texture( tiles, vec3( v_uv, f_tileIndex.x ) ),
+          texture( tiles, vec3( v_uv, f_tileIndex.y ) ),
+          texture( tiles, vec3( v_uv, f_tileIndex.z ) ),
+          texture( tiles, vec3( v_uv, f_tileIndex.w ) )
+        );
+
+        vec4[] alpha = vec4[](
+          texture( blends, vec3( v_uv, f_blendIndex.x ) ),
+          texture( blends, vec3( v_uv, f_blendIndex.y ) ),
+          texture( blends, vec3( v_uv, f_blendIndex.z ) ),
+          texture( blends, vec3( v_uv, f_blendIndex.w ) )
+        );
+
+        outColor = color[ 0 ];
+        
+        for ( int i = 1; i < 4; i ++ ) {
+          outColor = mix( outColor, color[ i ], alpha[ i ] );
+        }
+      }
+    `,
+    glslVersion: THREE.GLSL3,
+  });
+
+  //
+  // Scene
+  //
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color( 0x222255 );
+
+  const mesh = new THREE.Mesh( geometry, material );
+  scene.add( mesh );
+
+  const light = new THREE.DirectionalLight( 0xffffff );
+  light.position.set( 0, 1.0, 0.5 );
+  light.target.position.set( 0, 0, 0 );
+  scene.add( light );
+
+  const centerX = (cols - 1) / 2;
+  const centerZ = (rows - 1) / 2;
+
+  const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+  camera.position.set( centerX, 1.0, centerZ * 2 );
+
+  //
+  // Rendering
+  //
+  const renderer = new THREE.WebGLRenderer();
+  document.body.appendChild( renderer.domElement );
+
+  const stats = new Stats();
+  document.body.appendChild( stats.dom );
+
+  window.onresize = () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    render();
+  }
+  window.onresize();
+
+  const controls = new OrbitControls( camera, renderer.domElement );
+	controls.addEventListener( 'change', render );
+  controls.target.set( centerX, 0, centerZ );
+	controls.minDistance = 1;
+	controls.maxDistance = 10;
+  controls.update();
+
+  function render() {
+    requestAnimationFrame(animate);
+  }
+
+  function animate( time ) {
+    //requestAnimationFrame( animate );
+
+    // const val = time * 0.0001;
+    // const dist = cols * 0.7;
+
+    // const centerX = ( cols - 1 ) / 2;
+    // const centerZ = ( rows - 1 ) / 2;
+
+    // camera.position.set( 
+    //   centerX + dist * Math.sin( val ), 
+    //   3,
+    //   centerZ + dist * Math.cos( val )
+    // );
+    // camera.lookAt( centerX, 0, centerZ );
+
+    renderer.render( scene, camera );
+    stats.update();
+  }
+
+</script>
