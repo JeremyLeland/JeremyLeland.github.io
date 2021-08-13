@@ -1,0 +1,13 @@
+<link rel="stylesheet" href="../styles.css">
+
+<script type="module">
+
+  import * as BlendTiles from './src/BlendTiles.js';
+  
+  const size = 128;
+
+  const canvas = await BlendTiles.load( '../textures/transitions_01.png' );
+
+  document.body.appendChild( canvas );
+  
+</script>
