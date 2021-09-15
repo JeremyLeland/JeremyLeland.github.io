@@ -1,13 +1,47 @@
 <style>
   .block { width: 32; height: 32 }
-  .color1 { fill: red; }
+  .color0 { fill: red; }
+  .color1 { fill: orange; }
   .color2 { fill: yellow }
   .color3 { fill: green }
   .color4 { fill: blue }
+  .color5 { fill: lightskyblue }
+  .color6 { fill: purple }
+  .color7 { fill: pink }
+  .color8 { fill: black }
 </style>
-<svg class="block" viewBox="0 0 100 100">
-  <polygon points="0,0 50,50 100,0" class="color1"/>
-  <polygon points="0,0 50,50 0,100" class="color2"/>
-  <polygon points="100,0 50,50 100,100" class="color3"/>
-  <polygon points="0,100 50,50 100,100" class="color4"/>
-</svg>
+<body>
+</body>
+<script>
+  const POINTS = {
+    'north': '0,0 50,50 100,0',
+    'west':  '0,0 50,50, 0,100',
+    'east':  '100,0 50,50 100,100',
+    'south': '0,100 50,50 100,100'
+  };
+
+  class Block {
+    constructor( north, west, east, south ) {
+      this.north = north;
+      this.west = west;
+      this.east = east;
+      this.south = south;
+
+      const xmlns = 'http://www.w3.org/2000/svg';
+
+      this.svg = document.createElementNS( xmlns, 'svg' );
+      this.svg.setAttribute( 'class', 'block' );
+      this.svg.setAttribute( 'viewBox', '0 0 100 100' );
+
+      this.northDOM = document.createElementNS( xmlns, 'polygon' );
+      this.northDOM.setAttribute( 'points', POINTS['north'] );
+      this.northDOM.setAttribute( 'class', `color${ north }` );
+
+      this.svg.appendChild( this.northDOM );
+    }
+  }
+
+  const block = new Block( 0, 1, 2, 3 );
+  document.body.appendChild( block.svg );
+
+</script>
