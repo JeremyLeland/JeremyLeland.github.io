@@ -23,8 +23,8 @@
 </style>
 
 <body>
-  <div class="grid" style="left: 0; top: 0; width: 192; height: 192"></div>
-  <div class="grid" style="left: 0; top: 256; width: 192; height: 192"></div>
+  <div id="solution" class="grid" style="left: 0; top: 0; width: 192; height: 192"></div>
+  <div id="shuffled" class="grid" style="left: 0; top: 256; width: 192; height: 192"></div>
 </body>
 
 <script>
@@ -49,6 +49,9 @@
       [ 7 , 8 , 0 ]
   ];
 
+  const solutionGrid = document.getElementById( 'solution' );
+  const shuffledGrid = document.getElementById( 'shuffled' );
+
   class Block {
     constructor( { x, y, north, west, east, south } ) {
       this.north = north;
@@ -64,12 +67,8 @@
       this.svg.style.width = size;
       this.svg.style.height = size;
 
-      this.svg.onmousedown = ( e ) => {
-        activeBlock = this;
-        activeOffsetX = e.offsetX;
-        activeOffsetY = e.offsetY;
-      }
-      this.svg.onmouseup   = ( e ) => activeBlock = null;
+      this.svg.onmousedown = ( e ) => this.mouseDown( e );
+      this.svg.onmouseup   = ( e ) => this.mouseUp( e );
 
       this.dom = [];
       [ north, west, east, south ].forEach( ( color, index ) => {
@@ -83,14 +82,48 @@
     }
 
     setLocation( x, y ) {
-      this.svg.style.left = x - activeOffsetX;
-      this.svg.style.top  = y - activeOffsetY;
+      this.svg.style.left = x;
+      this.svg.style.top  = y;
+    }
+
+    mouseDown( mouseEvent ) {
+      activeBlock = this;
+      activeOffsetX = mouseEvent.offsetX;
+      activeOffsetY = mouseEvent.offsetY;
+      oldX = this.svg.style.left;
+      oldY = this.svg.style.top;
+    }
+    
+    mouseUp( mouseEvent ) {
+      const x = mouseEvent.pageX;
+      const y = mouseEvent.pageY;
+
+      if ( !this.alignToGrid( x, y, solutionGrid ) ) {
+        if ( !this.alignToGrid( x, y, shuffledGrid ) ) {
+          this.setLocation( oldX, oldY );
+        }
+      }
+
+      activeBlock = null;
+    }
+
+    alignToGrid( x, y, grid ) {
+      const sb = grid.getBoundingClientRect();
+      if ( sb.left <= x && x <= sb.right && sb.top <= y && y <= sb.bottom ) {
+        const col = Math.floor( ( x - sb.left ) / size );
+        const row = Math.floor( ( y - sb.top )  / size );
+        this.setLocation( sb.left + col * size, sb.top + row * size );
+        return true;
+      }
+      else {
+        return false;
+      }
     }
   }
 
-  let activeBlock = null, activeOffsetX = 0, activeOffsetY = 0;
+  let activeBlock = null, activeOffsetX = 0, activeOffsetY = 0, oldX = 0, oldY = 0;
 
-  document.onmousemove = ( e ) => activeBlock?.setLocation( e.pageX, e.pageY );
+  document.onmousemove = ( e ) => activeBlock?.setLocation( e.pageX - activeOffsetX, e.pageY - activeOffsetY );
 
   const blocks = [];
   for ( let row = 0; row < rows; row ++ ) {
