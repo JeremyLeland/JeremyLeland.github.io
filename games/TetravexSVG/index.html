@@ -1,5 +1,5 @@
 <style>
-  body { background-color: black;}
+  body { background-color: black; overflow: hidden; }
   .block {
     position: absolute;
   }
@@ -112,11 +112,13 @@
       oldX: e.currentTarget.style.left,
       oldY: e.currentTarget.style.top,
     };
+
+    active.block.style.zIndex = 2;
   }
 
   function mouseMove( e ) {
     if ( active ) {
-      setLocation( e.currentTarget, e.pageX - active.offsetX, e.pageY - active.offsetY );
+      setLocation( active.block, e.pageX - active.offsetX, e.pageY - active.offsetY );
     }
   }
 
@@ -128,6 +130,8 @@
         this.setLocation( active.oldX, active.oldY );
       }
     }
+
+    active.block.style.zIndex = 1;
 
     active = null;
   }
