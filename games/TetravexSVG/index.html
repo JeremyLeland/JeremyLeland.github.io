@@ -50,7 +50,7 @@
   ];
 
   class Block {
-    constructor({ x, y, north, west, east, south }) {
+    constructor( { x, y, north, west, east, south } ) {
       this.north = north;
       this.west = west;
       this.east = east;
@@ -64,6 +64,13 @@
       this.svg.style.width = size;
       this.svg.style.height = size;
 
+      this.svg.onmousedown = ( e ) => {
+        activeBlock = this;
+        activeOffsetX = e.offsetX;
+        activeOffsetY = e.offsetY;
+      }
+      this.svg.onmouseup   = ( e ) => activeBlock = null;
+
       this.dom = [];
       [ north, west, east, south ].forEach( ( color, index ) => {
         const polygon =  document.createElementNS( XMLNS, 'polygon' );
@@ -74,7 +81,16 @@
         this.dom[ index ] = polygon;
       } );
     }
+
+    setLocation( x, y ) {
+      this.svg.style.left = x - activeOffsetX;
+      this.svg.style.top  = y - activeOffsetY;
+    }
   }
+
+  let activeBlock = null, activeOffsetX = 0, activeOffsetY = 0;
+
+  document.onmousemove = ( e ) => activeBlock?.setLocation( e.pageX, e.pageY );
 
   const blocks = [];
   for ( let row = 0; row < rows; row ++ ) {
