@@ -1,5 +1,14 @@
 <style>
+  body { background-color: black;}
   .block {
+    position: absolute;
+  }
+  .grid {
+    background-image: linear-gradient(   0deg, white 1px, transparent 1px ), 
+                      linear-gradient(  90deg, white 1px, transparent 1px ),
+                      linear-gradient( 180deg, white 1px, transparent 1px ),
+                      linear-gradient( 270deg, white 1px, transparent 1px );
+    background-size: 64px 64px;
     position: absolute;
   }
   .color0 { fill: red }
@@ -12,8 +21,12 @@
   .color7 { fill: hotpink }
   .color8 { fill: dimgray }
 </style>
+
 <body>
+  <div class="grid" style="left: 0; top: 0; width: 192; height: 192"></div>
+  <div class="grid" style="left: 0; top: 256; width: 192; height: 192"></div>
 </body>
+
 <script>
   const XMLNS = 'http://www.w3.org/2000/svg';
   const POINTS = [
@@ -21,6 +34,19 @@
     '0,0 50,50, 0,100',     // west
     '100,0 50,50 100,100',  // east
     '0,100 50,50 100,100'   // south
+  ];
+
+  const size = 64;
+
+  const cols = 3, rows = 3;
+  const solution = [
+      [ 0 , 1 , 5 ],
+    [ 2 , 3 , 4 , 6 ],
+      [ 5 , 6 , 7 ],
+    [ 7 , 8 , 0 , 8 ],
+      [ 1 , 2 , 0 ],
+    [ 3 , 4 , 5 , 6 ],
+      [ 7 , 8 , 0 ]
   ];
 
   class Block {
@@ -35,6 +61,8 @@
       this.svg.setAttribute( 'viewBox', '0 0 100 100' );
       this.svg.style.left = x;
       this.svg.style.top = y;
+      this.svg.style.width = size;
+      this.svg.style.height = size;
 
       this.dom = [];
       [ north, west, east, south ].forEach( ( color, index ) => {
@@ -48,24 +76,12 @@
     }
   }
 
-  const size = 64;
-  const cols = 3, rows = 3;
-  const solution = [
-      [ 0 , 1 , 5 ],
-    [ 2 , 3 , 4 , 6 ],
-      [ 5 , 6 , 7 ],
-    [ 7 , 8 , 0 , 8 ],
-      [ 1 , 2 , 0 ],
-    [ 3 , 4 , 5 , 6 ],
-      [ 7 , 8 , 0 ]
-  ];
-
   const blocks = [];
   for ( let row = 0; row < rows; row ++ ) {
     for ( let col = 0; col < cols; col ++ ) {
       blocks.push( new Block( { 
         x: col * size, 
-        y: row * size,
+        y: row * size + 256,
         north: solution[ row * 2 ][ col ],
         west:  solution[ row * 2 + 1 ][ col ],
         east:  solution[ row * 2 + 1 ][ col + 1 ],
@@ -76,8 +92,8 @@
 
   blocks.forEach( block => document.body.appendChild( block.svg ) );
 
-  const blockStyle = document.styleSheets[0].cssRules[0].style;
-  blockStyle.width = size;
-  blockStyle.height = size;
+  // const blockStyle = document.styleSheets[0].cssRules[0].style;
+  // blockStyle.width = size;
+  // blockStyle.height = size;
 
 </script>
