@@ -15,6 +15,7 @@
     width: 64px;
     height: 64px;
   }
+
   .grid {
     background-image: linear-gradient(   0deg, white 1px, transparent 1px ), 
                       linear-gradient(  90deg, white 1px, transparent 1px ),
@@ -35,7 +36,11 @@
 </style>
 
 <body>
+  <!-- TODO: Don't hardcode width/height here -->
+  <!-- Maybe SVG with lines instead of CSS linear-gradient hack? -->
   <div id="solution" class="grid" style="width: 192; height: 192"></div>
+
+  <!-- TODO: Text formatting -- center title at least? -->
   <h3>Tetravex</h3>
   <span>Arrange tiles so colors match</span>
   <div id="shuffled" class="grid" style="width: 192; height: 192"></div>
@@ -50,6 +55,8 @@
     '0,100 50,50 100,100'   // south
   ];
 
+  // TODO: See if we can avoid size, since it may depend on screen size.
+  //       Can we use cols/rows to figure out where we are in grid?
   const size = 64;
   const cols = 3, rows = 3;
 
@@ -62,6 +69,7 @@
   /**
    * Blocks
    */
+  // TODO: Get rid of Block class, make constructor a normal function that makes SVG dom
   class Block {
     constructor( { north, west, east, south } ) {
       this.svg = document.createElementNS( XMLNS, 'svg' );
@@ -77,6 +85,7 @@
       this.svg.onmousemove = mouseMove;
       this.svg.onmouseup   = mouseUp;
 
+      // TODO: Would path be easier/cleaner in any way?
       this.dom = [];
       [ north, west, east, south ].forEach( ( color, index ) => {
         const polygon =  document.createElementNS( XMLNS, 'polygon' );
@@ -160,6 +169,7 @@
     block.style.zIndex = 2;
   }
 
+  // TODO: Sometimes this misses if mouse goes outside bounds, should we attach this elsewhere?
   function mouseMove( e ) {
     if ( active ) {
       setLocation( active.block, e.pageX - active.offsetX, e.pageY - active.offsetY );
@@ -180,6 +190,7 @@
     active = null;
 
     if ( isValidSolution( grids[ 'solution' ].blocks ) ) {
+      // TODO: Change title to "Solved!" and description to "click for next game"
       console.log( 'Valid solution!' );
     }
   }
