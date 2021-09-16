@@ -38,11 +38,12 @@
   ];
 
   const size = 64;
+  const cols = 3, rows = 3;
 
   const grids = [];
   [ 'solution', 'shuffled' ].forEach( id => {
     grids[ id ] = document.getElementById( id );
-    grids[ id ].blocks = [];
+    grids[ id ].blocks = Array( cols * rows );
   } );
 
   class Block {
@@ -87,14 +88,10 @@
     const sb = grid.getBoundingClientRect();
     setLocation( block, sb.left + col * size, sb.top + row * size );
 
-    if ( block.grid ) {
-      block.grid.blocks[ block.gridIndex ] = null;
-    }
-
-    const gridIndex = col + row * cols;
-    grid.blocks[ gridIndex ] = block;
+    grid.blocks[ col + row * cols ] = block;
     block.grid = grid;
-    block.gridIndex = gridIndex;
+    block.col = col;
+    block.row = row;
   }
   
   function tryAlignToGrid( block, x, y, grid ) {
@@ -102,8 +99,14 @@
     if ( sb.left <= x && x <= sb.right && sb.top <= y && y <= sb.bottom ) {
       const col = Math.floor( ( x - sb.left ) / size );
       const row = Math.floor( ( y - sb.top )  / size );
+
+      const existingBlock = grid.blocks[ col + row * cols ];
+      if ( existingBlock ) {
+        placeInGrid( existingBlock, block.col, block.row, block.grid );
+      }
+
       placeInGrid( block, col, row, grid );
-      // TODO: Swap if block already exists
+
       return true;
     }
     else {
@@ -112,16 +115,17 @@
   }
 
   function mouseDown( e ) {
+    const block = e.currentTarget;
+
     active = {
-      block: e.currentTarget,
+      block: block,
       offsetX: e.offsetX,
       offsetY: e.offsetY,
-      oldX: e.currentTarget.style.left,
-      oldY: e.currentTarget.style.top,
-      oldGrid: e.currentTarget.grid
     };
 
-    active.block.style.zIndex = 2;
+    block.grid.blocks[ block.col + block.row * cols ] = null;
+
+    block.style.zIndex = 2;
   }
 
   function mouseMove( e ) {
@@ -135,7 +139,7 @@
 
     if ( !tryAlignToGrid( active.block, x, y, grids[ 'solution' ] ) ) {
       if ( !tryAlignToGrid( active.block, x, y, grids[ 'shuffled' ] ) ) {
-        setLocation( active.block, active.oldX, active.oldY );
+        placeInGrid( active.block, active.block.col, active.block.row, active.block.grid );
       }
     }
 
@@ -144,7 +148,6 @@
     active = null;
   }
 
-  const cols = 3, rows = 3;
   const values = [
       [ 0 , 1 , 5 ],
     [ 2 , 3 , 4 , 6 ],
