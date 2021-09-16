@@ -1,7 +1,19 @@
 <style>
-  body { background-color: black; overflow: hidden; }
+  body {
+    background-color: black;
+    color: white;
+    user-select: none;
+    overflow: hidden;
+  }
+  h3 {
+    font: bold 30px sans-serif;
+    margin: 0;
+  }
+  p  { font: bold 20px sans-serif }
   .block {
     position: absolute;
+    width: 64px;
+    height: 64px;
   }
   .grid {
     background-image: linear-gradient(   0deg, white 1px, transparent 1px ), 
@@ -9,7 +21,6 @@
                       linear-gradient( 180deg, white 1px, transparent 1px ),
                       linear-gradient( 270deg, white 1px, transparent 1px );
     background-size: 64px 64px;
-    position: absolute;
   }
   polygon { stroke: black; stroke-width: 2px; }
   .color0 { fill: red }
@@ -24,8 +35,10 @@
 </style>
 
 <body>
-  <div id="solution" class="grid" style="left: 0; top: 0; width: 192; height: 192"></div>
-  <div id="shuffled" class="grid" style="left: 0; top: 256; width: 192; height: 192"></div>
+  <div id="solution" class="grid" style="width: 192; height: 192"></div>
+  <h3>Tetravex</h3>
+  <span>Arrange tiles so colors match</span>
+  <div id="shuffled" class="grid" style="width: 192; height: 192"></div>
 </body>
 
 <script>
@@ -46,20 +59,19 @@
     grids[ id ].blocks = Array( cols * rows );
   } );
 
+  /**
+   * Blocks
+   */
   class Block {
     constructor( { north, west, east, south } ) {
-      this.north = north;
-      this.west = west;
-      this.east = east;
-      this.south = south;
-
       this.svg = document.createElementNS( XMLNS, 'svg' );
       this.svg.setAttribute( 'class', 'block' );
       this.svg.setAttribute( 'viewBox', '0 0 100 100' );
 
-      // TODO: set from CSS
-      this.svg.style.width = size;
-      this.svg.style.height = size;
+      this.svg.north = north;
+      this.svg.west = west;
+      this.svg.east = east;
+      this.svg.south = south;
 
       this.svg.onmousedown = mouseDown;
       this.svg.onmousemove = mouseMove;
@@ -76,8 +88,6 @@
       } );
     }
   }
-
-  let active = null;
 
   function setLocation( block, x, y ) {
     block.style.left = x;
@@ -114,6 +124,28 @@
     }
   }
 
+  function isValidSolution( blocks ) {
+    for ( let index = 0, row = 0; row < rows; row ++ ) {
+      for ( let col = 0; col < cols; col ++, index ++ ) {
+        const block = blocks[ index ];
+
+        if ( !block )   return false;
+
+        if ( 0 < row && block.north != blocks[ index - cols ]?.south )   return false;
+        if ( 0 < col && block.west != blocks[ index - 1 ]?.east )        return false;
+        if ( col < cols - 1 && block.east  != blocks[ index + 1]?.west )       return false;
+        if ( row < rows - 1 && block.south != blocks[ index + cols ]?.north )  return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Input
+   */
+  let active = null;
+
   function mouseDown( e ) {
     const block = e.currentTarget;
 
@@ -146,6 +178,10 @@
     active.block.style.zIndex = 1;
 
     active = null;
+
+    if ( isValidSolution( grids[ 'solution' ].blocks ) ) {
+      console.log( 'Valid solution!' );
+    }
   }
 
   const values = [
