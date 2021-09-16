@@ -39,22 +39,14 @@
 
   const size = 64;
 
-  const cols = 3, rows = 3;
-  const solution = [
-      [ 0 , 1 , 5 ],
-    [ 2 , 3 , 4 , 6 ],
-      [ 5 , 6 , 7 ],
-    [ 7 , 8 , 0 , 8 ],
-      [ 1 , 2 , 0 ],
-    [ 3 , 4 , 5 , 6 ],
-      [ 7 , 8 , 0 ]
-  ];
-
-  const solutionGrid = document.getElementById( 'solution' );
-  const shuffledGrid = document.getElementById( 'shuffled' );
+  const grids = [];
+  [ 'solution', 'shuffled' ].forEach( id => {
+    grids[ id ] = document.getElementById( id );
+    grids[ id ].blocks = [];
+  } );
 
   class Block {
-    constructor( { x, y, north, west, east, south } ) {
+    constructor( { north, west, east, south } ) {
       this.north = north;
       this.west = west;
       this.east = east;
@@ -63,8 +55,8 @@
       this.svg = document.createElementNS( XMLNS, 'svg' );
       this.svg.setAttribute( 'class', 'block' );
       this.svg.setAttribute( 'viewBox', '0 0 100 100' );
-      this.svg.style.left = x;
-      this.svg.style.top = y;
+
+      // TODO: set from CSS
       this.svg.style.width = size;
       this.svg.style.height = size;
 
@@ -90,13 +82,28 @@
     block.style.left = x;
     block.style.top  = y;
   }
+
+  function placeInGrid( block, col, row, grid ) {
+    const sb = grid.getBoundingClientRect();
+    setLocation( block, sb.left + col * size, sb.top + row * size );
+
+    if ( block.grid ) {
+      block.grid.blocks[ block.gridIndex ] = null;
+    }
+
+    const gridIndex = col + row * cols;
+    grid.blocks[ gridIndex ] = block;
+    block.grid = grid;
+    block.gridIndex = gridIndex;
+  }
   
-  function alignToGrid( block, x, y, grid ) {
+  function tryAlignToGrid( block, x, y, grid ) {
     const sb = grid.getBoundingClientRect();
     if ( sb.left <= x && x <= sb.right && sb.top <= y && y <= sb.bottom ) {
       const col = Math.floor( ( x - sb.left ) / size );
       const row = Math.floor( ( y - sb.top )  / size );
-      setLocation( block, sb.left + col * size, sb.top + row * size );
+      placeInGrid( block, col, row, grid );
+      // TODO: Swap if block already exists
       return true;
     }
     else {
@@ -111,6 +118,7 @@
       offsetY: e.offsetY,
       oldX: e.currentTarget.style.left,
       oldY: e.currentTarget.style.top,
+      oldGrid: e.currentTarget.grid
     };
 
     active.block.style.zIndex = 2;
@@ -125,9 +133,9 @@
   function mouseUp( e ) {
     const x = e.pageX, y = e.pageY;
 
-    if ( !alignToGrid( active.block, x, y, solutionGrid ) ) {
-      if ( !alignToGrid( active.block, x, y, shuffledGrid ) ) {
-        this.setLocation( active.oldX, active.oldY );
+    if ( !tryAlignToGrid( active.block, x, y, grids[ 'solution' ] ) ) {
+      if ( !tryAlignToGrid( active.block, x, y, grids[ 'shuffled' ] ) ) {
+        setLocation( active.block, active.oldX, active.oldY );
       }
     }
 
@@ -136,19 +144,35 @@
     active = null;
   }
 
+  const cols = 3, rows = 3;
+  const values = [
+      [ 0 , 1 , 5 ],
+    [ 2 , 3 , 4 , 6 ],
+      [ 5 , 6 , 7 ],
+    [ 7 , 8 , 0 , 8 ],
+      [ 1 , 2 , 0 ],
+    [ 3 , 4 , 5 , 6 ],
+      [ 7 , 8 , 0 ]
+  ];
+
   const blocks = [];
   for ( let row = 0; row < rows; row ++ ) {
     for ( let col = 0; col < cols; col ++ ) {
-      blocks.push( new Block( { 
-        x: col * size, 
-        y: row * size + 256,
-        north: solution[ row * 2 ][ col ],
-        west:  solution[ row * 2 + 1 ][ col ],
-        east:  solution[ row * 2 + 1 ][ col + 1 ],
-        south: solution[ row * 2 + 2 ][ col ]
-      }))
+      const block = new Block( { 
+        north: values[ row * 2 ][ col ],
+        west:  values[ row * 2 + 1 ][ col ],
+        east:  values[ row * 2 + 1 ][ col + 1 ],
+        south: values[ row * 2 + 2 ][ col ]
+      });
+
+      placeInGrid( block.svg, col, row, grids[ 'shuffled' ] );
+
+      blocks.push( block );
     }
   }
+
+  // TODO: Reference blocks here so we can easily compare against neighboring
+  //       blocks, swap if there's another block already there, etc
 
   blocks.forEach( block => document.body.appendChild( block.svg ) );
 
