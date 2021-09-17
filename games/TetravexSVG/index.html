@@ -204,16 +204,23 @@
     const values = Array.from( Array( rows * 2 + 1 ), ( ( _, index ) => 
                     Array.from( Array( cols + ( index % 2 ) ), _ => 
                       Math.floor( Math.random() * COLORS ) ) ) );
+    
 
+    const blocks = [];
     for ( let row = 0; row < rows; row ++ ) {
       for ( let col = 0; col < cols; col ++ ) {
-        const block = createBlock( {
+        blocks.push( createBlock( {
           north: values[ row * 2 ][ col ],
           west: values[ row * 2 + 1 ][ col ],
           east: values[ row * 2 + 1 ][ col + 1 ],
           south: values[ row * 2 + 2 ][ col ]
-        } );
+        } ) );
+      }
+    }
 
+    for ( let row = 0; row < rows; row ++ ) {
+      for ( let col = 0; col < cols; col ++ ) {
+        const block = blocks.splice( Math.floor( Math.random() * blocks.length ), 1 )[ 0 ];
         placeInGrid( block, col, row, grids[ 'shuffled' ] );
         document.body.appendChild( block )
       }
