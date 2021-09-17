@@ -59,6 +59,7 @@
   //       Can we use cols/rows to figure out where we are in grid?
   const size = 64;
   const cols = 3, rows = 3;
+  const COLORS = 9;
 
   const grids = [];
   [ 'solution', 'shuffled' ].forEach( id => {
@@ -69,33 +70,32 @@
   /**
    * Blocks
    */
-  // TODO: Get rid of Block class, make constructor a normal function that makes SVG dom
-  class Block {
-    constructor( { north, west, east, south } ) {
-      this.svg = document.createElementNS( XMLNS, 'svg' );
-      this.svg.setAttribute( 'class', 'block' );
-      this.svg.setAttribute( 'viewBox', '0 0 100 100' );
+  function createBlock( { north, west, east, south } ) {
+    const block = document.createElementNS( XMLNS, 'svg' );
+    block.setAttribute( 'class', 'block' );
+    block.setAttribute( 'viewBox', '0 0 100 100' );
 
-      this.svg.north = north;
-      this.svg.west = west;
-      this.svg.east = east;
-      this.svg.south = south;
+    block.north = north;
+    block.west = west;
+    block.east = east;
+    block.south = south;
 
-      this.svg.onmousedown = mouseDown;
-      this.svg.onmousemove = mouseMove;
-      this.svg.onmouseup   = mouseUp;
+    block.onmousedown = mouseDown;
+    block.onmousemove = mouseMove;
+    block.onmouseup   = mouseUp;
 
-      // TODO: Would path be easier/cleaner in any way?
-      this.dom = [];
-      [ north, west, east, south ].forEach( ( color, index ) => {
-        const polygon =  document.createElementNS( XMLNS, 'polygon' );
-        polygon.setAttribute( 'points', POINTS[ index ] );
-        polygon.setAttribute( 'class', `color${ color }` );
-        this.svg.appendChild( polygon );
+    // TODO: Would path be easier/cleaner in any way?
+    dom = [];
+    [ north, west, east, south ].forEach( ( color, index ) => {
+      const polygon =  document.createElementNS( XMLNS, 'polygon' );
+      polygon.setAttribute( 'points', POINTS[ index ] );
+      polygon.setAttribute( 'class', `color${ color }` );
+      block.appendChild( polygon );
 
-        this.dom[ index ] = polygon;
-      } );
-    }
+      dom[ index ] = polygon;
+    } );
+
+    return block;
   }
 
   function setLocation( block, x, y ) {
@@ -203,19 +203,19 @@
     //   S 
     const values = Array.from( Array( rows * 2 + 1 ), ( ( _, index ) => 
                     Array.from( Array( cols + ( index % 2 ) ), _ => 
-                      Math.floor( Math.random() * 8 ) ) ) )
+                      Math.floor( Math.random() * COLORS ) ) ) );
 
     for ( let row = 0; row < rows; row ++ ) {
       for ( let col = 0; col < cols; col ++ ) {
-        const block = new Block( {
+        const block = createBlock( {
           north: values[ row * 2 ][ col ],
           west: values[ row * 2 + 1 ][ col ],
           east: values[ row * 2 + 1 ][ col + 1 ],
           south: values[ row * 2 + 2 ][ col ]
         } );
 
-        placeInGrid( block.svg, col, row, grids[ 'shuffled' ] );
-        document.body.appendChild( block.svg )
+        placeInGrid( block, col, row, grids[ 'shuffled' ] );
+        document.body.appendChild( block )
       }
     }
   }
