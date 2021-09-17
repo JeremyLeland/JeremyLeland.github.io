@@ -5,6 +5,11 @@
     overflow: hidden;
     margin: 0;
   }
+
+  /* TODO: aspect-ratio is not supported on Safari/iOS */
+  /* Would something like this work instead? http://jsfiddle.net/webtiki/MpXYr/3/ */
+  /* Probably need to choose height or width and accomodate that */
+
   #wrapper {
     aspect-ratio: 1 / 2.4;
     max-width: 100%;
@@ -14,7 +19,6 @@
   }
   .block {
     position: absolute;
-    width: 33%;
   }
   text {
     fill: white;
@@ -22,14 +26,11 @@
   }
 
   .grid {
-    background-image: linear-gradient(   0deg, white 1px, transparent 1px ), 
-                      linear-gradient(  90deg, white 1px, transparent 1px ),
-                      linear-gradient( 180deg, white 1px, transparent 1px ),
-                      linear-gradient( 270deg, white 1px, transparent 1px );
-    background-size: 33% 33%;
     width: 100%;
-    aspect-ratio: 1 / 1;
+    /* padding-bottom: 100%; */
     position: relative;
+    stroke: white;
+    stroke-width: 2;
   }
   polygon { stroke: black; stroke-width: 2px; }
 
@@ -47,17 +48,15 @@
 
 <body>
   <div id="wrapper">
-    <!-- Maybe SVG with lines instead of CSS linear-gradient hack? -->
     <div id="solution" class="grid"></div>
-
     <!-- TODO: Text formatting -- center title at least? -->
     <svg viewBox="0 0 100 30">
       <style>
-        .small { font-size: 45% }
-        .heavy { font-weight: bold }
+        #title { font-weight: bold }
+        #subtitle { font-size: 45% }
       </style>
-      <text x="0" y="15" class="heavy">Tetravex</text>
-      <text x="0" y="25" class="small">Arrange tiles so colors match</text>
+      <text x="0" y="15" id="title">Tetravex</text>
+      <text x="0" y="25" id="subtitle">Arrange tiles so colors match</text>
     </svg>
     <div id="shuffled" class="grid"></div>
   </div>
@@ -72,15 +71,48 @@
     '0,100 50,50 100,100'   // south
   ];
 
-  const cols = 3, rows = 3;
+  const cols = 2, rows = 2;
   const COLORS = 9;
 
-  const grids = [];
-  [ 'solution', 'shuffled' ].forEach( id => {
-    grids[ id ] = document.getElementById( id );
-    grids[ id ].blocks = Array( cols * rows );
-  } );
   const wrapper = document.getElementById( 'wrapper' );
+  const solutionGrid = createGrid( cols, rows );
+  const shuffledGrid = createGrid( cols, rows );
+
+  document.getElementById( 'solution' ).appendChild( solutionGrid );
+  document.getElementById( 'shuffled' ).appendChild( shuffledGrid );
+  generateSolution( cols, rows );
+
+
+  function createGrid( cols, rows ) {
+    const grid = document.createElementNS( XMLNS, 'svg' );
+    grid.setAttribute( 'viewBox', '0 0 100 100' );
+
+    grid.blocks = Array( cols * rows );
+
+    const size = Math.floor( 100 / cols );
+
+    for ( let col = 0; col <= cols; col ++ ) {
+      const line = document.createElementNS( XMLNS, 'line' );
+      line.setAttribute( 'x1', `${ col * size }` );
+      line.setAttribute( 'y1', `${ 0   * size }` );
+      line.setAttribute( 'x2', `${ col  * size }` );
+      line.setAttribute( 'y2', `${ rows * size }` );
+      line.setAttribute( 'vector-effect', 'non-scaling-stroke' );
+      grid.appendChild( line );
+    }
+
+    for ( let row = 0; row <= rows; row ++ ) {
+      const line = document.createElementNS( XMLNS, 'line' );
+      line.setAttribute( 'x1', `${ 0   * size }` );
+      line.setAttribute( 'y1', `${ row * size }` );
+      line.setAttribute( 'x2', `${ cols * size }` );
+      line.setAttribute( 'y2', `${ row  * size }` );
+      line.setAttribute( 'vector-effect', 'non-scaling-stroke' );
+      grid.appendChild( line );
+    }
+
+    return grid;
+  }
 
   /**
    * Blocks
@@ -89,6 +121,9 @@
     const block = document.createElementNS( XMLNS, 'svg' );
     block.setAttribute( 'class', 'block' );
     block.setAttribute( 'viewBox', '0 0 100 100' );
+
+    block.setAttribute( 'width',  `${ 100 / cols }%` );
+    block.setAttribute( 'height', `${ 100 / rows }%` );
 
     block.north = north;
     block.west = west;
@@ -119,7 +154,7 @@
   }
 
   function placeInGrid( block, col, row, grid ) {
-    grid.appendChild( block );
+    grid.parentElement.appendChild( block );
 
     const x = ( 1 / cols ) * col * 100;
     const y = ( 1 / rows ) * row * 100;
@@ -139,7 +174,7 @@
 
       const existingBlock = grid.blocks[ col + row * cols ];
       if ( existingBlock ) {
-        block.grid.removeChild( existingBlock );  // so we don't double-add here
+        block.grid.parentElement.removeChild( existingBlock );  // so we don't double-add here
         placeInGrid( existingBlock, block.col, block.row, block.grid );
       }
 
@@ -183,11 +218,8 @@
       offsetY: e.offsetY,
     };
 
-    block.grid.removeChild( block );
+    block.grid.parentElement.removeChild( block );
     block.grid.blocks[ block.col + block.row * cols ] = null;
-
-    // TODO: Maybe keep these as part of one grid or the other to keep width consistent?
-    // Might be able to adjust location based on movementX/movementY?
 
     wrapper.appendChild( block );
 
@@ -208,8 +240,8 @@
 
     wrapper.removeChild( active.block );
 
-    if ( !tryAlignToGrid( active.block, x, y, grids[ 'solution' ] ) ) {
-      if ( !tryAlignToGrid( active.block, x, y, grids[ 'shuffled' ] ) ) {
+    if ( !tryAlignToGrid( active.block, x, y, solutionGrid ) ) {
+      if ( !tryAlignToGrid( active.block, x, y, shuffledGrid ) ) {
         placeInGrid( active.block, active.block.col, active.block.row, active.block.grid );
       }
     }
@@ -218,7 +250,7 @@
 
     active = null;
 
-    if ( isValidSolution( grids[ 'solution' ].blocks ) ) {
+    if ( isValidSolution( solutionGrid.blocks ) ) {
       // TODO: Change title to "Solved!" and description to "click for next game"
       console.log( 'Valid solution!' );
     }
@@ -250,11 +282,9 @@
     for ( let row = 0; row < rows; row ++ ) {
       for ( let col = 0; col < cols; col ++ ) {
         const block = blocks.splice( Math.floor( Math.random() * blocks.length ), 1 )[ 0 ];
-        placeInGrid( block, col, row, grids[ 'shuffled' ] );
+        placeInGrid( block, col, row, shuffledGrid );
       }
     }
   }
-
-  generateSolution( cols, rows );
 
 </script>
