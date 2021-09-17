@@ -7,10 +7,10 @@
     margin: 0;
   }
   #wrapper {
-    /*padding-top: calc( 1% / 2);*/
     aspect-ratio: 1 / 2.25;
     max-width: 100%;
     max-height: 100%;
+    margin: 8px;
     position: relative;
   }
   h3 {
@@ -49,7 +49,6 @@
 
 <body>
   <div id="wrapper">
-    <!-- TODO: Don't hardcode width/height here -->
     <!-- Maybe SVG with lines instead of CSS linear-gradient hack? -->
     <div id="solution" class="grid"></div>
 
@@ -69,9 +68,6 @@
     '0,100 50,50 100,100'   // south
   ];
 
-  // TODO: See if we can avoid size, since it may depend on screen size.
-  //       Can we use cols/rows to figure out where we are in grid?
-  const size = 64;
   const cols = 3, rows = 3;
   const COLORS = 9;
 
@@ -120,9 +116,6 @@
 
   function placeInGrid( block, col, row, grid ) {
     grid.appendChild( block );
-
-    //const sb = grid.getBoundingClientRect();
-    //setLocation( block, sb.left + col * size, sb.top + row * size );
 
     const x = ( 1 / cols ) * col * 100;
     const y = ( 1 / rows ) * row * 100;
@@ -189,16 +182,20 @@
     block.grid.removeChild( block );
     block.grid.blocks[ block.col + block.row * cols ] = null;
 
+    // TODO: Maybe keep these as part of one grid or the other to keep width consistent?
+    // Might be able to adjust location based on movementX/movementY?
+
     wrapper.appendChild( block );
-    setLocation( active.block, e.pageX - active.offsetX, e.pageY - active.offsetY );
 
     block.style.zIndex = 2;
+
+    mouseMove( e );   // to align block with mouse
   }
 
   // TODO: Sometimes this misses if mouse goes outside bounds, should we attach this elsewhere?
   function mouseMove( e ) {
     if ( active ) {
-      setLocation( active.block, e.pageX - active.offsetX, e.pageY - active.offsetY );
+      setLocation( active.block, e.pageX - active.offsetX - wrapper.offsetLeft, e.pageY - active.offsetY - wrapper.offsetTop );
     }
   }
 
@@ -255,9 +252,5 @@
   }
 
   generateSolution( cols, rows );
-
-  // const blockStyle = document.styleSheets[0].cssRules[0].style;
-  // blockStyle.width = size;
-  // blockStyle.height = size;
 
 </script>
