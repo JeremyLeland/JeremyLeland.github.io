@@ -4,6 +4,14 @@
     color: white;
     user-select: none;
     overflow: hidden;
+    margin: 0;
+  }
+  #wrapper {
+    /*padding-top: calc( 1% / 2);*/
+    aspect-ratio: 1 / 2.25;
+    max-width: 100%;
+    max-height: 100%;
+    position: relative;
   }
   h3 {
     font: bold 30px sans-serif;
@@ -12,8 +20,7 @@
   p  { font: bold 20px sans-serif }
   .block {
     position: absolute;
-    width: 64px;
-    height: 64px;
+    width: 33%;
   }
 
   .grid {
@@ -21,9 +28,14 @@
                       linear-gradient(  90deg, white 1px, transparent 1px ),
                       linear-gradient( 180deg, white 1px, transparent 1px ),
                       linear-gradient( 270deg, white 1px, transparent 1px );
-    background-size: 64px 64px;
+    background-size: 33% 33%;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    position: relative;
   }
   polygon { stroke: black; stroke-width: 2px; }
+
+  /* Colors */
   .color0 { fill: red }
   .color1 { fill: orange }
   .color2 { fill: yellow }
@@ -36,14 +48,16 @@
 </style>
 
 <body>
-  <!-- TODO: Don't hardcode width/height here -->
-  <!-- Maybe SVG with lines instead of CSS linear-gradient hack? -->
-  <div id="solution" class="grid" style="width: 192; height: 192"></div>
+  <div id="wrapper">
+    <!-- TODO: Don't hardcode width/height here -->
+    <!-- Maybe SVG with lines instead of CSS linear-gradient hack? -->
+    <div id="solution" class="grid"></div>
 
-  <!-- TODO: Text formatting -- center title at least? -->
-  <h3>Tetravex</h3>
-  <span>Arrange tiles so colors match</span>
-  <div id="shuffled" class="grid" style="width: 192; height: 192"></div>
+    <!-- TODO: Text formatting -- center title at least? -->
+    <h3>Tetravex</h3>
+    <span>Arrange tiles so colors match</span>
+    <div id="shuffled" class="grid"></div>
+  </div>
 </body>
 
 <script>
@@ -66,6 +80,7 @@
     grids[ id ] = document.getElementById( id );
     grids[ id ].blocks = Array( cols * rows );
   } );
+  const wrapper = document.getElementById( 'wrapper' );
 
   /**
    * Blocks
@@ -104,8 +119,14 @@
   }
 
   function placeInGrid( block, col, row, grid ) {
-    const sb = grid.getBoundingClientRect();
-    setLocation( block, sb.left + col * size, sb.top + row * size );
+    grid.appendChild( block );
+
+    //const sb = grid.getBoundingClientRect();
+    //setLocation( block, sb.left + col * size, sb.top + row * size );
+
+    const x = ( 1 / cols ) * col * 100;
+    const y = ( 1 / rows ) * row * 100;
+    setLocation( block, `${x}%`, `${y}%` );
 
     grid.blocks[ col + row * cols ] = block;
     block.grid = grid;
@@ -116,11 +137,12 @@
   function tryAlignToGrid( block, x, y, grid ) {
     const sb = grid.getBoundingClientRect();
     if ( sb.left <= x && x <= sb.right && sb.top <= y && y <= sb.bottom ) {
-      const col = Math.floor( ( x - sb.left ) / size );
-      const row = Math.floor( ( y - sb.top )  / size );
+      const col = Math.floor( cols * ( x - sb.left ) / sb.width  );
+      const row = Math.floor( rows * ( y - sb.top )  / sb.height );
 
       const existingBlock = grid.blocks[ col + row * cols ];
       if ( existingBlock ) {
+        block.grid.removeChild( existingBlock );  // so we don't double-add here
         placeInGrid( existingBlock, block.col, block.row, block.grid );
       }
 
@@ -164,7 +186,11 @@
       offsetY: e.offsetY,
     };
 
+    block.grid.removeChild( block );
     block.grid.blocks[ block.col + block.row * cols ] = null;
+
+    wrapper.appendChild( block );
+    setLocation( active.block, e.pageX - active.offsetX, e.pageY - active.offsetY );
 
     block.style.zIndex = 2;
   }
@@ -178,6 +204,8 @@
 
   function mouseUp( e ) {
     const x = e.pageX, y = e.pageY;
+
+    wrapper.removeChild( active.block );
 
     if ( !tryAlignToGrid( active.block, x, y, grids[ 'solution' ] ) ) {
       if ( !tryAlignToGrid( active.block, x, y, grids[ 'shuffled' ] ) ) {
@@ -222,7 +250,6 @@
       for ( let col = 0; col < cols; col ++ ) {
         const block = blocks.splice( Math.floor( Math.random() * blocks.length ), 1 )[ 0 ];
         placeInGrid( block, col, row, grids[ 'shuffled' ] );
-        document.body.appendChild( block )
       }
     }
   }
