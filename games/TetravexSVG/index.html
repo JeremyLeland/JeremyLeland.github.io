@@ -1,26 +1,24 @@
 <style>
   body {
     background-color: black;
-    color: white;
     user-select: none;
     overflow: hidden;
     margin: 0;
   }
   #wrapper {
-    aspect-ratio: 1 / 2.25;
+    aspect-ratio: 1 / 2.4;
     max-width: 100%;
     max-height: 100%;
     margin: 8px;
     position: relative;
   }
-  h3 {
-    font: bold 30px sans-serif;
-    margin: 0;
-  }
-  p  { font: bold 20px sans-serif }
   .block {
     position: absolute;
     width: 33%;
+  }
+  text {
+    fill: white;
+    font-family: sans-serif;
   }
 
   .grid {
@@ -53,8 +51,14 @@
     <div id="solution" class="grid"></div>
 
     <!-- TODO: Text formatting -- center title at least? -->
-    <h3>Tetravex</h3>
-    <span>Arrange tiles so colors match</span>
+    <svg viewBox="0 0 100 30">
+      <style>
+        .small { font-size: 45% }
+        .heavy { font-weight: bold }
+      </style>
+      <text x="0" y="15" class="heavy">Tetravex</text>
+      <text x="0" y="25" class="small">Arrange tiles so colors match</text>
+    </svg>
     <div id="shuffled" class="grid"></div>
   </div>
 </body>
