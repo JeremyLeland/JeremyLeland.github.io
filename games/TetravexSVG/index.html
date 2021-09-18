@@ -48,7 +48,7 @@
 </style>
 
 <body>
-  <svg id="wrapper" viewBox="0 0 100 230" style="max-width: 100%; max-height: 100%">
+  <svg id="wrapper" viewBox="0 0 100 230" style="width: 100%; height: 100%" preserveAspectRatio="xMinYMin">
     <svg id="solution" stroke="white" stroke-width="2"></svg>
 
     <text id="title" x="0" y="115" style="font-weight: bold;">Tetravex</text>
@@ -225,23 +225,25 @@
   }
 
   function mouseUp( e ) {
-    const x = e.pageX, y = e.pageY;
+    if ( active ) {
+      const x = e.pageX, y = e.pageY;
 
-    wrapper.removeChild( active.block );
+      wrapper.removeChild( active.block );
 
-    if ( !tryAlignToGrid( active.block, x, y, solutionGrid ) ) {
-      if ( !tryAlignToGrid( active.block, x, y, shuffledGrid ) ) {
-        placeInGrid( active.block, active.block.col, active.block.row, active.block.grid );
+      if ( !tryAlignToGrid( active.block, x, y, solutionGrid ) ) {
+        if ( !tryAlignToGrid( active.block, x, y, shuffledGrid ) ) {
+          placeInGrid( active.block, active.block.col, active.block.row, active.block.grid );
+        }
       }
-    }
 
-    active.block.style.zIndex = 1;
+      active.block.style.zIndex = 1;
 
-    active = null;
+      active = null;
 
-    if ( isValidSolution( solutionGrid.blocks ) ) {
-      // TODO: Change title to "Solved!" and description to "click for next game"
-      console.log( 'Valid solution!' );
+      if ( isValidSolution( solutionGrid.blocks ) ) {
+        // TODO: Change title to "Solved!" and description to "click for next game"
+        console.log( 'Valid solution!' );
+      }
     }
   }
 
