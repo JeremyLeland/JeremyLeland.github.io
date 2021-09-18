@@ -10,16 +10,17 @@
   /* Would something like this work instead? http://jsfiddle.net/webtiki/MpXYr/3/ */
   /* Probably need to choose height or width and accomodate that */
 
-  #wrapper {
+  /* #wrapper {
     aspect-ratio: 1 / 2.4;
     max-width: 100%;
-    max-height: 100%;
+    width: auto;
+    height: 100%;
     margin: 8px;
     position: relative;
-  }
-  .block {
+  } */
+  /* .block {
     position: absolute;
-  }
+  } */
   text {
     fill: white;
     font-family: sans-serif;
@@ -47,19 +48,14 @@
 </style>
 
 <body>
-  <div id="wrapper">
-    <div id="solution" class="grid"></div>
-    <!-- TODO: Text formatting -- center title at least? -->
-    <svg viewBox="0 0 100 30">
-      <style>
-        #title { font-weight: bold }
-        #subtitle { font-size: 45% }
-      </style>
-      <text x="0" y="15" id="title">Tetravex</text>
-      <text x="0" y="25" id="subtitle">Arrange tiles so colors match</text>
-    </svg>
-    <div id="shuffled" class="grid"></div>
-  </div>
+  <svg id="wrapper" viewBox="0 0 100 230" style="max-width: 100%; max-height: 100%">
+    <svg id="solution" stroke="white" stroke-width="2"></svg>
+
+    <text id="title" x="0" y="115" style="font-weight: bold;">Tetravex</text>
+    <text id="subtitle" x="0" y="125" style="font-size: 45%;">Arrange tiles so colors match</text>
+
+    <svg id="shuffled" y="130" stroke="white" stroke-width="2"></svg>
+  </svg>
 </body>
 
 <script>
@@ -71,22 +67,24 @@
     '0,100 50,50 100,100'   // south
   ];
 
-  const cols = 2, rows = 2;
+  const cols = 3, rows = 3;
   const COLORS = 9;
 
   const wrapper = document.getElementById( 'wrapper' );
-  const solutionGrid = createGrid( cols, rows );
-  const shuffledGrid = createGrid( cols, rows );
+  const solutionGrid = document.getElementById( 'solution' );
+  const shuffledGrid = document.getElementById( 'shuffled' );
 
-  document.getElementById( 'solution' ).appendChild( solutionGrid );
-  document.getElementById( 'shuffled' ).appendChild( shuffledGrid );
+  prepareGrid( solutionGrid, cols, rows );
+  prepareGrid( shuffledGrid, cols, rows );
   generateSolution( cols, rows );
 
+  let active = null;
 
-  function createGrid( cols, rows ) {
-    const grid = document.createElementNS( XMLNS, 'svg' );
-    grid.setAttribute( 'viewBox', '0 0 100 100' );
+  // mouseDown handled by the block we clicked on
+  document.onmousemove = mouseMove;
+  document.onmouseup = mouseUp;
 
+  function prepareGrid( grid, cols, rows ) {
     grid.blocks = Array( cols * rows );
 
     const size = Math.floor( 100 / cols );
@@ -110,8 +108,6 @@
       line.setAttribute( 'vector-effect', 'non-scaling-stroke' );
       grid.appendChild( line );
     }
-
-    return grid;
   }
 
   /**
@@ -121,6 +117,7 @@
     const block = document.createElementNS( XMLNS, 'svg' );
     block.setAttribute( 'class', 'block' );
     block.setAttribute( 'viewBox', '0 0 100 100' );
+    block.setAttribute( 'preserveAspectRatio', 'xMidYMin' );
 
     block.setAttribute( 'width',  `${ 100 / cols }%` );
 
@@ -130,8 +127,6 @@
     block.south = south;
 
     block.onmousedown = mouseDown;
-    block.onmousemove = mouseMove;
-    block.onmouseup   = mouseUp;
 
     // TODO: Would path be easier/cleaner in any way?
     dom = [];
@@ -147,17 +142,11 @@
     return block;
   }
 
-  function setLocation( block, x, y ) {
-    block.style.left = x;
-    block.style.top  = y;
-  }
-
   function placeInGrid( block, col, row, grid ) {
-    grid.parentElement.appendChild( block );
+    grid.appendChild( block );
 
-    const x = ( 1 / cols ) * col * 100;
-    const y = ( 1 / rows ) * row * 100;
-    setLocation( block, `${x}%`, `${y}%` );
+    block.setAttribute( 'x', ( 1 / cols ) * col * 100 );
+    block.setAttribute( 'y', ( 1 / rows ) * row * 100 );
 
     grid.blocks[ col + row * cols ] = block;
     block.grid = grid;
@@ -173,7 +162,7 @@
 
       const existingBlock = grid.blocks[ col + row * cols ];
       if ( existingBlock ) {
-        block.grid.parentElement.removeChild( existingBlock );  // so we don't double-add here
+        grid.removeChild( existingBlock );  // so we don't double-add here
         placeInGrid( existingBlock, block.col, block.row, block.grid );
       }
 
@@ -206,18 +195,17 @@
   /**
    * Input
    */
-  let active = null;
-
   function mouseDown( e ) {
     const block = e.currentTarget;
+    const bounds = block.getBoundingClientRect();
 
     active = {
       block: block,
-      offsetX: e.offsetX,
-      offsetY: e.offsetY,
+      offsetX: e.offsetX - bounds.x,
+      offsetY: e.offsetY - bounds.y,
     };
 
-    block.grid.parentElement.removeChild( block );
+    block.grid.removeChild( block );
     block.grid.blocks[ block.col + block.row * cols ] = null;
 
     wrapper.appendChild( block );
@@ -230,7 +218,9 @@
   // TODO: Sometimes this misses if mouse goes outside bounds, should we attach this elsewhere?
   function mouseMove( e ) {
     if ( active ) {
-      setLocation( active.block, e.pageX - active.offsetX - wrapper.offsetLeft, e.pageY - active.offsetY - wrapper.offsetTop );
+      const wrapperBox = wrapper.viewBox.baseVal;
+      active.block.setAttribute( 'x', wrapperBox.width * ( e.offsetX - active.offsetX ) / wrapper.clientWidth );// - active.offsetX /* - wrapper.offsetLeft*/ );
+      active.block.setAttribute( 'y', wrapperBox.height * ( e.offsetY - active.offsetY ) / wrapper.clientHeight );// - active.offsetY /*- wrapper.offsetTop*/ );
     }
   }
 
@@ -281,6 +271,7 @@
     for ( let row = 0; row < rows; row ++ ) {
       for ( let col = 0; col < cols; col ++ ) {
         const block = blocks.splice( Math.floor( Math.random() * blocks.length ), 1 )[ 0 ];
+        wrapper.appendChild( block );
         placeInGrid( block, col, row, shuffledGrid );
       }
     }
