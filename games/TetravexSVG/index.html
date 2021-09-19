@@ -17,7 +17,7 @@
     width: 100%;
     position: relative;
     stroke: white;
-    stroke-width: 2;
+    stroke-width: 1;
   }
   polygon { stroke: black; stroke-width: 2px; }
 
@@ -35,7 +35,7 @@
 
 <body>
   <svg id="wrapper" viewBox="0 0 100 230" style="width: 100%; height: 100%" preserveAspectRatio="xMidYMin">
-    <svg id="solution" stroke="white" stroke-width="2"></svg>
+    <svg id="solution" stroke="white" stroke-width="1"></svg>
 
     <!-- TODO: Make this all center nicely without hacky x/y -->
     <svg id="prev" y="-5" width="10%" viewBox="0 0 100 100" fill="white" onclick="prevSize()">
@@ -52,7 +52,7 @@
     <text id="title" x="50" y="115" style="font-weight: bold;">Tetravex</text>
     <text id="subtitle" x="50" y="125" style="font-size: 45%;">Arrange tiles so colors match</text>
 
-    <svg id="shuffled" y="130" stroke="white" stroke-width="2"></svg>
+    <svg id="shuffled" y="130" stroke="white" stroke-width="1"></svg>
   </svg>
 </body>
 
@@ -94,14 +94,12 @@
     for ( let col = 0; col <= cols; col ++ ) {
       const line = document.createElementNS( XMLNS, 'line' );
       setAttributes( line, { x1: col * size, y1: 0, x2: col * size, y2: rows * size } );
-      line.setAttribute( 'vector-effect', 'non-scaling-stroke' );
       grid.appendChild( line );
     }
 
     for ( let row = 0; row <= rows; row ++ ) {
       const line = document.createElementNS( XMLNS, 'line' );
       setAttributes( line, { x1: 0, y1: row * size, x2: cols * size, y2: row * size } );
-      line.setAttribute( 'vector-effect', 'non-scaling-stroke' );
       grid.appendChild( line );
     }
   }
@@ -162,7 +160,6 @@
       const polygon =  document.createElementNS( XMLNS, 'polygon' );
       polygon.setAttribute( 'points', POINTS[ index ] );
       polygon.setAttribute( 'class', `color${ color }` );
-      polygon.setAttribute( 'vector-effect', 'non-scaling-stroke' );
       block.appendChild( polygon );
 
       dom[ index ] = polygon;
@@ -309,6 +306,9 @@
   function updatePrevNextButtons() {
     document.getElementById( 'prevSize' ).textContent = cols - 1;
     document.getElementById( 'nextSize' ).textContent = cols + 1;
+
+    document.getElementById( 'prev' ).style = cols <= 2 ? "display: none" : "display: initial";
+    document.getElementById( 'next' ).style = cols >= 6 ? "display: none" : "display: initial";
   }
 
   function newGame() {
