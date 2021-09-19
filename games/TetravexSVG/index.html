@@ -14,7 +14,6 @@
 
   .grid {
     width: 100%;
-    /* padding-bottom: 100%; */
     position: relative;
     stroke: white;
     stroke-width: 2;
@@ -34,11 +33,11 @@
 </style>
 
 <body>
-  <svg id="wrapper" viewBox="0 0 100 230" style="width: 100%; height: 100%" preserveAspectRatio="xMinYMin">
+  <svg id="wrapper" viewBox="0 0 100 230" style="width: 100%; height: 100%" preserveAspectRatio="xMidYMin">
     <svg id="solution" stroke="white" stroke-width="2"></svg>
 
-    <text id="title" x="0" y="115" style="font-weight: bold;">Tetravex</text>
-    <text id="subtitle" x="0" y="125" style="font-size: 45%;">Arrange tiles so colors match</text>
+    <text id="title" x="50" y="115" style="text-anchor: middle; font-weight: bold;">Tetravex</text>
+    <text id="subtitle" x="50" y="125" style="text-anchor: middle; font-size: 45%;">Arrange tiles so colors match</text>
 
     <svg id="shuffled" y="130" stroke="white" stroke-width="2"></svg>
   </svg>
@@ -69,7 +68,6 @@
   // mouseDown handled by the block we clicked on
   document.onmousemove = inputMove;
   document.onmouseup = inputEnd;
-
   document.ontouchmove = inputMove;
   document.ontouchend = inputEnd;
 
@@ -80,20 +78,14 @@
 
     for ( let col = 0; col <= cols; col ++ ) {
       const line = document.createElementNS( XMLNS, 'line' );
-      line.setAttribute( 'x1', `${ col * size }` );
-      line.setAttribute( 'y1', `${ 0   * size }` );
-      line.setAttribute( 'x2', `${ col  * size }` );
-      line.setAttribute( 'y2', `${ rows * size }` );
+      setAttributes( line, { x1: col * size, y1: 0, x2: col * size, y2: rows * size } );
       line.setAttribute( 'vector-effect', 'non-scaling-stroke' );
       grid.appendChild( line );
     }
 
     for ( let row = 0; row <= rows; row ++ ) {
       const line = document.createElementNS( XMLNS, 'line' );
-      line.setAttribute( 'x1', `${ 0   * size }` );
-      line.setAttribute( 'y1', `${ row * size }` );
-      line.setAttribute( 'x2', `${ cols * size }` );
-      line.setAttribute( 'y2', `${ row  * size }` );
+      setAttributes( line, { x1: 0, y1: row * size, x2: cols * size, y2: row * size } );
       line.setAttribute( 'vector-effect', 'non-scaling-stroke' );
       grid.appendChild( line );
     }
@@ -124,6 +116,7 @@
       const polygon =  document.createElementNS( XMLNS, 'polygon' );
       polygon.setAttribute( 'points', POINTS[ index ] );
       polygon.setAttribute( 'class', `color${ color }` );
+      polygon.setAttribute( 'vector-effect', 'non-scaling-stroke' );
       block.appendChild( polygon );
 
       dom[ index ] = polygon;
@@ -239,9 +232,8 @@
   }
   
   function inputStart( e ) {
-    const block = e.currentTarget;
     const pos = e.touches ? e.touches[0] : e;
-    pickUpBlock( block, pos.pageX, pos.pageY );
+    pickUpBlock( e.currentTarget, pos.pageX, pos.pageY );
   }
 
   function inputMove( e ) {
@@ -255,7 +247,6 @@
   }
 
   function generateSolution( cols, rows ) {
-
     // NOTE: Array looks like:
     //   N
     //  W E
@@ -264,7 +255,6 @@
                     Array.from( Array( cols + ( index % 2 ) ), _ => 
                       Math.floor( Math.random() * COLORS ) ) ) );
     
-
     const blocks = [];
     for ( let row = 0; row < rows; row ++ ) {
       for ( let col = 0; col < cols; col ++ ) {
@@ -283,6 +273,12 @@
         wrapper.appendChild( block );
         placeInGrid( block, col, row, shuffledGrid );
       }
+    }
+  }
+
+  function setAttributes( el, attrs ) {
+    for ( let key in attrs ) {
+      el.setAttribute( key, attrs[ key ] );
     }
   }
 
