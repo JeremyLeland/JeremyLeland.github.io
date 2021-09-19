@@ -10,6 +10,7 @@
   text {
     fill: white;
     font-family: sans-serif;
+    text-anchor: middle;
   }
 
   .grid {
@@ -36,8 +37,20 @@
   <svg id="wrapper" viewBox="0 0 100 230" style="width: 100%; height: 100%" preserveAspectRatio="xMidYMin">
     <svg id="solution" stroke="white" stroke-width="2"></svg>
 
-    <text id="title" x="50" y="115" style="text-anchor: middle; font-weight: bold;">Tetravex</text>
-    <text id="subtitle" x="50" y="125" style="text-anchor: middle; font-size: 45%;">Arrange tiles so colors match</text>
+    <!-- TODO: Make this all center nicely without hacky x/y -->
+    <svg id="prev" y="-5" width="10%" viewBox="0 0 100 100" fill="white" onclick="prevSize()">
+      <path d="M 100 0 L 0 50 L 100 100"></path>
+      <text id="prevSize" x="75" y="70" style="fill: black; font-size: 60">2</text>
+    </svg>
+
+    <!-- TODO: Why isn't preserveAspectRatio with xMax putting this on the right side? -->
+    <svg id="next" x="90" y="-5" width="10%" viewBox="0 0 100 100" fill="white" onclick="nextSize()" preserveAspectRatio="xMaxYMid meet">
+      <path d="M 0 0 L 100 50 L 0 100"></path>
+      <text id="nextSize" x="25" y="70" style="fill: black; font-size: 60">4</text>
+    </svg>
+
+    <text id="title" x="50" y="115" style="font-weight: bold;">Tetravex</text>
+    <text id="subtitle" x="50" y="125" style="font-size: 45%;">Arrange tiles so colors match</text>
 
     <svg id="shuffled" y="130" stroke="white" stroke-width="2"></svg>
   </svg>
@@ -52,16 +65,14 @@
     '0,100 50,50 100,100'   // south
   ];
 
-  const cols = 3, rows = 3;
+  let cols = 3, rows = 3;
   const COLORS = 9;
 
   const wrapper = document.getElementById( 'wrapper' );
   const solutionGrid = document.getElementById( 'solution' );
   const shuffledGrid = document.getElementById( 'shuffled' );
 
-  prepareGrid( solutionGrid, cols, rows );
-  prepareGrid( shuffledGrid, cols, rows );
-  generateSolution( cols, rows );
+  newGame();
 
   let active = null;
 
@@ -71,10 +82,14 @@
   document.ontouchmove = inputMove;
   document.ontouchend = inputEnd;
 
-  function prepareGrid( grid, cols, rows ) {
+  function prepareGrid( grid ) {
+    while( grid.firstChild ) {
+      grid.removeChild( grid.firstChild );
+    }
+
     grid.blocks = Array( cols * rows );
 
-    const size = Math.floor( 100 / cols );
+    const size = 100 / cols;
 
     for ( let col = 0; col <= cols; col ++ ) {
       const line = document.createElementNS( XMLNS, 'line' );
@@ -90,6 +105,37 @@
       grid.appendChild( line );
     }
   }
+
+  function generateSolution() {
+    // NOTE: Array looks like:
+    //   N
+    //  W E
+    //   S 
+    const values = Array.from( Array( rows * 2 + 1 ), ( ( _, index ) => 
+                    Array.from( Array( cols + ( index % 2 ) ), _ => 
+                      Math.floor( Math.random() * COLORS ) ) ) );
+    
+    const blocks = [];
+    for ( let row = 0; row < rows; row ++ ) {
+      for ( let col = 0; col < cols; col ++ ) {
+        blocks.push( createBlock( {
+          north: values[ row * 2 ][ col ],
+          west: values[ row * 2 + 1 ][ col ],
+          east: values[ row * 2 + 1 ][ col + 1 ],
+          south: values[ row * 2 + 2 ][ col ]
+        } ) );
+      }
+    }
+
+    for ( let row = 0; row < rows; row ++ ) {
+      for ( let col = 0; col < cols; col ++ ) {
+        const block = blocks.splice( Math.floor( Math.random() * blocks.length ), 1 )[ 0 ];
+        wrapper.appendChild( block );
+        placeInGrid( block, col, row, shuffledGrid );
+      }
+    }
+  }
+
 
   /**
    * Blocks
@@ -205,7 +251,7 @@
       // NOTE: Because Safari needs wrapper to have width and height of 100%, I can't use wrapper.clientWidth/Height
       //       Base this on shuffledGrid bottom right corner instead as a workaround
       const shuffledBounds = shuffledGrid.getBoundingClientRect();
-      active.block.setAttribute( 'x', wrapperBox.width * ( x - active.offsetX ) / shuffledBounds.right );
+      active.block.setAttribute( 'x', wrapperBox.width * ( x - active.offsetX - shuffledBounds.left ) / shuffledBounds.width );
       active.block.setAttribute( 'y', wrapperBox.height * ( y - active.offsetY ) / shuffledBounds.bottom );
     }
   }
@@ -246,34 +292,29 @@
     releaseActiveBlock( pos.pageX, pos.pageY );
   }
 
-  function generateSolution( cols, rows ) {
-    // NOTE: Array looks like:
-    //   N
-    //  W E
-    //   S 
-    const values = Array.from( Array( rows * 2 + 1 ), ( ( _, index ) => 
-                    Array.from( Array( cols + ( index % 2 ) ), _ => 
-                      Math.floor( Math.random() * COLORS ) ) ) );
-    
-    const blocks = [];
-    for ( let row = 0; row < rows; row ++ ) {
-      for ( let col = 0; col < cols; col ++ ) {
-        blocks.push( createBlock( {
-          north: values[ row * 2 ][ col ],
-          west: values[ row * 2 + 1 ][ col ],
-          east: values[ row * 2 + 1 ][ col + 1 ],
-          south: values[ row * 2 + 2 ][ col ]
-        } ) );
-      }
-    }
+  function prevSize() {
+    cols --;
+    rows --;
+    updatePrevNextButtons();
+    newGame();
+  }
 
-    for ( let row = 0; row < rows; row ++ ) {
-      for ( let col = 0; col < cols; col ++ ) {
-        const block = blocks.splice( Math.floor( Math.random() * blocks.length ), 1 )[ 0 ];
-        wrapper.appendChild( block );
-        placeInGrid( block, col, row, shuffledGrid );
-      }
-    }
+  function nextSize() {
+    cols ++;
+    rows ++;
+    updatePrevNextButtons();
+    newGame();
+  }
+
+  function updatePrevNextButtons() {
+    document.getElementById( 'prevSize' ).textContent = cols - 1;
+    document.getElementById( 'nextSize' ).textContent = cols + 1;
+  }
+
+  function newGame() {
+    prepareGrid( solutionGrid );
+    prepareGrid( shuffledGrid );
+    generateSolution();
   }
 
   function setAttributes( el, attrs ) {
