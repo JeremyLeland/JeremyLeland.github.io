@@ -65,8 +65,8 @@
       <text id="nextSize" x="25" y="70">4</text>
     </svg>
 
-    <text id="title" x="50" y="115" style="font-weight: bold;">Tetravex</text>
-    <text id="subtitle" x="50" y="125" style="font-size: 45%;">Arrange tiles so colors match</text>
+    <text id="title" x="50" y="115" style="font-weight: bold;"></text>
+    <text id="subtitle" x="50" y="125" style="font-size: 45%;"></text>
 
     <svg id="shuffled" y="130" class="grid"></svg>
   </svg>
@@ -87,14 +87,18 @@
   const wrapper = document.getElementById( 'wrapper' );
   const solutionGrid = document.getElementById( 'solution' );
   const shuffledGrid = document.getElementById( 'shuffled' );
+  const titleText = document.getElementById( 'title' );
+  const subtitleText = document.getElementById( 'subtitle' );
+
+  let solved = false;
+  let active = null;
 
   newGame();
 
-  let active = null;
-
-  // mouseDown handled by the block we clicked on
+  document.onmousedown = nonBlockInputStart;
   document.onmousemove = inputMove;
   document.onmouseup = inputEnd;
+  document.ontouchdown = nonBlockInputStart;
   document.ontouchmove = inputMove;
   document.ontouchend = inputEnd;
 
@@ -284,9 +288,17 @@
       active = null;
 
       if ( isValidSolution( solutionGrid.blocks ) ) {
-        // TODO: Change title to "Solved!" and description to "click for next game"
-        console.log( 'Valid solution!' );
+        solved = true;
+        titleText.textContent = 'Solved!';
+        const clickOrTap = navigator.maxTouchPoints > 0 ? 'Tap' : 'Click';
+        subtitleText.textContent = `${ clickOrTap } here for new game`;
       }
+    }
+  }
+
+  function nonBlockInputStart( e ) {
+    if ( solved ) {
+      newGame();
     }
   }
   
@@ -323,11 +335,16 @@
     document.getElementById( 'prevSize' ).textContent = cols - 1;
     document.getElementById( 'nextSize' ).textContent = cols + 1;
 
-    document.getElementById( 'prev' ).style = cols <= 2 ? "display: none" : "display: initial";
-    document.getElementById( 'next' ).style = cols >= 6 ? "display: none" : "display: initial";
+    document.getElementById( 'prev' ).style = cols <= 2 ? 'display: none' : 'display: initial';
+    document.getElementById( 'next' ).style = cols >= 6 ? 'display: none' : 'display: initial';
   }
 
   function newGame() {
+    titleText.textContent = 'Tetravex';
+    subtitleText.textContent = 'Arrange tiles so colors match';
+
+    solved = false;
+
     prepareGrid( solutionGrid );
     prepareGrid( shuffledGrid );
     generateSolution();
