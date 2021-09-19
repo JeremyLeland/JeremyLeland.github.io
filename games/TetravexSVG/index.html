@@ -7,21 +7,6 @@
     margin: 0;
   }
 
-  /* TODO: aspect-ratio is not supported on Safari/iOS */
-  /* Would something like this work instead? http://jsfiddle.net/webtiki/MpXYr/3/ */
-  /* Probably need to choose height or width and accomodate that */
-
-  /* #wrapper {
-    aspect-ratio: 1 / 2.4;
-    max-width: 100%;
-    width: auto;
-    height: 100%;
-    margin: 8px;
-    position: relative;
-  } */
-  /* .block {
-    position: absolute;
-  } */
   text {
     fill: white;
     font-family: sans-serif;
@@ -82,8 +67,11 @@
   let active = null;
 
   // mouseDown handled by the block we clicked on
-  document.onmousemove = mouseMove;
-  document.onmouseup = mouseUp;
+  document.onmousemove = inputMove;
+  document.onmouseup = inputEnd;
+
+  document.ontouchmove = inputMove;
+  document.ontouchend = inputEnd;
 
   function prepareGrid( grid, cols, rows ) {
     grid.blocks = Array( cols * rows );
@@ -127,7 +115,8 @@
     block.east = east;
     block.south = south;
 
-    block.onmousedown = mouseDown;
+    block.onmousedown = inputStart;
+    block.ontouchstart = inputStart;
 
     // TODO: Would path be easier/cleaner in any way?
     dom = [];
@@ -249,16 +238,20 @@
     }
   }
   
-  function mouseDown( e ) {
-    pickUpBlock( e.currentTarget, e.offsetX, e.offsetY );
+  function inputStart( e ) {
+    const block = e.currentTarget;
+    const pos = e.touches ? e.touches[0] : e;
+    pickUpBlock( block, pos.pageX, pos.pageY );
   }
 
-  function mouseMove( e ) {
-    setActiveBlockLocation( e.offsetX, e.offsetY );
+  function inputMove( e ) {
+    const pos = e.touches ? e.touches[0] : e;
+    setActiveBlockLocation( pos.pageX, pos.pageY );
   }
 
-  function mouseUp( e ) {
-    releaseActiveBlock( e.offsetX, e.offsetY );
+  function inputEnd( e ) {
+    const pos = e.touches ? e.changedTouches[0] : e;
+    releaseActiveBlock( pos.pageX, pos.pageY );
   }
 
   function generateSolution( cols, rows ) {
