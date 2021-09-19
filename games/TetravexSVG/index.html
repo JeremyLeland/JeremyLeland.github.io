@@ -1,3 +1,4 @@
+<title>Tetravex SVG</title>
 <style>
   body {
     background-color: black;
@@ -195,14 +196,14 @@
   /**
    * Input
    */
-  function mouseDown( e ) {
-    const block = e.currentTarget;
+
+  function pickUpBlock( block, x, y ) {
     const bounds = block.getBoundingClientRect();
 
     active = {
       block: block,
-      offsetX: e.offsetX - bounds.x,
-      offsetY: e.offsetY - bounds.y,
+      offsetX: x - bounds.x,
+      offsetY: y - bounds.y,
     };
 
     block.grid.removeChild( block );
@@ -212,22 +213,23 @@
 
     block.style.zIndex = 2;
 
-    mouseMove( e );   // to align block with mouse
+    setActiveBlockLocation( x, y );
   }
 
-  // TODO: Sometimes this misses if mouse goes outside bounds, should we attach this elsewhere?
-  function mouseMove( e ) {
+  function setActiveBlockLocation( x, y ) {
     if ( active ) {
       const wrapperBox = wrapper.viewBox.baseVal;
-      active.block.setAttribute( 'x', wrapperBox.width * ( e.offsetX - active.offsetX ) / wrapper.clientWidth );// - active.offsetX /* - wrapper.offsetLeft*/ );
-      active.block.setAttribute( 'y', wrapperBox.height * ( e.offsetY - active.offsetY ) / wrapper.clientHeight );// - active.offsetY /*- wrapper.offsetTop*/ );
+
+      // NOTE: Because Safari needs wrapper to have width and height of 100%, I can't use wrapper.clientWidth/Height
+      //       Base this on shuffledGrid bottom right corner instead as a workaround
+      const shuffledBounds = shuffledGrid.getBoundingClientRect();
+      active.block.setAttribute( 'x', wrapperBox.width * ( x - active.offsetX ) / shuffledBounds.right );
+      active.block.setAttribute( 'y', wrapperBox.height * ( y - active.offsetY ) / shuffledBounds.bottom );
     }
   }
 
-  function mouseUp( e ) {
+  function releaseActiveBlock( x, y ) {
     if ( active ) {
-      const x = e.pageX, y = e.pageY;
-
       wrapper.removeChild( active.block );
 
       if ( !tryAlignToGrid( active.block, x, y, solutionGrid ) ) {
@@ -245,6 +247,18 @@
         console.log( 'Valid solution!' );
       }
     }
+  }
+  
+  function mouseDown( e ) {
+    pickUpBlock( e.currentTarget, e.offsetX, e.offsetY );
+  }
+
+  function mouseMove( e ) {
+    setActiveBlockLocation( e.offsetX, e.offsetY );
+  }
+
+  function mouseUp( e ) {
+    releaseActiveBlock( e.offsetX, e.offsetY );
   }
 
   function generateSolution( cols, rows ) {
