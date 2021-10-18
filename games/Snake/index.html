@@ -90,25 +90,27 @@
   svg.setAttribute( 'class', 'border' );
   document.body.appendChild( svg );
 
-  let dStr = `M ${ points[ 0 ].x } ${ points[ 0 ].y } `;
-
-  for ( let i = 1; i < points.length; i ++ ) {
+  const leftCoords = [];
+  for ( let i = 0; i < points.length; i ++ ) {
     const leftAng = points[ i ].angle - Math.PI / 2;
-    const width = size * ( i + 1 ) / points.length;
+    const width = size * i / ( points.length - 1 );
     const x = points[ i ].x + Math.cos( leftAng ) * width;
     const y = points[ i ].y + Math.sin( leftAng ) * width;
-    dStr += `L ${ x } ${ y } `;
+    leftCoords.push( `${ x } ${ y }` );
+
+    // TODO: unshift the right coord as part of this loop?
   }
 
-  for ( let i = points.length - 1; i > 0; i -- ) {
+  const rightCoords = [];
+  for ( let i = points.length - 1; i >= 0; i -- ) {
     const rightAng = points[ i ].angle + Math.PI / 2;
-    const width = size * ( i + 1 ) / points.length;
+    const width = size * i / ( points.length - 1 );
     const x = points[ i ].x + Math.cos( rightAng ) * width;
     const y = points[ i ].y + Math.sin( rightAng ) * width;
-    dStr += `L ${ x } ${ y } `;
+    rightCoords.push( `${ x } ${ y }` );
   }
 
-  dStr += 'Z';
+  const dStr = `M ${ leftCoords.join( 'L' ) } A ${ size } ${ size } 0 0 1 ${ rightCoords.join( 'L' ) }`;
 
   const path = document.createElementNS( XMLNS, 'path' );
   path.setAttribute( 'd', dStr );
