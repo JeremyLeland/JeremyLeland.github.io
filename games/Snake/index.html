@@ -4,36 +4,42 @@
     stroke-linecap: round;
   }
 </style>
+
 <svg id="border" class="border">
-  <!-- <line x1="32" y1="32" x2="64" y2="64" style="stroke-width: 5;"></line>
-  <line x1="64" y1="64" x2="96" y2="96" style="stroke-width: 4;"></line> -->
 </svg>
 
 <script>
   const svg = document.getElementById( 'border' );
 
-  let x = 32, y = 32, width = 10;
-  let angle = Math.PI / 7, speed = 4;
-  
-  const XMLNS = 'http://www.w3.org/2000/svg';
+  const speed = 4;
+  const points = [];
 
+  let x = 32, y = 32, angle = Math.PI / 7;
   for ( let i = 0; i < 20; i ++ ) {
-    const line = document.createElementNS( XMLNS, 'line' );
-    line.setAttribute( 'x1', x );
-    line.setAttribute( 'y1', y );
-
     x += Math.cos( angle ) * speed;
     y += Math.sin( angle ) * speed;
-
     angle += 0.1;
 
-    line.setAttribute( 'x2', x );
-    line.setAttribute( 'y2', y );
-
-    line.style.strokeWidth = i;
-
-    svg.appendChild( line );
+    points.push( { x: x, y: y } );
   }
 
+  drawSnakePoints( points, 20 );
+  
+  function drawSnakePoints( points, width ) {
+    const XMLNS = 'http://www.w3.org/2000/svg';
+
+    for ( let i = 1; i < points.length; i ++ ) {
+      const line = document.createElementNS( XMLNS, 'line' );
+      line.setAttribute( 'x1', points[ i - 1 ].x );
+      line.setAttribute( 'y1', points[ i - 1 ].y );
+
+      line.setAttribute( 'x2', points[ i ].x );
+      line.setAttribute( 'y2', points[ i ].y );
+
+      line.style.strokeWidth = ( i / points.length ) * width;
+
+      svg.appendChild( line );
+    }
+  }
 
 </script>
