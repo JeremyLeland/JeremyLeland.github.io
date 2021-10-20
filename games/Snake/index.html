@@ -22,13 +22,12 @@
     #x;
     #y;
     #angle;
+    #goalAngle;
     #size;
     #speed;
     #points;
-    #lines;
     #svg;
 
-    goalAngle;
 
     constructor( x, y ) {
       this.#x = x;
@@ -43,10 +42,16 @@
 
       svg.appendChild( this.#svg );
 
-      this.goalAngle = 0;
+      this.#goalAngle = 0;
+    }
+
+    aimToward( x, y ) {
+      this.#goalAngle = Math.atan2( y - this.#y, x - this.#x );
     }
 
     update( dt ) {
+      this.#angle = this.#goalAngle;
+
       this.#x += Math.cos( this.#angle ) * this.#speed * dt;
       this.#y += Math.sin( this.#angle ) * this.#speed * dt;
 
@@ -79,7 +84,14 @@
 
   const snake = new Snake( 32, 32 );
 
+  let mouseX = 0, mouseY = 0;
+  document.onmousemove = ( e ) => {
+    mouseX = e.offsetX;
+    mouseY = e.offsetY;
+  }
+
   function update( dt ) {
+    snake.aimToward( mouseX, mouseY );
     snake.update( dt );
   }
 
@@ -93,10 +105,5 @@
   }
   requestAnimationFrame( animate );
 
-  let mouseX = 0, mouseY = 0;
-  document.onmousemove = ( e ) => {
-    mouseX = e.offsetX;
-    mouseY = e.offsetY;
-  }
 
 </script>
