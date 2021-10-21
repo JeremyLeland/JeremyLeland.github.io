@@ -22,7 +22,7 @@
     #x;
     #y;
     #angle = 0;
-    #goalAngle = 0;
+    goalAngle = 0;
     #size = 10;
     #speed = 0.2;
     #turnSpeed = 0.005;
@@ -41,22 +41,24 @@
     }
 
     aimToward( x, y ) {
-      this.#goalAngle = Math.atan2( y - this.#y, x - this.#x );
-
-      if ( this.#goalAngle - this.#angle > Math.PI ) {
-        this.#angle += Math.PI * 2;
-      }
-      else if ( this.#angle - this.#goalAngle > Math.PI ) {
-        this.#angle -= Math.PI * 2;
-      }
+      this.goalAngle = Math.atan2( y - this.#y, x - this.#x );
     }
 
     update( dt ) {
-      if ( this.#goalAngle < this.#angle ) {
-        this.#angle = Math.max( this.#goalAngle, this.#angle - this.#turnSpeed * dt );
+      // Fix goal angle
+      if ( this.goalAngle - this.#angle > Math.PI ) {
+        this.#angle += Math.PI * 2;
       }
-      else if ( this.#angle < this.#goalAngle ) {
-        this.#angle = Math.min( this.#goalAngle, this.#angle + this.#turnSpeed * dt );
+      else if ( this.#angle - this.goalAngle > Math.PI ) {
+        this.#angle -= Math.PI * 2;
+      }
+
+      // Turn toward goal angle
+      if ( this.goalAngle < this.#angle ) {
+        this.#angle = Math.max( this.goalAngle, this.#angle - this.#turnSpeed * dt );
+      }
+      else if ( this.#angle < this.goalAngle ) {
+        this.#angle = Math.min( this.goalAngle, this.#angle + this.#turnSpeed * dt );
       }
 
       this.#x += Math.cos( this.#angle ) * this.#speed * dt;
@@ -68,6 +70,10 @@
 
       this.#svg.setAttribute( 'd', this.getDString() );
     }
+
+    // TODO: Draw this to canvas instead of using path object?
+    //       Start with arc( x, y, angle - PI/2, angle + PI/2 ) as head,
+    //       so we can use the points as the tail and only have one push up top?
 
     getDString() {
       const leftCoords = [], rightCoords = [];
