@@ -1,22 +1,14 @@
 <style>
-  .snake {
-    stroke: black;
-    fill: lightsalmon;
-    stroke-linecap: round;
-  }
+  body { margin: 0 }
 </style>
 
 <body>
-
+  <canvas id="canvas" width="500" height="500"></canvas>
 </body>
 
 <script>
-  const XMLNS = 'http://www.w3.org/2000/svg';
-
-  const svg = document.createElementNS( XMLNS, 'svg' );
-  svg.style.width = '100%';
-  svg.style.height = '100%';
-  document.body.appendChild( svg );
+  const canvas = document.getElementById( 'canvas' );
+  const ctx = canvas.getContext( '2d' );
 
   class Snake {
     #x;
@@ -26,25 +18,34 @@
     #size = 10;
     #speed = 0.2;
     #turnSpeed = 0.005;
-    #points = [];
+    #tail = [];
     #svg;
 
     constructor( x, y ) {
       this.#x = x;
       this.#y = y;
-      this.#points.push( { x: this.#x, y: this.#y, angle: this.#angle } );
-
-      this.#svg = document.createElementNS( XMLNS, 'path' );
-      this.#svg.setAttribute( 'class', 'snake' );
-
-      svg.appendChild( this.#svg );
     }
 
-    aimToward( x, y ) {
-      this.goalAngle = Math.atan2( y - this.#y, x - this.#x );
-    }
+    angleTo( other ) { return angleToPoint( other.#x, other.#y ); }
+    angleToPoint( x, y ) { return Math.atan2( y - this.#y, x - this.#x ); }
+
+    distanceTo( other ) { return distanceTo( other.#x, other.#y ); }
+    distanceToPoint( x, y ) { return Math.hypot( x - this.#x, y - this.#y ); }
 
     update( dt ) {
+      this.#updateAngle( dt );
+
+      if ( this.#tail.push( { x: this.#x, y: this.#y, angle: this.#angle } ) > 20 ) {
+        this.#tail.shift();
+      }
+
+      this.#x += Math.cos( this.#angle ) * this.#speed * dt;
+      this.#y += Math.sin( this.#angle ) * this.#speed * dt;
+
+      this.draw( ctx );
+    }
+
+    #updateAngle( dt ) {
       // Fix goal angle
       if ( this.goalAngle - this.#angle > Math.PI ) {
         this.#angle += Math.PI * 2;
@@ -60,42 +61,41 @@
       else if ( this.#angle < this.goalAngle ) {
         this.#angle = Math.min( this.goalAngle, this.#angle + this.#turnSpeed * dt );
       }
-
-      this.#x += Math.cos( this.#angle ) * this.#speed * dt;
-      this.#y += Math.sin( this.#angle ) * this.#speed * dt;
-
-      if ( this.#points.push( { x: this.#x, y: this.#y, angle: this.#angle } ) > 20 ) {
-        this.#points.shift();
-      }
-
-      this.#svg.setAttribute( 'd', this.getDString() );
     }
 
-    // TODO: Draw this to canvas instead of using path object?
-    //       Start with arc( x, y, angle - PI/2, angle + PI/2 ) as head,
-    //       so we can use the points as the tail and only have one push up top?
-
-    getDString() {
+    draw( ctx ) {
       const leftCoords = [], rightCoords = [];
-      for ( let i = 0; i < this.#points.length; i ++ ) {
-        const width = this.#size * i / ( this.#points.length - 1 );
+      for ( let i = 0; i < this.#tail.length; i ++ ) {
+        const width = this.#size * i / this.#tail.length;
 
-        const leftAng = this.#points[ i ].angle - Math.PI / 2;
-        const leftX = this.#points[ i ].x + Math.cos( leftAng ) * width;
-        const leftY = this.#points[ i ].y + Math.sin( leftAng ) * width;
-        leftCoords.push( `${ leftX },${ leftY }` );
+        const leftAng = this.#tail[ i ].angle - Math.PI / 2;
+        const leftX = this.#tail[ i ].x + Math.cos( leftAng ) * width;
+        const leftY = this.#tail[ i ].y + Math.sin( leftAng ) * width;
+        leftCoords.push( { x: leftX, y: leftY } );
 
-        const rightAng = this.#points[ i ].angle + Math.PI / 2;
-        const rightX = this.#points[ i ].x + Math.cos( rightAng ) * width;
-        const rightY = this.#points[ i ].y + Math.sin( rightAng ) * width;
-        rightCoords.unshift( `${ rightX },${ rightY }` );
+        const rightAng = this.#tail[ i ].angle + Math.PI / 2;
+        const rightX = this.#tail[ i ].x + Math.cos( rightAng ) * width;
+        const rightY = this.#tail[ i ].y + Math.sin( rightAng ) * width;
+        rightCoords.unshift( { x: rightX, y: rightY } );
       }
 
-      return `M ${ leftCoords.join( ' L ' ) } A ${ this.#size } ${ this.#size } 0 0 1 ${ rightCoords.join( ' L ' ) }`;
+      ctx.beginPath();
+      ctx.arc( this.#x, this.#y, this.#size, this.#angle - Math.PI / 2, this.#angle + Math.PI / 2 );
+      rightCoords.forEach( coord => ctx.lineTo( coord.x, coord.y ) );
+      leftCoords.forEach( coord => ctx.lineTo( coord.x, coord.y ) );
+      ctx.closePath();
+
+      ctx.fillStyle = 'red';
+      ctx.fill();
+      ctx.strokeStyle = 'black';
+      ctx.stroke();
     }
   }
 
-  const snake = new Snake( 32, 32 );
+  const snakes = [
+    new Snake( 32, 32 ),
+    new Snake( 128, 128 ),
+  ];
 
   let mouseX = 0, mouseY = 0;
   document.onmousemove = ( e ) => {
@@ -104,8 +104,26 @@
   }
 
   function update( dt ) {
-    snake.aimToward( mouseX, mouseY );
-    snake.update( dt );
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height );
+
+    snakes.forEach( snake => {
+
+      // const avoidAngle = snakes.filter( e => e != snake ).map( other => {
+      //   const dist = other.distanceTo( snake );
+      //   return [ 
+      //     ( snake.x - other.x ) / dist, 
+      //     ( snake.y - other.y ) / dist
+      //   ];
+
+      // }
+
+      //   other.angleTo( snake ) / other.distanceTo( snake )
+      // ).reduce
+
+      snake.goalAngle = snake.angleToPoint( mouseX, mouseY );
+
+      snake.update( dt );
+    });
   }
 
   let lastTime = null;
