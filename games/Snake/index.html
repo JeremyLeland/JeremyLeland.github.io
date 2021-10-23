@@ -14,26 +14,54 @@
     #x;
     #y;
     #angle = 0;
-    goalAngle = 0;
     #size = 10;
     #speed = 0.2;
     #turnSpeed = 0.005;
     #tail = [];
-    #svg;
+
+    goalAngle = 0;
+    color = `hsl( ${ Math.random() * 360 }deg, 50%, 50% )`;
 
     constructor( x, y ) {
       this.#x = x;
       this.#y = y;
     }
 
-    angleTo( other ) { return angleToPoint( other.#x, other.#y ); }
+    angleTo( other ) { return this.angleToPoint( other.#x, other.#y ); }
     angleToPoint( x, y ) { return Math.atan2( y - this.#y, x - this.#x ); }
 
-    distanceTo( other ) { return distanceTo( other.#x, other.#y ); }
+    distanceTo( other ) { return this.distanceToPoint( other.#x, other.#y ); }
     distanceToPoint( x, y ) { return Math.hypot( x - this.#x, y - this.#y ); }
 
-    update( dt ) {
-      this.#updateAngle( dt );
+    update( dt, others ) {
+      this.draw( ctx );
+
+      let angX = mouseX - this.#x;
+      let angY = mouseY - this.#y;
+
+      const DESIRED_SEPARATION = this.#size * 4;
+
+      ctx.beginPath();
+      others.forEach( other => {
+        const dist = other.distanceTo( this );
+
+        if ( dist < DESIRED_SEPARATION ) {
+          const cx = ( this.#x - other.#x ); // / dist;  // / dist;
+          const cy = ( this.#y - other.#y ); // / dist;  // / dist;
+
+          ctx.moveTo( this.#x, this.#y );
+          ctx.lineTo( this.#x + cx, this.#y + cy );
+
+          angX = cx;
+          angY = cy;
+        }
+      } );
+      ctx.strokeStyle = 'blue';
+      ctx.stroke();
+
+      this.goalAngle = Math.atan2( angY, angX );
+
+      this.#turnTowardGoal( dt );
 
       if ( this.#tail.push( { x: this.#x, y: this.#y, angle: this.#angle } ) > 20 ) {
         this.#tail.shift();
@@ -42,11 +70,11 @@
       this.#x += Math.cos( this.#angle ) * this.#speed * dt;
       this.#y += Math.sin( this.#angle ) * this.#speed * dt;
 
-      this.draw( ctx );
+      // this.draw( ctx );
     }
 
-    #updateAngle( dt ) {
-      // Fix goal angle
+    #turnTowardGoal( dt ) {
+      // Fix internal angle to better match goal angle
       if ( this.goalAngle - this.#angle > Math.PI ) {
         this.#angle += Math.PI * 2;
       }
@@ -85,17 +113,16 @@
       leftCoords.forEach( coord => ctx.lineTo( coord.x, coord.y ) );
       ctx.closePath();
 
-      ctx.fillStyle = 'red';
+      ctx.fillStyle = this.color;
       ctx.fill();
       ctx.strokeStyle = 'black';
       ctx.stroke();
     }
   }
 
-  const snakes = [
-    new Snake( 32, 32 ),
-    new Snake( 128, 128 ),
-  ];
+  const snakes = Array.from( Array( 10 ), _ => 
+    new Snake( Math.random() * 500, Math.random() * 500 ) 
+  );
 
   let mouseX = 0, mouseY = 0;
   document.onmousemove = ( e ) => {
@@ -106,24 +133,9 @@
   function update( dt ) {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height );
 
-    snakes.forEach( snake => {
-
-      // const avoidAngle = snakes.filter( e => e != snake ).map( other => {
-      //   const dist = other.distanceTo( snake );
-      //   return [ 
-      //     ( snake.x - other.x ) / dist, 
-      //     ( snake.y - other.y ) / dist
-      //   ];
-
-      // }
-
-      //   other.angleTo( snake ) / other.distanceTo( snake )
-      // ).reduce
-
-      snake.goalAngle = snake.angleToPoint( mouseX, mouseY );
-
-      snake.update( dt );
-    });
+    snakes.forEach( snake => 
+      snake.update( dt, snakes.filter( e => e != snake ) )
+    );
   }
 
   let lastTime = null;
