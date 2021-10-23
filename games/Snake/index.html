@@ -3,11 +3,17 @@
 </style>
 
 <body>
-  <canvas id="canvas" width="500" height="500"></canvas>
+  <canvas id="canvas"></canvas>
 </body>
 
 <script>
   const canvas = document.getElementById( 'canvas' );
+  window.onresize = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.onresize();
+
   const ctx = canvas.getContext( '2d' );
 
   class Snake {
