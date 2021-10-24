@@ -151,9 +151,13 @@
   );
 
   let mouseX = 0, mouseY = 0;
-  document.onmousemove = ( e ) => {
-    mouseX = e.offsetX;
-    mouseY = e.offsetY;
+  document.onmousemove = onInput;
+  document.ontouchstart = onInput;
+  document.ontouchmove = onInput;
+  function onInput( e ) {
+    const event = e.touches ? e.touches[0] : e;
+    mouseX = event.pageX;
+    mouseY = event.pageY;
   }
 
   function update( dt ) {
