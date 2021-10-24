@@ -42,8 +42,9 @@
     update( dt, others ) {
       this.draw( ctx );
 
-      let angX = mouseX - this.#x;
-      let angY = mouseY - this.#y;
+      // let angX = mouseX - this.#x;
+      // let angY = mouseY - this.#y;
+      let angX = 0, angY = 0;
 
       const DESIRED_SEPARATION = this.#size * 4;
 
@@ -55,12 +56,12 @@
           const cx = ( this.#x - other.#x ); // / dist;  // / dist;
           const cy = ( this.#y - other.#y ); // / dist;  // / dist;
 
-          ctx.beginPath();
-          ctx.moveTo( this.#x, this.#y );
-          ctx.lineTo( this.#x + cx, this.#y + cy );
-          ctx.strokeStyle = other.color;
-          ctx.lineWidth = 2;
-          ctx.stroke();
+          // ctx.beginPath();
+          // ctx.moveTo( this.#x, this.#y );
+          // ctx.lineTo( this.#x + cx, this.#y + cy );
+          // ctx.strokeStyle = other.color;
+          // ctx.lineWidth = 2;
+          // ctx.stroke();
 
           angX += cx;
           angY += cy;
@@ -70,12 +71,18 @@
       // ctx.lineWidth = 4;
       // ctx.stroke();
 
-          ctx.beginPath();
-          ctx.moveTo( this.#x, this.#y );
-          ctx.lineTo( this.#x + angX, this.#y + angY );
-          ctx.strokeStyle = 'red';
-          ctx.lineWidth = 4;
-          ctx.stroke();
+      if ( angX == 0 && angY == 0 ) {
+        angX = mouseX - this.#x;
+        angY = mouseY - this.#y;
+      }
+      // else {
+      //   ctx.beginPath();
+      //   ctx.moveTo( this.#x, this.#y );
+      //   ctx.lineTo( this.#x + angX, this.#y + angY );
+      //   ctx.strokeStyle = 'red';
+      //   ctx.lineWidth = 4;
+      //   ctx.stroke();
+      // }
 
       this.goalAngle = Math.atan2( angY, angX );
 
@@ -134,7 +141,7 @@
       ctx.fillStyle = this.color;
       ctx.fill();
       ctx.strokeStyle = 'black';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 2;
       ctx.stroke();
     }
   }
