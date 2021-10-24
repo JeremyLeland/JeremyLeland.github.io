@@ -53,8 +53,10 @@
         const dist = other.distanceTo( this );
 
         if ( dist < DESIRED_SEPARATION ) {
-          const cx = ( this.#x - other.#x ); // / dist;  // / dist;
-          const cy = ( this.#y - other.#y ); // / dist;  // / dist;
+          // Divide by dist once to normalize
+          // Divide by dist again to give greater weight to closer others
+          const cx = ( this.#x - other.#x ) / dist / dist;
+          const cy = ( this.#y - other.#y ) / dist / dist;
 
           // ctx.beginPath();
           // ctx.moveTo( this.#x, this.#y );
