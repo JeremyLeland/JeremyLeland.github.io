@@ -24,9 +24,11 @@
     #speed = 0.2;
     #turnSpeed = 0.005;
     #tail = [];
+    #length = 0;
 
     goalAngle = 0;
     color = `hsl( ${ Math.random() * 360 }deg, 50%, 50% )`;
+    maxLength = 100;
 
     constructor( x, y ) {
       this.#x = x;
@@ -90,14 +92,17 @@
 
       this.#turnTowardGoal( dt );
 
-      if ( this.#tail.push( { x: this.#x, y: this.#y, angle: this.#angle } ) > 20 ) {
-        this.#tail.shift();
+      const moveDist = this.#speed * dt;
+
+      this.#tail.push( { x: this.#x, y: this.#y, angle: this.#angle, length: moveDist } );
+      this.#length += moveDist;
+
+      while ( this.#length > this.maxLength ) {
+        this.#length -= this.#tail.shift().length;
       }
 
-      this.#x += Math.cos( this.#angle ) * this.#speed * dt;
-      this.#y += Math.sin( this.#angle ) * this.#speed * dt;
-
-      // this.draw( ctx );
+      this.#x += Math.cos( this.#angle ) * moveDist;
+      this.#y += Math.sin( this.#angle ) * moveDist;
     }
 
     #turnTowardGoal( dt ) {
