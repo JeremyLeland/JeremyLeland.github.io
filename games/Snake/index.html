@@ -21,12 +21,15 @@
     #y;
     #angle = 0;
     #size = 10;
-    #speed = 0.2;
     #turnSpeed = 0.005;
     #tail = [];
     #length = 0;
 
+    goalX = 0;
+    goalY = 0;
     goalAngle = 0;
+    speed = 0.2;
+
     color = `hsl( ${ Math.random() * 360 }deg, 50%, 50% )`;
     maxLength = 100;
 
@@ -52,47 +55,54 @@
 
       //ctx.beginPath();
       others.forEach( other => {
-        const dist = other.distanceTo( this );
+        other.#tail.forEach( segment => {
+          const dist = this.distanceToPoint( segment.x, segment.y );
 
-        if ( dist < DESIRED_SEPARATION ) {
-          // Divide by dist once to normalize
-          // Divide by dist again to give greater weight to closer others
-          const cx = ( this.#x - other.#x ) / dist / dist;
-          const cy = ( this.#y - other.#y ) / dist / dist;
+          // TODO: Account for segment width
+          // for ( let i = 0; i < this.#tail.length; i ++ ) {
+          //   const width = this.#size * i / this.#tail.length;
 
-          // ctx.beginPath();
-          // ctx.moveTo( this.#x, this.#y );
-          // ctx.lineTo( this.#x + cx, this.#y + cy );
-          // ctx.strokeStyle = other.color;
-          // ctx.lineWidth = 2;
-          // ctx.stroke();
+          if ( dist < DESIRED_SEPARATION ) {
+            // Divide by dist once to normalize
+            // Divide by dist again to give greater weight to closer others
+            const cx = ( this.#x - segment.x ) / dist / dist;
+            const cy = ( this.#y - segment.y ) / dist / dist;
 
-          angX += cx;
-          angY += cy;
-        }
+            ctx.beginPath();
+            ctx.moveTo( this.#x, this.#y );
+            ctx.lineTo( this.#x + cx * 1000, this.#y + cy * 1000 );
+            ctx.strokeStyle = other.color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            angX += cx;
+            angY += cy;
+
+          }
+        } );
       } );
       // ctx.strokeStyle = 'blue';
       // ctx.lineWidth = 4;
       // ctx.stroke();
 
       if ( angX == 0 && angY == 0 ) {
-        angX = mouseX - this.#x;
-        angY = mouseY - this.#y;
+        angX = this.goalX - this.#x;
+        angY = this.goalY - this.#y;
       }
-      // else {
-      //   ctx.beginPath();
-      //   ctx.moveTo( this.#x, this.#y );
-      //   ctx.lineTo( this.#x + angX, this.#y + angY );
-      //   ctx.strokeStyle = 'red';
-      //   ctx.lineWidth = 4;
-      //   ctx.stroke();
-      // }
+      else {
+        ctx.beginPath();
+        ctx.moveTo( this.#x, this.#y );
+        ctx.lineTo( this.#x + angX * 100, this.#y + angY * 100 );
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
 
       this.goalAngle = Math.atan2( angY, angX );
 
       this.#turnTowardGoal( dt );
 
-      const moveDist = this.#speed * dt;
+      const moveDist = this.speed * dt;
 
       this.#tail.push( { x: this.#x, y: this.#y, angle: this.#angle, length: moveDist } );
       this.#length += moveDist;
@@ -153,9 +163,20 @@
     }
   }
 
-  const snakes = Array.from( Array( 10 ), _ => 
+  const snakes = Array.from( Array( 2 ), _ => 
     new Snake( Math.random() * canvas.width, Math.random() * canvas.height ) 
   );
+
+  // // TEMP: Put a static obstacle to test against
+  // const obstacle = new Snake( 100, 100 );
+  // obstacle.goalX = 500;
+  // obstacle.goalY = 100;
+  // for ( let i = 0; i < 200; i ++ ) {
+  //   obstacle.update( 10, snakes );
+  // }
+  // obstacle.speed = 0;
+
+  // snakes.push( obstacle );
 
   let mouseX = 0, mouseY = 0;
   document.onmousemove = onInput;
@@ -167,18 +188,28 @@
     mouseY = event.pageY;
   }
 
+  let keyDown = false;
+  document.onkeydown = () => keyDown = true;
+  document.onkeyup   = () => keyDown = false;
+
   function update( dt ) {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height );
 
-    snakes.forEach( snake => 
+    snakes.forEach( snake => {
+      snake.goalX = mouseX;
+      snake.goalY = mouseY;
       snake.update( dt, snakes.filter( e => e != snake ) )
-    );
+    } );
   }
 
   let lastTime = null;
   function animate( now ) {
     lastTime ??= now;   // for first call only
-    update( now - lastTime );
+
+    // Only update when key is pressed (for debugging purposes)
+    if ( keyDown ) {
+      update( now - lastTime );
+    }
     lastTime = now;
 
     requestAnimationFrame( animate );
