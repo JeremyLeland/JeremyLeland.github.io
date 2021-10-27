@@ -7,6 +7,9 @@
 </body>
 
 <script>
+  let GOAL_WEIGHT = 1;
+  let AVOID_WEIGHT = 100;
+
   const canvas = document.getElementById( 'canvas' );
   window.onresize = () => {
     canvas.width = window.innerWidth;
@@ -57,10 +60,20 @@
       let angX = GOAL_WEIGHT * ( this.goalX - this.#x ) / distToGoal;
       let angY = GOAL_WEIGHT * ( this.goalY - this.#y ) / distToGoal;
 
+      ctx.beginPath();
+      ctx.moveTo( this.#x, this.#y );
+      ctx.lineTo( this.#x + angX * 100, this.#y + angY * 100 );
+      ctx.strokeStyle = 'green';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
       const DESIRED_SEPARATION = this.#size * 4;
 
       //ctx.beginPath();
       others.forEach( other => {
+
+        let avoidX = 0, avoidY = 0;
+
         other.#tail.forEach( segment => {
           const dist = this.distanceToPoint( segment.x, segment.y );
 
@@ -68,30 +81,34 @@
           // for ( let i = 0; i < this.#tail.length; i ++ ) {
           //   const width = this.#size * i / this.#tail.length;
 
-          const avoidWeight = Math.abs( 1 / Math.pow( dist - DESIRED_SEPARATION, 1 ) );
+          const avoidWeight = AVOID_WEIGHT * Math.abs( 1 / Math.pow( dist - DESIRED_SEPARATION, 1 ) );
 
-          // if ( dist < DESIRED_SEPARATION ) {
-            // Divide by dist once to normalize
-            // Divide by dist again to give greater weight to closer others
-            const cx = avoidWeight * ( this.#x - segment.x ) / dist;
-            const cy = avoidWeight * ( this.#y - segment.y ) / dist;
+          const cx = avoidWeight * ( this.#x - segment.x ) / dist;
+          const cy = avoidWeight * ( this.#y - segment.y ) / dist;
 
-            ctx.beginPath();
-            ctx.moveTo( this.#x, this.#y );
-            ctx.lineTo( this.#x + cx * 100, this.#y + cy * 100 );
-            ctx.strokeStyle = other.color;
-            ctx.lineWidth = 2;
-            ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo( this.#x, this.#y );
+          ctx.lineTo( this.#x + cx * 100, this.#y + cy * 100 );
+          ctx.strokeStyle = other.color;
+          ctx.lineWidth = 2;
+          ctx.stroke();
 
-            angX += cx;
-            angY += cy;
+          avoidX += cx / other.#tail.length;
+          avoidY += cy / other.#tail.length;
 
-          // }
         } );
+
+        ctx.beginPath();
+        ctx.moveTo( this.#x, this.#y );
+        ctx.lineTo( this.#x + avoidX * 100, this.#y + avoidY * 100 );
+        ctx.strokeStyle = 'blue';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        angX += avoidX;
+        angY += avoidY;
+
       } );
-      // ctx.strokeStyle = 'blue';
-      // ctx.lineWidth = 4;
-      // ctx.stroke();
 
       ctx.beginPath();
       ctx.moveTo( this.#x, this.#y );
@@ -170,9 +187,9 @@
   );
 
   // TEMP: Put a static obstacle to test against
-  const obstacle = new Snake( 100, 100 );
+  const obstacle = new Snake( 100, 500 );
   obstacle.goalX = 500;
-  obstacle.goalY = 100;
+  obstacle.goalY = 500;
   for ( let i = 0; i < 200; i ++ ) {
     obstacle.update( 10, snakes );
   }
