@@ -47,9 +47,15 @@
     update( dt, others ) {
       this.draw( ctx );
 
-      // let angX = mouseX - this.#x;
-      // let angY = mouseY - this.#y;
-      let angX = 0, angY = 0;
+      if ( this.speed == 0 ) {
+        return;
+      }
+
+      const GOAL_WEIGHT = 1.0;
+
+      const distToGoal = this.distanceToPoint( this.goalX, this.goalY );
+      let angX = GOAL_WEIGHT * ( this.goalX - this.#x ) / distToGoal;
+      let angY = GOAL_WEIGHT * ( this.goalY - this.#y ) / distToGoal;
 
       const DESIRED_SEPARATION = this.#size * 4;
 
@@ -62,15 +68,17 @@
           // for ( let i = 0; i < this.#tail.length; i ++ ) {
           //   const width = this.#size * i / this.#tail.length;
 
-          if ( dist < DESIRED_SEPARATION ) {
+          const avoidWeight = Math.abs( 1 / Math.pow( dist - DESIRED_SEPARATION, 1 ) );
+
+          // if ( dist < DESIRED_SEPARATION ) {
             // Divide by dist once to normalize
             // Divide by dist again to give greater weight to closer others
-            const cx = ( this.#x - segment.x ) / dist / dist;
-            const cy = ( this.#y - segment.y ) / dist / dist;
+            const cx = avoidWeight * ( this.#x - segment.x ) / dist;
+            const cy = avoidWeight * ( this.#y - segment.y ) / dist;
 
             ctx.beginPath();
             ctx.moveTo( this.#x, this.#y );
-            ctx.lineTo( this.#x + cx * 1000, this.#y + cy * 1000 );
+            ctx.lineTo( this.#x + cx * 100, this.#y + cy * 100 );
             ctx.strokeStyle = other.color;
             ctx.lineWidth = 2;
             ctx.stroke();
@@ -78,25 +86,19 @@
             angX += cx;
             angY += cy;
 
-          }
+          // }
         } );
       } );
       // ctx.strokeStyle = 'blue';
       // ctx.lineWidth = 4;
       // ctx.stroke();
 
-      if ( angX == 0 && angY == 0 ) {
-        angX = this.goalX - this.#x;
-        angY = this.goalY - this.#y;
-      }
-      else {
-        ctx.beginPath();
-        ctx.moveTo( this.#x, this.#y );
-        ctx.lineTo( this.#x + angX * 100, this.#y + angY * 100 );
-        ctx.strokeStyle = 'red';
-        ctx.lineWidth = 4;
-        ctx.stroke();
-      }
+      ctx.beginPath();
+      ctx.moveTo( this.#x, this.#y );
+      ctx.lineTo( this.#x + angX * 100, this.#y + angY * 100 );
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 4;
+      ctx.stroke();
 
       this.goalAngle = Math.atan2( angY, angX );
 
@@ -167,16 +169,16 @@
     new Snake( Math.random() * canvas.width, Math.random() * canvas.height ) 
   );
 
-  // // TEMP: Put a static obstacle to test against
-  // const obstacle = new Snake( 100, 100 );
-  // obstacle.goalX = 500;
-  // obstacle.goalY = 100;
-  // for ( let i = 0; i < 200; i ++ ) {
-  //   obstacle.update( 10, snakes );
-  // }
-  // obstacle.speed = 0;
+  // TEMP: Put a static obstacle to test against
+  const obstacle = new Snake( 100, 100 );
+  obstacle.goalX = 500;
+  obstacle.goalY = 100;
+  for ( let i = 0; i < 200; i ++ ) {
+    obstacle.update( 10, snakes );
+  }
+  obstacle.speed = 0;
 
-  // snakes.push( obstacle );
+  snakes.push( obstacle );
 
   let mouseX = 0, mouseY = 0;
   document.onmousemove = onInput;
@@ -188,7 +190,7 @@
     mouseY = event.pageY;
   }
 
-  let keyDown = false;
+  let keyDown = true;     // default to running
   document.onkeydown = () => keyDown = true;
   document.onkeyup   = () => keyDown = false;
 
