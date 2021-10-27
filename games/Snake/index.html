@@ -7,7 +7,7 @@
 </body>
 
 <script>
-  let GOAL_WEIGHT = 1;
+  let GOAL_WEIGHT = 0.5;
   let AVOID_WEIGHT = 100;
 
   const canvas = document.getElementById( 'canvas' );
@@ -61,7 +61,7 @@
       ctx.beginPath();
       ctx.moveTo( this.#x, this.#y );
       ctx.lineTo( this.#x + angX * 100, this.#y + angY * 100 );
-      ctx.strokeStyle = 'green';
+      ctx.strokeStyle = 'gray';
       ctx.lineWidth = 2;
       ctx.stroke();
 
@@ -88,7 +88,7 @@
           ctx.moveTo( this.#x, this.#y );
           ctx.lineTo( this.#x + cx * 100, this.#y + cy * 100 );
           ctx.strokeStyle = other.color;
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 1;
           ctx.stroke();
 
           avoidX += cx / other.#tail.length;
@@ -99,12 +99,12 @@
         ctx.beginPath();
         ctx.moveTo( this.#x, this.#y );
         ctx.lineTo( this.#x + avoidX * 100, this.#y + avoidY * 100 );
-        ctx.strokeStyle = 'blue';
+        ctx.strokeStyle = other.color;
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        angX += avoidX;
-        angY += avoidY;
+        angX += avoidX / others.length;
+        angY += avoidY / others.length;
 
       } );
 
