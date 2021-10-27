@@ -54,8 +54,6 @@
         return;
       }
 
-      const GOAL_WEIGHT = 1.0;
-
       const distToGoal = this.distanceToPoint( this.goalX, this.goalY );
       let angX = GOAL_WEIGHT * ( this.goalX - this.#x ) / distToGoal;
       let angY = GOAL_WEIGHT * ( this.goalY - this.#y ) / distToGoal;
@@ -67,7 +65,7 @@
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      const DESIRED_SEPARATION = this.#size * 4;
+      const DESIRED_SEPARATION = this.#size * 2;
 
       //ctx.beginPath();
       others.forEach( other => {
@@ -182,20 +180,20 @@
     }
   }
 
-  const snakes = Array.from( Array( 2 ), _ => 
+  const snakes = Array.from( Array( 4 ), _ => 
     new Snake( Math.random() * canvas.width, Math.random() * canvas.height ) 
   );
 
   // TEMP: Put a static obstacle to test against
-  const obstacle = new Snake( 100, 500 );
-  obstacle.goalX = 500;
-  obstacle.goalY = 500;
-  for ( let i = 0; i < 200; i ++ ) {
-    obstacle.update( 10, snakes );
-  }
-  obstacle.speed = 0;
+  // const obstacle = new Snake( 100, 500 );
+  // obstacle.goalX = 500;
+  // obstacle.goalY = 500;
+  // for ( let i = 0; i < 200; i ++ ) {
+  //   obstacle.update( 10, snakes );
+  // }
+  // obstacle.speed = 0;
 
-  snakes.push( obstacle );
+  // snakes.push( obstacle );
 
   let mouseX = 0, mouseY = 0;
   document.onmousemove = onInput;
