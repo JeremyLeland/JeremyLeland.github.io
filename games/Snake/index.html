@@ -6,10 +6,14 @@
   <canvas id="canvas"></canvas>
 </body>
 
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
 <script>
-  let GOAL_WEIGHT = 0.5;
-  let AVOID_WEIGHT = 100;
-  let DRAW_FORCES = false;
+  const Settings = {
+    GoalWeight: 0.5,
+    AvoidWeight: 100,
+    AvoidPower: 1,
+    DrawForces: false,
+  };
 
   const canvas = document.getElementById( 'canvas' );
   window.onresize = () => {
@@ -56,10 +60,10 @@
       }
 
       const distToGoal = this.distanceToPoint( this.goalX, this.goalY );
-      let angX = GOAL_WEIGHT * ( this.goalX - this.#x ) / distToGoal;
-      let angY = GOAL_WEIGHT * ( this.goalY - this.#y ) / distToGoal;
+      let angX = Settings.GoalWeight * ( this.goalX - this.#x ) / distToGoal;
+      let angY = Settings.GoalWeight * ( this.goalY - this.#y ) / distToGoal;
 
-      if ( DRAW_FORCES ) {
+      if ( Settings.DrawForces ) {
         ctx.beginPath();
         ctx.moveTo( this.#x, this.#y );
         ctx.lineTo( this.#x + angX * 100, this.#y + angY * 100 );
@@ -82,12 +86,12 @@
           // for ( let i = 0; i < this.#tail.length; i ++ ) {
           //   const width = this.#size * i / this.#tail.length;
 
-          const avoidWeight = AVOID_WEIGHT * Math.abs( 1 / Math.pow( dist - DESIRED_SEPARATION, 1 ) );
+          const avoidWeight = Math.abs( Settings.AvoidWeight / Math.pow( dist - DESIRED_SEPARATION, Settings.AvoidPower ) );
 
           const cx = avoidWeight * ( this.#x - segment.x ) / dist;
           const cy = avoidWeight * ( this.#y - segment.y ) / dist;
 
-          if ( DRAW_FORCES ) {
+          if ( Settings.DrawForces ) {
             ctx.beginPath();
             ctx.moveTo( this.#x, this.#y );
             ctx.lineTo( this.#x + cx * 100, this.#y + cy * 100 );
@@ -101,7 +105,7 @@
 
         } );
 
-        if ( DRAW_FORCES ) {
+        if ( Settings.DrawForces ) {
           ctx.beginPath();
           ctx.moveTo( this.#x, this.#y );
           ctx.lineTo( this.#x + avoidX * 100, this.#y + avoidY * 100 );
@@ -115,7 +119,7 @@
 
       } );
 
-      if ( DRAW_FORCES ) {
+      if ( Settings.DrawForces ) {
         ctx.beginPath();
         ctx.moveTo( this.#x, this.#y );
         ctx.lineTo( this.#x + angX * 100, this.#y + angY * 100 );
@@ -189,7 +193,7 @@
     }
   }
 
-  const snakes = Array.from( Array( 14 ), _ => 
+  const snakes = Array.from( Array( 5 ), _ => 
     new Snake( Math.random() * canvas.width, Math.random() * canvas.height ) 
   );
 
@@ -203,6 +207,12 @@
   // obstacle.speed = 0;
 
   // snakes.push( obstacle );
+
+  const gui = new dat.GUI();
+  gui.width = 200;
+  for ( const setting in Settings ) {
+    gui.add( Settings, setting );
+  }
 
   let mouseX = 0, mouseY = 0;
   document.onmousemove = onInput;
