@@ -9,6 +9,7 @@
 <script>
   let GOAL_WEIGHT = 0.5;
   let AVOID_WEIGHT = 100;
+  let DRAW_FORCES = false;
 
   const canvas = document.getElementById( 'canvas' );
   window.onresize = () => {
@@ -58,12 +59,14 @@
       let angX = GOAL_WEIGHT * ( this.goalX - this.#x ) / distToGoal;
       let angY = GOAL_WEIGHT * ( this.goalY - this.#y ) / distToGoal;
 
-      ctx.beginPath();
-      ctx.moveTo( this.#x, this.#y );
-      ctx.lineTo( this.#x + angX * 100, this.#y + angY * 100 );
-      ctx.strokeStyle = 'gray';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      if ( DRAW_FORCES ) {
+        ctx.beginPath();
+        ctx.moveTo( this.#x, this.#y );
+        ctx.lineTo( this.#x + angX * 100, this.#y + angY * 100 );
+        ctx.strokeStyle = 'gray';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
 
       const DESIRED_SEPARATION = this.#size * 2;
 
@@ -84,36 +87,42 @@
           const cx = avoidWeight * ( this.#x - segment.x ) / dist;
           const cy = avoidWeight * ( this.#y - segment.y ) / dist;
 
-          ctx.beginPath();
-          ctx.moveTo( this.#x, this.#y );
-          ctx.lineTo( this.#x + cx * 100, this.#y + cy * 100 );
-          ctx.strokeStyle = other.color;
-          ctx.lineWidth = 1;
-          ctx.stroke();
+          if ( DRAW_FORCES ) {
+            ctx.beginPath();
+            ctx.moveTo( this.#x, this.#y );
+            ctx.lineTo( this.#x + cx * 100, this.#y + cy * 100 );
+            ctx.strokeStyle = other.color;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
 
           avoidX += cx / other.#tail.length;
           avoidY += cy / other.#tail.length;
 
         } );
 
-        ctx.beginPath();
-        ctx.moveTo( this.#x, this.#y );
-        ctx.lineTo( this.#x + avoidX * 100, this.#y + avoidY * 100 );
-        ctx.strokeStyle = other.color;
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        if ( DRAW_FORCES ) {
+          ctx.beginPath();
+          ctx.moveTo( this.#x, this.#y );
+          ctx.lineTo( this.#x + avoidX * 100, this.#y + avoidY * 100 );
+          ctx.strokeStyle = other.color;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
 
         angX += avoidX / others.length;
         angY += avoidY / others.length;
 
       } );
 
-      ctx.beginPath();
-      ctx.moveTo( this.#x, this.#y );
-      ctx.lineTo( this.#x + angX * 100, this.#y + angY * 100 );
-      ctx.strokeStyle = 'red';
-      ctx.lineWidth = 4;
-      ctx.stroke();
+      if ( DRAW_FORCES ) {
+        ctx.beginPath();
+        ctx.moveTo( this.#x, this.#y );
+        ctx.lineTo( this.#x + angX * 100, this.#y + angY * 100 );
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
 
       this.goalAngle = Math.atan2( angY, angX );
 
@@ -180,7 +189,7 @@
     }
   }
 
-  const snakes = Array.from( Array( 4 ), _ => 
+  const snakes = Array.from( Array( 14 ), _ => 
     new Snake( Math.random() * canvas.width, Math.random() * canvas.height ) 
   );
 
