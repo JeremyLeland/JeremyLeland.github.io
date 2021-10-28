@@ -33,6 +33,10 @@
     #tail = [];
     #length = 0;
 
+    #avoidVector;
+
+    #isAlive = true;
+
     goalX = 0;
     goalY = 0;
     goalAngle = 0;
@@ -54,33 +58,55 @@
 
     update( dt, others ) {
       this.draw( ctx );
+      
+      if ( this.#isAlive ) {
+        const distToGoal = this.distanceToPoint( this.goalX, this.goalY );
+        let angX = Settings.GoalWeight * ( this.goalX - this.#x ) / distToGoal;
+        let angY = Settings.GoalWeight * ( this.goalY - this.#y ) / distToGoal;
 
-      if ( this.speed == 0 ) {
-        return;
+        this.#compareAgainstOthers( others );
+
+        if ( this.#isAlive ) {
+          angX += this.#avoidVector.x;
+          angY += this.#avoidVector.y;
+
+          this.goalAngle = Math.atan2( angY, angX );
+
+          this.#turnTowardGoal( dt );
+
+          const moveDist = this.speed * dt;
+
+          this.#tail.push( { x: this.#x, y: this.#y, angle: this.#angle, length: moveDist } );
+          this.#length += moveDist;
+
+          this.#x += Math.cos( this.#angle ) * moveDist;
+          this.#y += Math.sin( this.#angle ) * moveDist;
+        }
+      }
+      else {
+        this.maxLength -= this.speed * dt;
       }
 
-      const distToGoal = this.distanceToPoint( this.goalX, this.goalY );
-      let angX = Settings.GoalWeight * ( this.goalX - this.#x ) / distToGoal;
-      let angY = Settings.GoalWeight * ( this.goalY - this.#y ) / distToGoal;
-
-      if ( Settings.DrawForces ) {
-        ctx.beginPath();
-        ctx.moveTo( this.#x, this.#y );
-        ctx.lineTo( this.#x + angX * 100, this.#y + angY * 100 );
-        ctx.strokeStyle = 'gray';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+      while ( this.#length > this.maxLength && this.#tail.length > 0 ) {
+        this.#length -= this.#tail.shift().length;
       }
+    }
 
+    // TODO: Not just others -- need to check against ourselves, too! (as we get longer)
+    #compareAgainstOthers( others ) {
       const DESIRED_SEPARATION = this.#size * 2;
 
-      //ctx.beginPath();
+      let angX = 0, angY = 0;
       others.forEach( other => {
-
         let avoidX = 0, avoidY = 0;
-
         other.#tail.forEach( segment => {
           const dist = this.distanceToPoint( segment.x, segment.y );
+
+          if ( dist < this.#size + other.#size ) {
+            this.#isAlive = false;
+            this.#avoidVector = { x: 0, y: 0 };
+            return;
+          }
 
           // TODO: Account for segment width
           // for ( let i = 0; i < this.#tail.length; i ++ ) {
@@ -91,58 +117,17 @@
           const cx = avoidWeight * ( this.#x - segment.x ) / dist;
           const cy = avoidWeight * ( this.#y - segment.y ) / dist;
 
-          if ( Settings.DrawForces ) {
-            ctx.beginPath();
-            ctx.moveTo( this.#x, this.#y );
-            ctx.lineTo( this.#x + cx * 100, this.#y + cy * 100 );
-            ctx.strokeStyle = other.color;
-            ctx.lineWidth = 1;
-            ctx.stroke();
-          }
-
           avoidX += cx / other.#tail.length;
           avoidY += cy / other.#tail.length;
 
         } );
-
-        if ( Settings.DrawForces ) {
-          ctx.beginPath();
-          ctx.moveTo( this.#x, this.#y );
-          ctx.lineTo( this.#x + avoidX * 100, this.#y + avoidY * 100 );
-          ctx.strokeStyle = other.color;
-          ctx.lineWidth = 2;
-          ctx.stroke();
-        }
 
         angX += avoidX / others.length;
         angY += avoidY / others.length;
 
       } );
 
-      if ( Settings.DrawForces ) {
-        ctx.beginPath();
-        ctx.moveTo( this.#x, this.#y );
-        ctx.lineTo( this.#x + angX * 100, this.#y + angY * 100 );
-        ctx.strokeStyle = 'red';
-        ctx.lineWidth = 4;
-        ctx.stroke();
-      }
-
-      this.goalAngle = Math.atan2( angY, angX );
-
-      this.#turnTowardGoal( dt );
-
-      const moveDist = this.speed * dt;
-
-      this.#tail.push( { x: this.#x, y: this.#y, angle: this.#angle, length: moveDist } );
-      this.#length += moveDist;
-
-      while ( this.#length > this.maxLength ) {
-        this.#length -= this.#tail.shift().length;
-      }
-
-      this.#x += Math.cos( this.#angle ) * moveDist;
-      this.#y += Math.sin( this.#angle ) * moveDist;
+      this.#avoidVector = { x: angX, y: angY };
     }
 
     #turnTowardGoal( dt ) {
@@ -193,7 +178,7 @@
     }
   }
 
-  const snakes = Array.from( Array( 5 ), _ => 
+  const snakes = Array.from( Array( 20 ), _ => 
     new Snake( Math.random() * canvas.width, Math.random() * canvas.height ) 
   );
 
