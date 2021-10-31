@@ -41,7 +41,10 @@
 
     maxLength = 100;
 
+    #color = `hsl( ${ Math.random() * 360 }deg, 50%, 50% )`;
+
     #bodySVG = document.createElementNS( SVGNS, 'path' );
+    #forcesSVG = new Map();
 
     constructor( x, y, angle ) {
       this.#x = x;
@@ -51,7 +54,7 @@
       this.#tail.push( { x: x, y: y, angle: angle, length: 0 } );
 
       this.#bodySVG.setAttribute( 'class', 'snake' );
-      this.#bodySVG.style.fill = `hsl( ${ Math.random() * 360 }deg, 50%, 50% )`;
+      this.#bodySVG.style.fill = this.#color;
 
       svg.appendChild( this.#bodySVG );
     }
@@ -102,6 +105,9 @@
       const vectors = [];
 
       others.forEach( other => {
+
+        const forceLines = [];
+
         other.#tail.forEach( ( segment, index, tail ) => {
           const cx = this.#x - segment.x;
           const cy = this.#y - segment.y;
@@ -109,7 +115,17 @@
             angle: Math.atan2( cy, cx ), 
             dist:  Math.hypot( cx, cy ) - other.#size * ( index / tail.length )
           } );
+
+          forceLines.push( `M ${ this.#x },${ this.#y } L ${ this.#x + cx },${ this.#y + cy }` );
         } );
+
+        if ( !this.#forcesSVG.has( other ) ) {
+          const path = document.createElementNS( SVGNS, 'path' );
+          path.style.stroke = other.#color;
+          this.#forcesSVG.set( other, svg.appendChild( path ) );
+        }
+        const forcesPath = this.#forcesSVG.get( other );
+        forcesPath.setAttribute( 'd', forceLines.join( ' ' ) );
       } );
 
       return vectors;
@@ -180,12 +196,12 @@
           const leftAng = segment.angle - Math.PI / 2;
           const leftX = segment.x + Math.cos( leftAng ) * width;
           const leftY = segment.y + Math.sin( leftAng ) * width;
-          leftCoords.push( `${ leftX }, ${ leftY }` );
+          leftCoords.push( `${ leftX },${ leftY }` );
 
           const rightAng = segment.angle + Math.PI / 2;
           const rightX = segment.x + Math.cos( rightAng ) * width;
           const rightY = segment.y + Math.sin( rightAng ) * width;
-          rightCoords.unshift( `${ rightX }, ${ rightY }` );
+          rightCoords.unshift( `${ rightX },${ rightY }` );
 
         } );
 
@@ -197,7 +213,7 @@
     }
   }
 
-  const snakes = Array.from( Array( 20 ), _ => 
+  const snakes = Array.from( Array( 2 ), _ => 
     new Snake( 
       Math.random() * window.innerWidth, 
       Math.random() * window.innerHeight,
