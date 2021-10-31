@@ -1,9 +1,10 @@
 <style>
   body { margin: 0 }
+  svg  { width: 100%; height: 100% }
+  .snake { stroke: black; stroke-width: 2; }
 </style>
 
 <body>
-  <canvas id="canvas"></canvas>
 </body>
 
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
@@ -15,14 +16,10 @@
     DrawForces: false,
   };
 
-  const canvas = document.getElementById( 'canvas' );
-  window.onresize = () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  window.onresize();
+  const SVGNS = 'http://www.w3.org/2000/svg';
 
-  const ctx = canvas.getContext( '2d' );
+  const svg = document.createElementNS( SVGNS, 'svg' );
+  document.body.appendChild( svg );
 
   class Snake {
     #x;
@@ -42,12 +39,21 @@
     goalAngle = 0;
     speed = 0.2;
 
-    color = `hsl( ${ Math.random() * 360 }deg, 50%, 50% )`;
     maxLength = 100;
 
-    constructor( x, y ) {
+    #bodySVG = document.createElementNS( SVGNS, 'path' );
+
+    constructor( x, y, angle ) {
       this.#x = x;
       this.#y = y;
+      this.#angle = angle;
+
+      this.#tail.push( { x: x, y: y, angle: angle, length: 0 } );
+
+      this.#bodySVG.setAttribute( 'class', 'snake' );
+      this.#bodySVG.style.fill = `hsl( ${ Math.random() * 360 }deg, 50%, 50% )`;
+
+      svg.appendChild( this.#bodySVG );
     }
 
     angleTo( other ) { return this.angleToPoint( other.#x, other.#y ); }
@@ -57,8 +63,6 @@
     distanceToPoint( x, y ) { return Math.hypot( x - this.#x, y - this.#y ); }
 
     update( dt, others ) {
-      this.draw( ctx );
-      
       if ( this.#isAlive ) {
         const vectors = this.#getVectors( others );
 
@@ -76,11 +80,11 @@
 
           const moveDist = this.speed * dt;
 
-          this.#tail.push( { x: this.#x, y: this.#y, angle: this.#angle, length: moveDist } );
-          this.#length += moveDist;
-
           this.#x += Math.cos( this.#angle ) * moveDist;
           this.#y += Math.sin( this.#angle ) * moveDist;
+
+          this.#tail.push( { x: this.#x, y: this.#y, angle: this.#angle, length: moveDist } );
+          this.#length += moveDist;
         }
       }
       else {
@@ -90,6 +94,8 @@
       while ( this.#length > this.maxLength && this.#tail.length > 0 ) {
         this.#length -= this.#tail.shift().length;
       }
+
+      this.#bodySVG.setAttribute( 'd', this.#getDString() );
     }
 
     #getVectors( others ) {
@@ -165,38 +171,38 @@
       }
     }
 
-    draw( ctx ) {
-      const leftCoords = [], rightCoords = [];
-      for ( let i = 0; i < this.#tail.length; i ++ ) {
-        const width = this.#size * i / this.#tail.length;
+    #getDString() {
+      if ( this.#tail.length > 0 ) {
+        const leftCoords = [], rightCoords = [];
+        this.#tail.forEach( ( segment, index, tail ) => {
+          const width = this.#size * index / tail.length;
 
-        const leftAng = this.#tail[ i ].angle - Math.PI / 2;
-        const leftX = this.#tail[ i ].x + Math.cos( leftAng ) * width;
-        const leftY = this.#tail[ i ].y + Math.sin( leftAng ) * width;
-        leftCoords.push( { x: leftX, y: leftY } );
+          const leftAng = segment.angle - Math.PI / 2;
+          const leftX = segment.x + Math.cos( leftAng ) * width;
+          const leftY = segment.y + Math.sin( leftAng ) * width;
+          leftCoords.push( `${ leftX }, ${ leftY }` );
 
-        const rightAng = this.#tail[ i ].angle + Math.PI / 2;
-        const rightX = this.#tail[ i ].x + Math.cos( rightAng ) * width;
-        const rightY = this.#tail[ i ].y + Math.sin( rightAng ) * width;
-        rightCoords.unshift( { x: rightX, y: rightY } );
+          const rightAng = segment.angle + Math.PI / 2;
+          const rightX = segment.x + Math.cos( rightAng ) * width;
+          const rightY = segment.y + Math.sin( rightAng ) * width;
+          rightCoords.unshift( `${ rightX }, ${ rightY }` );
+
+        } );
+
+        return `M ${ leftCoords.join( ' L ' ) } A ${ this.#size } ${ this.#size } 0 0 1 ${ rightCoords.join( ' L ' ) }`;
       }
-
-      ctx.beginPath();
-      ctx.arc( this.#x, this.#y, this.#size, this.#angle - Math.PI / 2, this.#angle + Math.PI / 2 );
-      rightCoords.forEach( coord => ctx.lineTo( coord.x, coord.y ) );
-      leftCoords.forEach( coord => ctx.lineTo( coord.x, coord.y ) );
-      ctx.closePath();
-
-      ctx.fillStyle = this.color;
-      ctx.fill();
-      ctx.strokeStyle = 'black';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      else {
+        return '';
+      }
     }
   }
 
   const snakes = Array.from( Array( 20 ), _ => 
-    new Snake( Math.random() * canvas.width, Math.random() * canvas.height ) 
+    new Snake( 
+      Math.random() * window.innerWidth, 
+      Math.random() * window.innerHeight,
+      Math.random() * Math.PI * 2
+    ) 
   );
 
   // TEMP: Put a static obstacle to test against
@@ -210,11 +216,11 @@
 
   // snakes.push( obstacle );
 
-  const gui = new dat.GUI();
-  gui.width = 200;
-  for ( const setting in Settings ) {
-    gui.add( Settings, setting );
-  }
+  // const gui = new dat.GUI();
+  // gui.width = 200;
+  // for ( const setting in Settings ) {
+  //   gui.add( Settings, setting );
+  // }
 
   let mouseX = 0, mouseY = 0;
   document.onmousemove = onInput;
@@ -231,8 +237,6 @@
   document.onkeyup   = () => keyDown = false;
 
   function update( dt ) {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height );
-
     snakes.forEach( snake => {
       snake.goalX = mouseX;
       snake.goalY = mouseY;
