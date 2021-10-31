@@ -60,15 +60,15 @@
       this.draw( ctx );
       
       if ( this.#isAlive ) {
-        const distToGoal = this.distanceToPoint( this.goalX, this.goalY );
-        let angX = Settings.GoalWeight * ( this.goalX - this.#x ) / distToGoal;
-        let angY = Settings.GoalWeight * ( this.goalY - this.#y ) / distToGoal;
+        const vectors = this.#getVectors( others );
 
-        this.#compareAgainstOthers( others );
-
-        if ( this.#isAlive ) {
-          angX += this.#avoidVector.x;
-          angY += this.#avoidVector.y;
+        if ( vectors.find( vector => vector.dist < this.#size ) ) {
+          this.#isAlive = false;
+        }
+        else {
+          const distToGoal = this.distanceToPoint( this.goalX, this.goalY );
+          let angX = Settings.GoalWeight * ( this.goalX - this.#x ) / distToGoal;
+          let angY = Settings.GoalWeight * ( this.goalY - this.#y ) / distToGoal;
 
           this.goalAngle = Math.atan2( angY, angX );
 
@@ -90,6 +90,23 @@
       while ( this.#length > this.maxLength && this.#tail.length > 0 ) {
         this.#length -= this.#tail.shift().length;
       }
+    }
+
+    #getVectors( others ) {
+      const vectors = [];
+
+      others.forEach( other => {
+        other.#tail.forEach( ( segment, index, tail ) => {
+          const cx = this.#x - segment.x;
+          const cy = this.#y - segment.y;
+          vectors.push( { 
+            angle: Math.atan2( cy, cx ), 
+            dist:  Math.hypot( cx, cy ) - other.#size * ( index / tail.length )
+          } );
+        } );
+      } );
+
+      return vectors;
     }
 
     // TODO: Not just others -- need to check against ourselves, too! (as we get longer)
