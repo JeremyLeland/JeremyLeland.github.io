@@ -2,6 +2,7 @@
   body { margin: 0 }
   svg  { width: 100%; height: 100% }
   .snake { stroke: black; stroke-width: 2; }
+  .goalForce { stroke: gray; stroke-width: 2; }
 </style>
 
 <body>
@@ -44,7 +45,8 @@
     #color = `hsl( ${ Math.random() * 360 }deg, 50%, 50% )`;
 
     #bodySVG = document.createElementNS( SVGNS, 'path' );
-    #forcesSVG = new Map();
+    #goalForceSVG = document.createElementNS( SVGNS, 'path' );
+    #avoidForcesSVG = new Map();
 
     constructor( x, y, angle ) {
       this.#x = x;
@@ -55,8 +57,10 @@
 
       this.#bodySVG.setAttribute( 'class', 'snake' );
       this.#bodySVG.style.fill = this.#color;
-
       svg.appendChild( this.#bodySVG );
+
+      this.#goalForceSVG.setAttribute( 'class', 'goalForce' );
+      svg.appendChild( this.#goalForceSVG );
     }
 
     angleTo( other ) { return this.angleToPoint( other.#x, other.#y ); }
@@ -73,11 +77,9 @@
           this.#isAlive = false;
         }
         else {
-          const distToGoal = this.distanceToPoint( this.goalX, this.goalY );
-          let angX = Settings.GoalWeight * ( this.goalX - this.#x ) / distToGoal;
-          let angY = Settings.GoalWeight * ( this.goalY - this.#y ) / distToGoal;
+          const goalAngle = Math.atan2( this.goalY - this.#y, this.goalX - this.#x );
 
-          const goalAngle = Math.atan2( angY, angX );
+          this.#goalForceSVG.setAttribute( 'd', this.#getForceLineDString( goalAngle, 1 ) );
 
           this.#turnTowardAngle( goalAngle, dt );
 
@@ -123,57 +125,28 @@
             weightedDist: weightedDist
           } );
 
-          forceLines.push( `M ${ this.#x },${ this.#y } L ${ this.#x + Math.cos( angle ) * weightedDist * 50 },${ this.#y + Math.sin( angle ) * weightedDist * 50 }` );
+          forceLines.push( this.#getForceLineDString( angle, weightedDist ) );
         } );
 
-        if ( !this.#forcesSVG.has( other ) ) {
+        if ( !this.#avoidForcesSVG.has( other ) ) {
           const path = document.createElementNS( SVGNS, 'path' );
           path.style.stroke = other.#color;
-          this.#forcesSVG.set( other, svg.appendChild( path ) );
+          this.#avoidForcesSVG.set( other, svg.appendChild( path ) );
         }
-        const forcesPath = this.#forcesSVG.get( other );
+        const forcesPath = this.#avoidForcesSVG.get( other );
         forcesPath.setAttribute( 'd', forceLines.join( ' ' ) );
+
+
       } );
 
       return vectors;
     }
 
-    // TODO: Not just others -- need to check against ourselves, too! (as we get longer)
-    #compareAgainstOthers( others ) {
-      const DESIRED_SEPARATION = this.#size * 2;
-
-      let angX = 0, angY = 0;
-      others.forEach( other => {
-        let avoidX = 0, avoidY = 0;
-        other.#tail.forEach( segment => {
-          const dist = this.distanceToPoint( segment.x, segment.y );
-
-          if ( dist < this.#size + other.#size ) {
-            this.#isAlive = false;
-            this.#avoidVector = { x: 0, y: 0 };
-            return;
-          }
-
-          // TODO: Account for segment width
-          // for ( let i = 0; i < this.#tail.length; i ++ ) {
-          //   const width = this.#size * i / this.#tail.length;
-
-          const avoidWeight = Math.abs( Settings.AvoidWeight / Math.pow( dist - DESIRED_SEPARATION, Settings.AvoidPower ) );
-
-          const cx = avoidWeight * ( this.#x - segment.x ) / dist;
-          const cy = avoidWeight * ( this.#y - segment.y ) / dist;
-
-          avoidX += cx / other.#tail.length;
-          avoidY += cy / other.#tail.length;
-
-        } );
-
-        angX += avoidX / others.length;
-        angY += avoidY / others.length;
-
-      } );
-
-      this.#avoidVector = { x: angX, y: angY };
+    #getForceLineDString( angle, dist ) {
+      const LENGTH = 50;
+      const x2 = this.#x + Math.cos( angle ) * dist * LENGTH;
+      const y2 = this.#y + Math.sin( angle ) * dist * LENGTH;
+      return `M ${ this.#x },${ this.#y } L ${ x2 },${ y2 }`;
     }
 
     #turnTowardAngle( goalAngle, dt ) {
