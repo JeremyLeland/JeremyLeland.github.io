@@ -77,9 +77,9 @@
           let angX = Settings.GoalWeight * ( this.goalX - this.#x ) / distToGoal;
           let angY = Settings.GoalWeight * ( this.goalY - this.#y ) / distToGoal;
 
-          this.goalAngle = Math.atan2( angY, angX );
+          const goalAngle = Math.atan2( angY, angX );
 
-          this.#turnTowardGoal( dt );
+          this.#turnTowardAngle( goalAngle, dt );
 
           const moveDist = this.speed * dt;
 
@@ -104,6 +104,8 @@
     #getVectors( others ) {
       const vectors = [];
 
+      const DESIRED_SEPARATION = this.#size * 2;
+
       others.forEach( other => {
 
         const forceLines = [];
@@ -111,12 +113,17 @@
         other.#tail.forEach( ( segment, index, tail ) => {
           const cx = this.#x - segment.x;
           const cy = this.#y - segment.y;
+          const angle = Math.atan2( cy, cx );
+          const dist = Math.hypot( cx, cy ) - other.#size * ( index / tail.length );
+          const weightedDist = Math.abs( Settings.AvoidWeight / Math.pow( dist - DESIRED_SEPARATION, Settings.AvoidPower ) );
+
           vectors.push( { 
-            angle: Math.atan2( cy, cx ), 
-            dist:  Math.hypot( cx, cy ) - other.#size * ( index / tail.length )
+            angle: angle,
+            dist: dist,
+            weightedDist: weightedDist
           } );
 
-          forceLines.push( `M ${ this.#x },${ this.#y } L ${ this.#x + cx },${ this.#y + cy }` );
+          forceLines.push( `M ${ this.#x },${ this.#y } L ${ this.#x + Math.cos( angle ) * weightedDist * 50 },${ this.#y + Math.sin( angle ) * weightedDist * 50 }` );
         } );
 
         if ( !this.#forcesSVG.has( other ) ) {
@@ -169,21 +176,21 @@
       this.#avoidVector = { x: angX, y: angY };
     }
 
-    #turnTowardGoal( dt ) {
+    #turnTowardAngle( goalAngle, dt ) {
       // Fix internal angle to better match goal angle
-      if ( this.goalAngle - this.#angle > Math.PI ) {
+      if ( goalAngle - this.#angle > Math.PI ) {
         this.#angle += Math.PI * 2;
       }
-      else if ( this.#angle - this.goalAngle > Math.PI ) {
+      else if ( this.#angle - goalAngle > Math.PI ) {
         this.#angle -= Math.PI * 2;
       }
 
       // Turn toward goal angle
-      if ( this.goalAngle < this.#angle ) {
-        this.#angle = Math.max( this.goalAngle, this.#angle - this.#turnSpeed * dt );
+      if ( goalAngle < this.#angle ) {
+        this.#angle = Math.max( goalAngle, this.#angle - this.#turnSpeed * dt );
       }
-      else if ( this.#angle < this.goalAngle ) {
-        this.#angle = Math.min( this.goalAngle, this.#angle + this.#turnSpeed * dt );
+      else if ( this.#angle < goalAngle ) {
+        this.#angle = Math.min( goalAngle, this.#angle + this.#turnSpeed * dt );
       }
     }
 
@@ -213,7 +220,7 @@
     }
   }
 
-  const snakes = Array.from( Array( 2 ), _ => 
+  const snakes = Array.from( Array( 3 ), _ => 
     new Snake( 
       Math.random() * window.innerWidth, 
       Math.random() * window.innerHeight,
