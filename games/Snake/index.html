@@ -87,20 +87,20 @@
           this.#isAlive = false;
         }
         else {
-          const goalAngle = Math.atan2( this.goalY - this.y, this.goalX - this.x );
+          // const goalAngle = Math.atan2( this.goalY - this.y, this.goalX - this.x );
 
-          this.#goalForceSVG.setAttribute( 'd', this.#getForceLineDString( goalAngle, 1 ) );
+          // this.#goalForceSVG.setAttribute( 'd', this.#getForceLineDString( goalAngle, 1 ) );
 
-          let finalForce = vectors.reduce( ( acc, vector ) => ( { 
-            x: acc.x + Math.cos( vector.angle ) * vector.weightedDist,// / vectors.length,
-            y: acc.y + Math.sin( vector.angle ) * vector.weightedDist,// / vectors.length
-          } ), { x: this.goalX - this.x, y: this.goalY - this.y } );
+          // let finalForce = vectors.reduce( ( acc, vector ) => ( { 
+          //   x: acc.x + Math.cos( vector.angle ) * vector.weightedDist,// / vectors.length,
+          //   y: acc.y + Math.sin( vector.angle ) * vector.weightedDist,// / vectors.length
+          // } ), { x: this.goalX - this.x, y: this.goalY - this.y } );
 
-          const finalAngle = Math.atan2( finalForce.y, finalForce.x );
+          // const finalAngle = Math.atan2( finalForce.y, finalForce.x );
 
-          this.#finalForceSVG.setAttribute( 'd', this.#getForceLineDString( finalAngle, 1 ) );
+          // this.#finalForceSVG.setAttribute( 'd', this.#getForceLineDString( finalAngle, 1 ) );
 
-          this.#turnTowardAngle( finalAngle, dt );
+          // this.turnTowardAngle( finalAngle, dt );
 
           const moveDist = this.speed * dt;
 
@@ -168,7 +168,7 @@
       return `M ${ this.x },${ this.y } L ${ x2 },${ y2 }`;
     }
 
-    #turnTowardAngle( goalAngle, dt ) {
+    turnTowardAngle( goalAngle, dt ) {
       // Fix internal angle to better match goal angle
       if ( goalAngle - this.#angle > Math.PI ) {
         this.#angle += Math.PI * 2;
@@ -260,10 +260,12 @@
     snakes.forEach( snake => {
 
       if ( snake == player ) {
-        snake.goalX = mouseX;
-        snake.goalY = mouseY;
+        const towardMouse = Math.atan2( mouseY - snake.y, mouseX - snake.x );
+        snake.turnTowardAngle( towardMouse, dt );
       }
       else {
+        // Head toward closest apple
+        // TODO: Use a waypoint to line up on it? (otherwise we sometimes circle them)
         let closest = apples.map( 
           apple => ( { apple: apple, dist: snake.distanceTo( apple ) } )
         ).reduce( 
@@ -271,8 +273,14 @@
           { apple: null, dist: Infinity }
         );
 
-        snake.goalX = closest.apple?.x ?? 0;  //Math.random() * window.innerWidth;
-        snake.goalY = closest.apple?.y ?? 0;  //Math.random() * window.innerHeight;
+        // TODO: Where to go if no apple? Waypoints system from above might help
+        const goalX = closest.apple?.x ?? 0;  //Math.random() * window.innerWidth;
+        const goalY = closest.apple?.y ?? 0;  //Math.random() * window.innerHeight;
+
+        // Try to avoid other snakes
+
+        const goalAngle = Math.atan2( goalY - snake.y, goalX - snake.x );
+        snake.turnTowardAngle( goalAngle, dt );
       }
 
       apples = apples.filter( apple => {
