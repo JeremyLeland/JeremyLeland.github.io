@@ -215,10 +215,8 @@
   class Apple {
     x;
     y;
-    svg = document.createElementNS( SVGNS, 'circle' );
-
     size = 10;
-    isAlive = true;
+    svg = document.createElementNS( SVGNS, 'circle' );
 
     constructor( x, y ) {
       this.x = x;
@@ -232,19 +230,17 @@
     }
   }
 
-  let snakes = Array.from( Array( 3 ), _ => 
-    new Snake( 
+  let player = randomSnake();
+  let snakes = [ player, randomSnake(), randomSnake() ];
+  let apples = [];
+
+  function randomSnake() {
+    return new Snake( 
       Math.random() * window.innerWidth, 
       Math.random() * window.innerHeight,
       Math.random() * Math.PI * 2
-    ) 
-  );
-
-  let apples = [];
-
-  spawnApple();
-  spawnApple();
-  spawnApple();
+    );
+  }
 
   function spawnApple() {
     apples.push(
@@ -255,22 +251,39 @@
     );
   }
 
+  spawnApple();
+  spawnApple();
+  spawnApple();
   setInterval( spawnApple, 5000 );
 
   function update( dt ) {
     snakes.forEach( snake => {
-      snake.goalX = mouseX;
-      snake.goalY = mouseY;
 
-      apples.forEach( apple => {
+      if ( snake == player ) {
+        snake.goalX = mouseX;
+        snake.goalY = mouseY;
+      }
+      else {
+        let closest = apples.map( 
+          apple => ( { apple: apple, dist: snake.distanceTo( apple ) } )
+        ).reduce( 
+          ( acc, appleDist ) => appleDist.dist < acc.dist ? appleDist : acc,
+          { apple: null, dist: Infinity }
+        );
+
+        snake.goalX = closest.apple?.x ?? 0;  //Math.random() * window.innerWidth;
+        snake.goalY = closest.apple?.y ?? 0;  //Math.random() * window.innerHeight;
+      }
+
+      apples = apples.filter( apple => {
         if ( snake.distanceTo( apple ) < snake.size + apple.size ) {
-          apple.isAlive = false;
-          apple.svg.remove();
           snake.maxLength += 100;
+          apple.svg.remove();
+          return false;
         }
-      })
 
-      apples = apples.filter( apple => apple.isAlive );
+        return true;
+      } );
 
       snake.update( dt, snakes.filter( e => e != snake ) )
     } );
