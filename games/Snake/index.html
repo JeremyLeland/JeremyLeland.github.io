@@ -240,43 +240,22 @@
     ) 
   );
 
-  let apples = Array.from( Array( 3 ), _ => 
-    new Apple( 
-      Math.random() * window.innerWidth, 
-      Math.random() * window.innerHeight,
-    ) 
-  );
+  let apples = [];
 
-  // TEMP: Put a static obstacle to test against
-  // const obstacle = new Snake( 100, 500 );
-  // obstacle.goalX = 500;
-  // obstacle.goalY = 500;
-  // for ( let i = 0; i < 200; i ++ ) {
-  //   obstacle.update( 10, snakes );
-  // }
-  // obstacle.speed = 0;
+  spawnApple();
+  spawnApple();
+  spawnApple();
 
-  // snakes.push( obstacle );
-
-  // const gui = new dat.GUI();
-  // gui.width = 200;
-  // for ( const setting in Settings ) {
-  //   gui.add( Settings, setting );
-  // }
-
-  let mouseX = 0, mouseY = 0;
-  document.onmousemove = onInput;
-  document.ontouchstart = onInput;
-  document.ontouchmove = onInput;
-  function onInput( e ) {
-    const event = e.touches ? e.touches[0] : e;
-    mouseX = event.pageX;
-    mouseY = event.pageY;
+  function spawnApple() {
+    apples.push(
+      new Apple( 
+        Math.random() * window.innerWidth, 
+        Math.random() * window.innerHeight,
+      ) 
+    );
   }
 
-  let keyDown = true;     // default to running
-  document.onkeydown = () => keyDown = true;
-  document.onkeyup   = () => keyDown = false;
+  setInterval( spawnApple, 5000 );
 
   function update( dt ) {
     snakes.forEach( snake => {
@@ -298,6 +277,27 @@
 
     snakes = snakes.filter( snake => snake.isAlive() );
   }
+
+
+  // const gui = new dat.GUI();
+  // gui.width = 200;
+  // for ( const setting in Settings ) {
+  //   gui.add( Settings, setting );
+  // }
+
+  let mouseX = 0, mouseY = 0;
+  document.onmousemove = onInput;
+  document.ontouchstart = onInput;
+  document.ontouchmove = onInput;
+  function onInput( e ) {
+    const event = e.touches ? e.touches[0] : e;
+    mouseX = event.pageX;
+    mouseY = event.pageY;
+  }
+
+  let keyDown = true;     // default to running
+  document.onkeydown = () => keyDown = true;
+  document.onkeyup   = () => keyDown = false;
 
   let lastTime = null;
   function animate( now ) {
