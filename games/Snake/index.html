@@ -289,7 +289,21 @@
   setInterval( spawnApple, 5000 );
 
   function update( dt ) {
-    snakes = snakes.filter( snake => {
+    snakes.forEach( snake => {
+      apples = apples.filter( apple => {
+        if ( snake.distanceTo( apple ) < snake.size + apple.size ) {
+          snake.maxLength += 100;
+          apple.svg.remove();
+          return false;
+        }
+
+        return true;
+      } );
+
+      // TODO: Check ourselves as well, but avoid head
+      // TODO: Get vectors with angle and distance here, use for collisions and later for avoid?
+      //       Pretty much the same as before, I guess...not sure what I'm accomplishing by constantly changing this
+      snake.checkCollisions( snakes.filter( e => e != snake ) );
 
       if ( snake == player ) {
         const towardMouse = Math.atan2( mouseY - snake.y, mouseX - snake.x );
@@ -314,26 +328,9 @@
         const goalAngle = Math.atan2( goalY - snake.y, goalX - snake.x );
         snake.turnTowardAngle( goalAngle, dt );
       }
-
-      apples = apples.filter( apple => {
-        if ( snake.distanceTo( apple ) < snake.size + apple.size ) {
-          snake.maxLength += 100;
-          apple.svg.remove();
-          return false;
-        }
-
-        return true;
-      } );
-
-      // TODO: Check ourselves as well, but avoid head
-      snake.checkCollisions( snakes.filter( e => e != snake ) );
-
-      //snake.update( dt, snakes.filter( e => e != snake ) )
-
-      return snake.moveForward( dt );
     } );
 
-    // snakes = snakes.filter( snake => snake.isAlive() );
+    snakes = snakes.filter( snake => snake.moveForward( dt ) );
   }
 
 
