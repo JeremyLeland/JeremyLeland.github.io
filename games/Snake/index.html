@@ -36,7 +36,7 @@
 
     #avoidVector;
 
-    #isAlive = true;
+    isAlive = true;
 
     goalX = 0;
     goalY = 0;
@@ -79,14 +79,14 @@
     distanceTo( other ) { return this.distanceToPoint( other.x, other.y ); }
     distanceToPoint( x, y ) { return Math.hypot( x - this.x, y - this.y ); }
 
-    update( dt, others ) {
-      if ( this.#isAlive ) {
-        const vectors = this.#getVectors( others );
+    // update( dt, others ) {
+    //   if ( this.isAlive ) {
+    //     const vectors = this.#getVectors( others );
 
-        if ( vectors.find( vector => vector.dist < this.size ) ) {
-          this.#isAlive = false;
-        }
-        else {
+    //     if ( vectors.find( vector => vector.dist < this.size ) ) {
+    //       this.isAlive = false;
+    //     }
+    //     else {
           // const goalAngle = Math.atan2( this.goalY - this.y, this.goalX - this.x );
 
           // this.#goalForceSVG.setAttribute( 'd', this.#getForceLineDString( goalAngle, 1 ) );
@@ -102,60 +102,41 @@
 
           // this.turnTowardAngle( finalAngle, dt );
 
-          const moveDist = this.speed * dt;
+    //       const moveDist = this.speed * dt;
 
-          this.x += Math.cos( this.#angle ) * moveDist;
-          this.y += Math.sin( this.#angle ) * moveDist;
+    //       this.x += Math.cos( this.#angle ) * moveDist;
+    //       this.y += Math.sin( this.#angle ) * moveDist;
 
-          this.#tail.push( { x: this.x, y: this.y, angle: this.#angle, length: moveDist } );
-          this.#length += moveDist;
-        }
-      }
-      else {
-        this.maxLength -= this.speed * dt;
-      }
+    //       this.#tail.push( { x: this.x, y: this.y, angle: this.#angle, length: moveDist } );
+    //       this.#length += moveDist;
+    //     }
+    //   }
+    //   else {
+    //     this.maxLength -= this.speed * dt;
+    //   }
 
-      while ( this.#length > this.maxLength && this.#tail.length > 0 ) {
-        this.#length -= this.#tail.shift().length;
-      }
+    //   while ( this.#length > this.maxLength && this.#tail.length > 0 ) {
+    //     this.#length -= this.#tail.shift().length;
+    //   }
 
-      this.#bodySVG.setAttribute( 'd', this.#getDString() );
-    }
+    //   this.#bodySVG.setAttribute( 'd', this.#getDString() );
+    // }
 
-    #getVectors( others ) {
+    getVectors( snakes ) {
       const vectors = [];
 
-      const DESIRED_SEPARATION = this.size * 2;
-
-      others.forEach( other => {
-
-        const forceLines = [];
-
-        other.#tail.forEach( ( segment, index, tail ) => {
+      snakes.forEach( snake => {
+        snake.#tail.forEach( ( segment, index, tail ) => {
           const cx = this.x - segment.x;
           const cy = this.y - segment.y;
           const angle = Math.atan2( cy, cx );
-          const dist = Math.hypot( cx, cy ) - other.size * ( index / tail.length );
-          const weightedDist = Math.abs( Settings.AvoidWeight / Math.pow( dist - DESIRED_SEPARATION, Settings.AvoidPower ) );
+          const dist = Math.hypot( cx, cy ) - snake.size * ( index / tail.length ) - this.size;
 
           vectors.push( { 
             angle: angle,
             dist: dist,
-            weightedDist: weightedDist
           } );
-
-          forceLines.push( this.#getForceLineDString( angle, weightedDist ) );
         } );
-
-        if ( !this.#avoidForcesSVG.has( other ) ) {
-          const path = document.createElementNS( SVGNS, 'path' );
-          path.style.stroke = other.#color;
-          this.#avoidForcesSVG.set( other, svg.appendChild( path ) );
-        }
-        const forcesPath = this.#avoidForcesSVG.get( other );
-        forcesPath.setAttribute( 'd', forceLines.join( ' ' ) );
-
-
       } );
 
       return vectors;
@@ -187,7 +168,7 @@
     }
 
     checkCollisions( snakes ) {
-      this.#isAlive &= !snakes.some( snake => {
+      this.isAlive &= !snakes.some( snake => {
         return snake.#tail.some( ( segment, index, tail ) => {
           const width = snake.size * ( index / tail.length );
           return Math.hypot( this.x - segment.x, this.y - segment.y ) < this.size + width;
@@ -196,7 +177,7 @@
     }
     
     moveForward( dt ) {
-      if ( this.#isAlive ) {
+      if ( this.isAlive ) {
         const moveDist = this.speed * dt;
 
         this.x += Math.cos( this.#angle ) * moveDist;
@@ -301,9 +282,9 @@
       } );
 
       // TODO: Check ourselves as well, but avoid head
-      // TODO: Get vectors with angle and distance here, use for collisions and later for avoid?
-      //       Pretty much the same as before, I guess...not sure what I'm accomplishing by constantly changing this
-      snake.checkCollisions( snakes.filter( e => e != snake ) );
+      const vectors = snake.getVectors( snakes.filter( e => e != snake ) );
+
+      snake.isAlive &= vectors.every( vector => vector.dist > 0 );
 
       if ( snake == player ) {
         const towardMouse = Math.atan2( mouseY - snake.y, mouseX - snake.x );
