@@ -39,12 +39,11 @@
 
     isAlive = true;
 
-    goalX = 0;
-    goalY = 0;
-    goalAngle = 0;
+    wanderX = Math.random() * window.innerWidth;
+    wanderY = Math.random() * window.innerHeight;
+
     speed = 0.2;
     size = 10;
-
     maxLength = 100;
 
     #color = `hsl( ${ Math.random() * 360 }deg, 50%, 50% )`;
@@ -58,6 +57,11 @@
       this.x = x;
       this.y = y;
       this.#angle = angle;
+
+      setInterval( () => {
+        this.wanderX = Math.random() * window.innerWidth;
+        this.wanderY = Math.random() * window.innerHeight;
+      }, 5000 );
 
       this.#tail.push( { x: x, y: y, angle: angle, length: 0 } );
 
@@ -280,9 +284,8 @@
           { apple: null, dist: Infinity }
         );
 
-        // TODO: Where to go if no apple? Waypoints system from above might help
-        const goalX = closest.apple?.x ?? window.innerWidth / 2;
-        const goalY = closest.apple?.y ?? window.innerHeight / 2;
+        const goalX = closest.apple?.x ?? snake.wanderX;
+        const goalY = closest.apple?.y ?? snake.wanderY;
 
         // Try to avoid other snakes
         const weighted = vectors.map( vector => {
