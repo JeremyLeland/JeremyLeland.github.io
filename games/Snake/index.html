@@ -75,56 +75,18 @@
       svg.appendChild( this.#finalForceSVG );
     }
 
-    isAlive() { return this.#tail.length > 0; }
+    destroy() {
+      this.#bodySVG.remove();
+      this.#goalForceSVG.remove();
+      this.#avoidForcesSVG.remove();
+      this.#finalForceSVG.remove();
+    }
 
     angleTo( other ) { return this.angleToPoint( other.x, other.y ); }
     angleToPoint( x, y ) { return Math.atan2( y - this.y, x - this.x ); }
 
     distanceTo( other ) { return this.distanceToPoint( other.x, other.y ); }
     distanceToPoint( x, y ) { return Math.hypot( x - this.x, y - this.y ); }
-
-    // update( dt, others ) {
-    //   if ( this.isAlive ) {
-    //     const vectors = this.#getVectors( others );
-
-    //     if ( vectors.find( vector => vector.dist < this.size ) ) {
-    //       this.isAlive = false;
-    //     }
-    //     else {
-          // const goalAngle = Math.atan2( this.goalY - this.y, this.goalX - this.x );
-
-          // this.#goalForceSVG.setAttribute( 'd', this.#getForceLineDString( goalAngle, 1 ) );
-
-          // let finalForce = vectors.reduce( ( acc, vector ) => ( { 
-          //   x: acc.x + Math.cos( vector.angle ) * vector.weightedDist,// / vectors.length,
-          //   y: acc.y + Math.sin( vector.angle ) * vector.weightedDist,// / vectors.length
-          // } ), { x: this.goalX - this.x, y: this.goalY - this.y } );
-
-          // const finalAngle = Math.atan2( finalForce.y, finalForce.x );
-
-          // this.#finalForceSVG.setAttribute( 'd', this.#getForceLineDString( finalAngle, 1 ) );
-
-          // this.turnTowardAngle( finalAngle, dt );
-
-    //       const moveDist = this.speed * dt;
-
-    //       this.x += Math.cos( this.#angle ) * moveDist;
-    //       this.y += Math.sin( this.#angle ) * moveDist;
-
-    //       this.#tail.push( { x: this.x, y: this.y, angle: this.#angle, length: moveDist } );
-    //       this.#length += moveDist;
-    //     }
-    //   }
-    //   else {
-    //     this.maxLength -= this.speed * dt;
-    //   }
-
-    //   while ( this.#length > this.maxLength && this.#tail.length > 0 ) {
-    //     this.#length -= this.#tail.shift().length;
-    //   }
-
-    //   this.#bodySVG.setAttribute( 'd', this.#getDString() );
-    // }
 
     getVectors( snakes ) {
       const vectors = [];
@@ -146,13 +108,6 @@
       return vectors;
     }
 
-    #getForceLineDString( angle, dist ) {
-      const LENGTH = 50;
-      const x2 = this.x + Math.cos( angle ) * dist * LENGTH;
-      const y2 = this.y + Math.sin( angle ) * dist * LENGTH;
-      return `M ${ this.x },${ this.y } L ${ x2 },${ y2 }`;
-    }
-
     turnTowardAngle( goalAngle, dt ) {
       // Fix internal angle to better match goal angle
       if ( goalAngle - this.#angle > Math.PI ) {
@@ -171,15 +126,6 @@
       }
     }
 
-    checkCollisions( snakes ) {
-      this.isAlive &= !snakes.some( snake => {
-        return snake.#tail.some( ( segment, index, tail ) => {
-          const width = snake.size * ( index / tail.length );
-          return Math.hypot( this.x - segment.x, this.y - segment.y ) < this.size + width;
-        } );
-      } );
-    }
-    
     moveForward( dt ) {
       if ( this.isAlive ) {
         const moveDist = this.speed * dt;
@@ -200,7 +146,12 @@
 
       this.#bodySVG.setAttribute( 'd', this.#getDString() );
 
-      return this.#tail.length > 0;
+      if ( this.#tail.length == 0 ) {
+        this.destroy();
+        return false;
+      }
+
+      return true;
     }
 
     drawGoalForce( goalForce ) {
@@ -254,17 +205,21 @@
     x;
     y;
     size = 10;
-    svg = document.createElementNS( SVGNS, 'circle' );
+    #svg = document.createElementNS( SVGNS, 'circle' );
 
     constructor( x, y ) {
       this.x = x;
       this.y = y;
 
-      this.svg.setAttribute( 'class', 'apple' );
-      this.svg.setAttribute( 'cx', x );
-      this.svg.setAttribute( 'cy', y );
-      this.svg.setAttribute( 'r', this.size );
-      svg.appendChild( this.svg );
+      this.#svg.setAttribute( 'class', 'apple' );
+      this.#svg.setAttribute( 'cx', x );
+      this.#svg.setAttribute( 'cy', y );
+      this.#svg.setAttribute( 'r', this.size );
+      svg.appendChild( this.#svg );
+    }
+
+    destroy() {
+      this.#svg.remove();
     }
   }
 
@@ -299,7 +254,7 @@
       apples = apples.filter( apple => {
         if ( snake.distanceTo( apple ) < snake.size + apple.size ) {
           snake.maxLength += 100;
-          apple.svg.remove();
+          apple.destroy();
           return false;
         }
 
@@ -326,8 +281,8 @@
         );
 
         // TODO: Where to go if no apple? Waypoints system from above might help
-        const goalX = closest.apple?.x ?? 0;  //Math.random() * window.innerWidth;
-        const goalY = closest.apple?.y ?? 0;  //Math.random() * window.innerHeight;
+        const goalX = closest.apple?.x ?? window.innerWidth / 2;
+        const goalY = closest.apple?.y ?? window.innerHeight / 2;
 
         // Try to avoid other snakes
         const weighted = vectors.map( vector => {
