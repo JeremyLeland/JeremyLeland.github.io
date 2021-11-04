@@ -305,14 +305,20 @@
         const goalY = closest.apple?.y ?? 0;  //Math.random() * window.innerHeight;
 
         // Try to avoid other snakes
-        let finalForce = vectors.reduce( ( acc, vector ) => {
+        const weighted = vectors.map( vector => {
           const weightedDist = Math.abs( Settings.AvoidWeight / Math.pow( vector.dist, Settings.AvoidPower ) );
-
           return { 
-            x: acc.x + Math.cos( vector.angle ) * weightedDist,// / vectors.length,
-            y: acc.y + Math.sin( vector.angle ) * weightedDist,// / vectors.length
-          } 
-        }, { x: goalX - snake.x, y: goalY - snake.y } );
+            x: Math.cos( vector.angle ) * weightedDist,// / vectors.length,
+            y: Math.sin( vector.angle ) * weightedDist,// / vectors.length
+          };
+        } );
+
+        const goalDist = Math.hypot( goalX - snake.x, goalY - snake.y ) / 100;
+
+        const finalForce = weighted.reduce(
+          ( acc, wv ) => ( { x: acc.x + wv.x, y: acc.y + wv.y } ),
+          { x: ( goalX - snake.x ) / goalDist, y: ( goalY - snake.y ) / goalDist }
+        );
 
         const goalAngle = Math.atan2( finalForce.y, finalForce.x );
         snake.turnTowardAngle( goalAngle, dt );
