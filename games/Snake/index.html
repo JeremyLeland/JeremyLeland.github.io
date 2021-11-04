@@ -203,10 +203,23 @@
       return this.#tail.length > 0;
     }
 
+    drawGoalForce( goalForce ) {
+      this.#goalForceSVG.setAttribute( 'd', 
+        `M ${ this.x },${ this.y } L ${ this.x + goalForce.x * 100 },${ this.y + goalForce.y * 100 }`
+      );
+    }
+
+    drawFinalForce( finalForce ) {
+      this.#finalForceSVG.setAttribute( 'd', 
+        `M ${ this.x },${ this.y } L ${ this.x + finalForce.x * 100 },${ this.y + finalForce.y * 100 }`
+      );
+    }
+
     drawAvoidForces( avoidForces ) {
+      const len = 100 * avoidForces.length;
       this.#avoidForcesSVG.setAttribute( 'd', 
         avoidForces.map( wv => 
-          `M ${ this.x },${ this.y } L ${ this.x + wv.x * 100 },${ this.y + wv.y * 100 }`
+          `M ${ this.x },${ this.y } L ${ this.x + wv.x * len },${ this.y + wv.y * len }`
         ).join( ' ' )
       );
     }
@@ -320,22 +333,29 @@
         const weighted = vectors.map( vector => {
           const weightedDist = Math.abs( Settings.AvoidWeight / Math.pow( vector.dist, Settings.AvoidPower ) );
           return { 
-            x: Math.cos( vector.angle ) * weightedDist,// / vectors.length,
-            y: Math.sin( vector.angle ) * weightedDist,// / vectors.length
+            x: Math.cos( vector.angle ) * weightedDist / vectors.length,
+            y: Math.sin( vector.angle ) * weightedDist / vectors.length
           };
         } );
 
         snake.drawAvoidForces( weighted );
 
-        const goalDist = Math.hypot( goalX - snake.x, goalY - snake.y ) / 100;
+        const goalAngle = Math.atan2( goalY - snake.y, goalX - snake.x );
+        const goalForce = {
+          x: Settings.GoalWeight * Math.cos( goalAngle ), 
+          y: Settings.GoalWeight * Math.sin( goalAngle ),
+        }
+
+        snake.drawGoalForce( goalForce );
 
         const finalForce = weighted.reduce(
           ( acc, wv ) => ( { x: acc.x + wv.x, y: acc.y + wv.y } ),
-          { x: ( goalX - snake.x ) / goalDist, y: ( goalY - snake.y ) / goalDist }
+          goalForce
         );
+        snake.drawFinalForce( finalForce );
 
-        const goalAngle = Math.atan2( finalForce.y, finalForce.x );
-        snake.turnTowardAngle( goalAngle, dt );
+        const finalAngle = Math.atan2( finalForce.y, finalForce.x );
+        snake.turnTowardAngle( finalAngle, dt );
       }
     } );
 
