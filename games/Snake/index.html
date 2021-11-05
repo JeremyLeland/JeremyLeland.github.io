@@ -5,9 +5,9 @@
   .snake { stroke: black; stroke-width: 2; }
   .apple { fill: red; stroke: black; stroke-width: 2; }
 
-  .goalForce { stroke: gray; stroke-width: 2; }
-  .avoidForce { stroke: black }
-  .finalForce { stroke: green; stroke-width: 3; }
+  .goalForce { stroke: gray; stroke-width: 2; visibility: hidden; }
+  .avoidForce { stroke: black; visibility: hidden; }
+  .finalForce { stroke: green; stroke-width: 3; visibility: hidden; }
 </style>
 
 <body>
@@ -235,7 +235,7 @@
   }
 
   let player = randomSnake();
-  let snakes = [ player, randomSnake(), randomSnake() ];
+  let snakes = [ player, ...Array.from( Array( 5 ), _ => randomSnake() ) ];
   let apples = [];
 
   function randomSnake() {
@@ -258,7 +258,7 @@
   spawnApple();
   spawnApple();
   spawnApple();
-  setInterval( spawnApple, 5000 );
+  setInterval( spawnApple, 3000 );
 
   function update( dt ) {
     snakes.forEach( snake => {
@@ -281,8 +281,8 @@
         snake.turnTowardAngle( towardMouse, dt );
       }
       else {
-        // Head toward closest apple
-        // TODO: Use a waypoint to line up on it? (otherwise we sometimes circle them)
+        // Head towards nearest apple we can hit (not too close)
+        // TODO: Remember our heading so we don't steer away from apples when we get close?
         let closest = apples.map( 
           apple => ( { apple: apple, dist: snake.distanceTo( apple ) } )
         ).reduce( 
@@ -295,6 +295,8 @@
         const goalY = closest.apple?.y ?? snake.wanderY;
 
         // Try to avoid other snakes
+        // TODO: Find way to ignore our own body unless we're headed to it...
+        //       maybe only include segments that are in front of us?
         const weighted = vectors.map( vector => {
           const weightedDist = Math.abs( Settings.AvoidWeight / Math.pow( vector.dist, Settings.AvoidPower ) );
           return { 
