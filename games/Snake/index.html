@@ -20,6 +20,7 @@
     AvoidWeight: 100,
     AvoidPower: 1,
     DrawForces: false,
+    MinimumAppleDist: 20,
   };
 
   const SVGNS = 'http://www.w3.org/2000/svg';
@@ -96,16 +97,22 @@
       const vectors = [];
 
       snakes.forEach( snake => {
+        let testLength = 0;
         snake.#tail.forEach( ( segment, index, tail ) => {
-          const cx = this.x - segment.x;
-          const cy = this.y - segment.y;
-          const angle = Math.atan2( cy, cx );
-          const dist = Math.hypot( cx, cy ) - snake.size * ( index / tail.length ) - this.size;
+          testLength += segment.length;
 
-          vectors.push( { 
-            angle: angle,
-            dist: dist,
-          } );
+          // If it's us, don't check against the head
+          if ( snake != this || testLength < this.#length - this.size * 2 ) {
+            const cx = this.x - segment.x;
+            const cy = this.y - segment.y;
+            const angle = Math.atan2( cy, cx );
+            const dist = Math.hypot( cx, cy ) - snake.size * ( index / tail.length ) - this.size;
+
+            vectors.push( { 
+              angle: angle,
+              dist: dist,
+            } );
+          }
         } );
       } );
 
@@ -265,8 +272,7 @@
         return true;
       } );
 
-      // TODO: Check ourselves as well, but avoid head
-      const vectors = snake.getVectors( snakes.filter( e => e != snake ) );
+      const vectors = snake.getVectors( snakes );
 
       snake.isAlive &= vectors.every( vector => vector.dist > 0 );
 
@@ -280,7 +286,8 @@
         let closest = apples.map( 
           apple => ( { apple: apple, dist: snake.distanceTo( apple ) } )
         ).reduce( 
-          ( acc, appleDist ) => appleDist.dist < acc.dist ? appleDist : acc,
+          ( acc, appleDist ) => 
+            Settings.MinimumAppleDist < appleDist.dist && appleDist.dist < acc.dist ? appleDist : acc,
           { apple: null, dist: Infinity }
         );
 
