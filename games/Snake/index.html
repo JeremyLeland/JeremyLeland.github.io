@@ -108,8 +108,7 @@
             const angle = Math.atan2( cy, cx );
             const dist = Math.hypot( cx, cy ) - snake.size * ( index / tail.length ) - this.size;
 
-            let angleDelta = Math.abs( angle - this.#angle );
-            angleDelta = angleDelta > Math.PI ? Math.PI * 2 - angleDelta : angleDelta;
+            let angleDelta = Math.abs( fixAngleTo( angle, this.#angle ) - this.#angle );
 
             if ( angleDelta > Math.PI / 2) {
               vectors.push( { 
@@ -125,13 +124,7 @@
     }
 
     turnTowardAngle( goalAngle, dt ) {
-      // Fix internal angle to better match goal angle
-      if ( goalAngle - this.#angle > Math.PI ) {
-        this.#angle += Math.PI * 2;
-      }
-      else if ( this.#angle - goalAngle > Math.PI ) {
-        this.#angle -= Math.PI * 2;
-      }
+      this.#angle = fixAngleTo( this.#angle, goalAngle );
 
       // Turn toward goal angle
       if ( goalAngle < this.#angle ) {
@@ -217,6 +210,17 @@
     }
   }
 
+  function fixAngleTo( angle, otherAngle ) {
+    if ( otherAngle - angle > Math.PI ) {
+      return angle + Math.PI * 2;
+    }
+    else if ( angle - otherAngle > Math.PI ) {
+      return angle - Math.PI * 2;
+    }
+
+    return angle;
+  }
+
   class Apple {
     x;
     y;
@@ -300,8 +304,6 @@
         const goalY = closest.apple?.y ?? snake.wanderY;
 
         // Try to avoid other snakes
-        // TODO: Find way to ignore our own body unless we're headed to it...
-        //       maybe only include segments that are in front of us?
         const weighted = vectors.map( vector => {
           const weightedDist = Math.abs( Settings.AvoidWeight / Math.pow( vector.dist, Settings.AvoidPower ) );
           return { 
