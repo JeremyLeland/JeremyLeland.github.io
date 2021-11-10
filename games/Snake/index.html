@@ -5,9 +5,9 @@
   .snake { stroke: black; stroke-width: 2; }
   .apple { fill: red; stroke: black; stroke-width: 2; }
 
-  .goalForce { stroke: gray; stroke-width: 2; visibility: hidden; }
-  .avoidForce { stroke: black; visibility: hidden; }
-  .finalForce { stroke: green; stroke-width: 3; visibility: hidden; }
+  .goalForce { stroke: gray; stroke-width: 2; }
+  .avoidForce { stroke: black; }
+  .finalForce { stroke: green; stroke-width: 3; }
 </style>
 
 <body>
@@ -108,10 +108,15 @@
             const angle = Math.atan2( cy, cx );
             const dist = Math.hypot( cx, cy ) - snake.size * ( index / tail.length ) - this.size;
 
-            vectors.push( { 
-              angle: angle,
-              dist: dist,
-            } );
+            let angleDelta = Math.abs( angle - this.#angle );
+            angleDelta = angleDelta > Math.PI ? Math.PI * 2 - angleDelta : angleDelta;
+
+            if ( angleDelta > Math.PI / 2) {
+              vectors.push( { 
+                angle: angle,
+                dist: dist,
+              } );
+            }
           }
         } );
       } );
