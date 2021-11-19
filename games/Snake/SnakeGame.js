@@ -8,17 +8,18 @@ export const Settings = {
   AvoidPower: 1,
   DrawForces: false,
   MinimumAppleDist: 20,
+  AppleGrowLength: 100,
 };
 
 export class Snake {
   x;
   y;
+  goalAngle;
+
   #angle = 0;
   #turnSpeed = 0.005;
   #tail = [];
   #length = 0;
-
-  isAlive = true;
 
   wanderX = Math.random() * window.innerWidth;
   wanderY = Math.random() * window.innerHeight;
@@ -27,7 +28,7 @@ export class Snake {
   size = 10;
   maxLength = 100;
 
-  #color = `hsl( ${ Math.random() * 360 }deg, 50%, 50% )`;
+  #color = `hsl( ${ Math.random() * 360 }deg, ${ Math.random() * 50 + 25 }%, ${ Math.random() * 50 + 25 }% )`;
 
   #bodySVG = document.createElementNS( SVGNS, 'path' );
   #goalForceSVG = document.createElementNS( SVGNS, 'path' );
@@ -41,6 +42,7 @@ export class Snake {
   ) {
     this.x = x;
     this.y = y;
+    this.goalAngle = angle;
     this.#angle = angle;
 
     setInterval( () => {
@@ -54,18 +56,18 @@ export class Snake {
     this.#bodySVG.style.fill = this.#color;
     svg.appendChild( this.#bodySVG );
 
-    this.#goalForceSVG.setAttribute( 'class', 'goalForce' );
+    this.#goalForceSVG.setAttribute( 'class', 'goal' );
     svg.appendChild( this.#goalForceSVG );
 
-    this.#avoidForcesSVG.setAttribute( 'class', 'avoidForce' );
+    this.#avoidForcesSVG.setAttribute( 'class', 'avoid' );
     svg.appendChild( this.#avoidForcesSVG );
 
-    this.#finalForceSVG.setAttribute( 'class', 'finalForce' );
+    this.#finalForceSVG.setAttribute( 'class', 'final' );
     svg.appendChild( this.#finalForceSVG );
   }
 
   // TODO: Clean up kill vs destroy
-  destroy() {
+  remove() {
     this.#bodySVG.remove();
     this.#goalForceSVG.remove();
     this.#avoidForcesSVG.remove();
@@ -116,19 +118,7 @@ export class Snake {
     return vectors;
   }
 
-  turnTowardAngle( goalAngle, dt ) {
-    this.#angle = fixAngleTo( this.#angle, goalAngle );
-
-    // Turn toward goal angle
-    if ( goalAngle < this.#angle ) {
-      this.#angle = Math.max( goalAngle, this.#angle - this.#turnSpeed * dt );
-    }
-    else if ( this.#angle < goalAngle ) {
-      this.#angle = Math.min( goalAngle, this.#angle + this.#turnSpeed * dt );
-    }
-  }
-
-  getGoalAngle( apples, avoidVectors ) {
+  think( apples, avoidVectors ) {
     let closest = apples.map( 
       apple => ( { apple: apple, dist: this.distanceTo( apple ) } )
     ).reduce( 
@@ -149,26 +139,50 @@ export class Snake {
       };
     } );
 
-    this.drawAvoidForces( weighted );
-
     const goalAngle = Math.atan2( goalY - this.y, goalX - this.x );
     const goalForce = {
       x: Settings.GoalWeight * Math.cos( goalAngle ), 
       y: Settings.GoalWeight * Math.sin( goalAngle ),
     }
 
-    this.drawGoalForce( goalForce );
-
     const finalForce = weighted.reduce(
       ( acc, wv ) => ( { x: acc.x + wv.x, y: acc.y + wv.y } ),
       goalForce
     );
-    this.drawFinalForce( finalForce );
 
-    return Math.atan2( finalForce.y, finalForce.x );
+    if ( Settings.DrawForces ) {
+      const len = 100 * weighted.length;
+      this.#avoidForcesSVG.setAttribute( 'd', 
+        weighted.map( wv => this.#getForceDString( wv, len ) ).join( ' ' )
+      );
+      this.#goalForceSVG.setAttribute( 'd', this.#getForceDString( goalForce ) );
+      this.#finalForceSVG.setAttribute( 'd', this.#getForceDString( finalForce ) );
+    }
+
+    this.goalAngle = Math.atan2( finalForce.y, finalForce.x );
+  }
+
+  tryEatApple( apple ) {
+    if ( this.distanceTo( apple ) < this.size + apple.size ) {
+      this.maxLength += Settings.AppleGrowLength;
+      apple.remove();
+      return true;
+    }
+
+    return false;
   }
 
   update( dt ) {
+    // Turn toward goal angle
+    this.#angle = fixAngleTo( this.#angle, this.goalAngle );
+    if ( this.goalAngle < this.#angle ) {
+      this.#angle = Math.max( this.goalAngle, this.#angle - this.#turnSpeed * dt );
+    }
+    else if ( this.#angle < this.goalAngle ) {
+      this.#angle = Math.min( this.goalAngle, this.#angle + this.#turnSpeed * dt );
+    }
+
+    // Move forward
     const moveDist = this.speed * dt;
 
     this.x += Math.cos( this.#angle ) * moveDist;
@@ -181,30 +195,14 @@ export class Snake {
       this.#length -= this.#tail.shift().length;
     }
 
+    // Draw
     this.#bodySVG.setAttribute( 'd', this.#getDString() );
   }
 
-  drawGoalForce( goalForce ) {
-    this.#goalForceSVG.setAttribute( 'd', 
-      `M ${ this.x },${ this.y } L ${ this.x + goalForce.x * 100 },${ this.y + goalForce.y * 100 }`
-    );
+  #getForceDString( force, length = 100 ) {
+    return `M ${ this.x },${ this.y } L ${ this.x + force.x * length },${ this.y + force.y * length }`
   }
-
-  drawFinalForce( finalForce ) {
-    this.#finalForceSVG.setAttribute( 'd', 
-      `M ${ this.x },${ this.y } L ${ this.x + finalForce.x * 100 },${ this.y + finalForce.y * 100 }`
-    );
-  }
-
-  drawAvoidForces( avoidForces ) {
-    const len = 100 * avoidForces.length;
-    this.#avoidForcesSVG.setAttribute( 'd', 
-      avoidForces.map( wv => 
-        `M ${ this.x },${ this.y } L ${ this.x + wv.x * len },${ this.y + wv.y * len }`
-      ).join( ' ' )
-    );
-  }
-
+      
   #getDString() {
     if ( this.#tail.length > 0 ) {
       const leftCoords = [], rightCoords = [];
@@ -267,7 +265,7 @@ export class Apple {
     svg.appendChild( this.#svg );
   }
 
-  destroy() {
+  remove() {
     this.#svg.remove();
   }
 }
