@@ -7,7 +7,7 @@ export class Jumper extends Game {
    static CAMERA_FOLLOW_Y = 3
    static CAMERA_FOLLOW_Z = 4
 
-   static VERSION = 0.81
+   static VERSION = 0.82
 
    static GameState = {
       LEVEL_LOADING: 0,
@@ -48,7 +48,7 @@ export class Jumper extends Game {
    constructor() {
       super()
 
-      this.keyBindings = { "left": 37, "up": 38, "right": 39, "down": 40, "jump": 32 }
+      this.keyBindings = { "left": 37, "up": 38, "right": 39, "down": 40, "jump": 32, "next": 78 }
 
       this.prepareUI()
 
@@ -162,6 +162,10 @@ export class Jumper extends Game {
       }
       else {
          this.levelUI.style.visibility = 'hidden'
+      }
+
+      if ( this.keyDown[ "next" ] ) {
+         this.nextLevel();
       }
 
       this.updatePlayerControls()
