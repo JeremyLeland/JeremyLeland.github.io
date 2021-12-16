@@ -7,7 +7,7 @@ export class Jumper extends Game {
    static CAMERA_FOLLOW_Y = 3
    static CAMERA_FOLLOW_Z = 4
 
-   static VERSION = 0.82
+   static VERSION = 0.83
 
    static GameState = {
       LEVEL_LOADING: 0,
