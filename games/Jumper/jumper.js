@@ -87,6 +87,11 @@ export class Jumper extends Game {
       }
    }
 
+   loadLevel( src ) {
+      this.gameState = Jumper.GameState.LEVEL_LOADING
+      this.level = new Level( '<Custom Level>', src )
+   }
+
    anyKeyPressed() {
       for (let key in this.keyDown) {
          if (this.keyDown[key]) {

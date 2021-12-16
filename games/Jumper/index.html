@@ -10,14 +10,35 @@
 	<body bgcolor="black" text="white">
       <script type="module">
          import { Jumper } from "./jumper.js"
-         globalThis.jumper = new Jumper()
+         const jumper = new Jumper();
+
+         //
+         // Drag and drop to load levels
+         //
+         window.ondragover = ( event ) => {
+            event.preventDefault();
+         }
+         window.ondrop = ( event ) => {
+            event.preventDefault();
+
+            if ( event.dataTransfer.items ) {
+               for ( let i = 0; i < event.dataTransfer.items.length; i ++ ) {
+                  if ( event.dataTransfer.items[ i ].kind === 'file' ) {
+                     const file = event.dataTransfer.items[ i ].getAsFile();
+                     const reader = new FileReader();
+                     reader.onloadend = () => {
+                        jumper.loadLevel( reader.result );
+                     };
+                     reader.readAsDataURL( file );
+                  }
+               }
+            }
+            else {
+               for ( let i = 0; i < event.dataTransfer.files.length; i ++ ) {
+                  jumper.loadLevel( event.dataTransfer.files[ i ].name );
+               }
+            }
+         }
       </script>
-      <!--<h3>Jumper</h3>
-      <p>Bounce your way to fame and glory.</p>
-      <ul>
-         <li><b>Left/Right Arrow Keys</b>: move</li>
-         <li><b>Up/Down Arrow Keys</b>: speed up/slow down</li>
-         <li><b>Spacebar</b>: jump</li>
-      </ul>-->
 	</body>
 </html>
