@@ -1,0 +1,19 @@
+<link rel="stylesheet" href="../style.css">
+
+<style>
+  canvas {
+    height: 100%;                 /* zoom in so we can see */
+    image-rendering: pixelated;   /* keep it crisp when we zoom in */
+  }
+</style>
+
+<body>
+</body>
+
+<script type="module">
+
+  import { Level } from '../src/Level.js';
+
+  document.body.append( Level.createRandomContext().canvas );
+
+</script>
