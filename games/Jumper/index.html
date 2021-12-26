@@ -1,11 +1,23 @@
 <head>
-  <title>Jumper v0.91</title>
+  <title>Jumper v0.92</title>
   <link rel='stylesheet' href='./style.css'>
+  <meta charset="utf-8">
 </head>
 
 <body>
   <div class='speed'>Speed: <span id='speed'></span></div>
-  <div id='title'>Jumper</div>
+  <div class="center">
+    <div id='title'>Jumper</div>
+    <div id='instructions'>
+      <span class="key">←</span><span class="action">Left</span>
+      <span class="key">→</span><span class="action">Right</span>
+      <span class="key">↑</span><span class="action">Faster</span>
+      <span class="key">↓</span><span class="action">Slower</span>
+      <span class="key">&nbsp;Space&nbsp;</span><span class="action">Jump</span>
+      <span class="key">N</span><span class="action">Next</span>
+      <span class="key">R</span><span class="action">Random</span>
+    </div>
+  </div>
 </body>
 
 <script type='module'>
@@ -55,9 +67,9 @@
   const scene = new THREE.Scene();
   scene.background = new THREE.Color( 0x010101 ); 
 
-  // TODO: Ambient lighting for sides of blocks?
+  scene.add( new THREE.AmbientLight( 0xffffff, 0.2 ) );
 
-  const light = new THREE.DirectionalLight();
+  const light = new THREE.DirectionalLight( 0xffffff, 0.8 );
   light.castShadow = true;
 
   light.shadow.camera.left = -5;
