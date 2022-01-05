@@ -67,10 +67,17 @@
   const MAX_GUESSES = 6;
   const NUM_LETTERS = 5;
 
+  const Guess = { Correct: 'correct', Partial: 'partial', Wrong: 'wrong' };
+
   class Board {
+    answer;
     div;
 
-    constructor() {
+    #guessIndex = 0;
+
+    constructor( answer ) {
+      this.answer = answer;
+
       this.div = document.createElement( 'div' );
       this.div.className = 'board';
 
@@ -91,17 +98,36 @@
     addWord( word ) {
       const letters = word.split('');
 
-      const guess = this.div.children[ 0 ];
+      const guess = this.div.children[ this.#guessIndex ];
 
       for ( let i = 0; i < NUM_LETTERS; i ++ ) {
-        guess.children[ i ].innerText = letters[ i ] ?? '';
+        const letter = letters[ i ] ?? '';
+        const letterDiv = guess.children[ i ];
+
+        letterDiv.innerText = letter;
+
+        if ( letter == this.answer[ i ] ) {
+          letterDiv.classList.add( Guess.Correct );
+        }
+        else if ( this.answer.includes( letter ) ) {
+          letterDiv.classList.add( Guess.Partial );
+        }
+        else {
+          letterDiv.classList.add( Guess.Wrong );
+        }
       }
+
+      this.#guessIndex ++;
     }
   }
 
-  const board = new Board();
+  const board = new Board( 'draws' );
 
   document.body.appendChild( board.div );
+
+  board.addWord( 'words' );
+  board.addWord( 'smart' );
+  board.addWord( 'braid' );
 
 </script>
 
