@@ -74,6 +74,7 @@
     div;
 
     #guessIndex = 0;
+    #letterIndex = 0;
 
     constructor( answer ) {
       this.answer = answer;
@@ -119,6 +120,20 @@
 
       this.#guessIndex ++;
     }
+
+    addLetter( letter ) {
+      if ( this.#letterIndex < NUM_LETTERS ) {
+        const letterDiv = this.div.children[ this.#guessIndex ].children[ this.#letterIndex ];
+        letterDiv.innerText = letter;
+        this.#letterIndex ++;
+      }
+    }
+
+    clearLetter() {
+      this.#letterIndex --;
+      const letterDiv = this.div.children[ this.#guessIndex ].children[ this.#letterIndex ];
+      letterDiv.innerText = '';
+    }
   }
 
   const board = new Board( 'draws' );
@@ -129,24 +144,13 @@
   board.addWord( 'smart' );
   board.addWord( 'braid' );
 
-</script>
-
-<!-- const Status = { Absent: 0, Partial: 1, Correct: 2 };
-
-const answer = 'wordie';
-
-function test( guess ) {
-  const response = [];      // Make this an object instead, { w: Correct, i: Partial, x: Absent }
-
-  for ( let i = 0; i < guess.length; i ++ ) {
-    if ( answer[ i ] == guess[ i ] ) {
-      response.push( Status.Correct );
+  document.onkeydown = ( e ) => {
+    if ( e.key.length == 1 && /[a-z]/i.test( e.key ) ) {
+      board.addLetter( e.key );
     }
-    else if ( answer.includes( guess[ i ] ) ) {
-      response.push( Status.Partial );
-    }
-    else {
-      response.push( Status.Absent );
+    else if ( e.key == 'Backspace' ) {
+      board.clearLetter();
     }
   }
-} -->
+
+</script>
