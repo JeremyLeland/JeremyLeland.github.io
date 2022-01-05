@@ -1,0 +1,55 @@
+<style>
+  .board {
+    display: table;
+  }
+
+  .guess {
+    display: table-row;
+  }
+
+  .letter {
+    display: table-cell;
+    border: 2px solid black;
+    width: 48px;
+    height: 48px;
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: 32px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .correct {
+    background-color: green;
+    color: white;
+  }
+
+  .partial {
+    background-color: olive;
+    color: white;
+  }
+
+  .wrong {
+    background-color: gray;
+    color: white;
+  }
+</style>
+
+<body>
+  <div class="board">
+    <div class="guess">
+      <div class="letter wrong">W</div>
+      <div class="letter partial">O</div>
+      <div class="letter correct">R</div>
+      <div class="letter wrong">D</div>
+      <div class="letter partial">S</div>
+    </div>
+    <div class="guess">
+      <div class="letter">G</div>
+      <div class="letter">U</div>
+      <div class="letter">E</div>
+      <div class="letter">S</div>
+      <div class="letter">S</div>
+    </div>
+  </div>
+</body>
