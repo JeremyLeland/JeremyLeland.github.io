@@ -1,3 +1,4 @@
+<title>Wordie v0.5</title>
 <style>
   body {
     margin: 0;
@@ -108,31 +109,34 @@
 
     applyGuess() {
       const guess = this.div.children[ this.#guessIndex ];
+      const word = [ ...guess.children ].map( child => child.textContent ).join('');
 
-      for ( let i = 0; i < NUM_LETTERS; i ++ ) {
-        const letterDiv = guess.children[ i ];
-        const letter = letterDiv.textContent;
+      if ( words.includes( word ) ) {
+        for ( let i = 0; i < NUM_LETTERS; i ++ ) {
+          const letterDiv = guess.children[ i ];
+          const letter = letterDiv.textContent;
 
-        if ( letter == this.answer[ i ] ) {
-          letterDiv.classList.add( Guess.Correct );
+          if ( letter == this.answer[ i ] ) {
+            letterDiv.classList.add( Guess.Correct );
 
-          alphabet[ letter ].classList.remove( Guess.Partial );
-          alphabet[ letter ].classList.add( Guess.Correct );
+            alphabet[ letter ].classList.remove( Guess.Partial );
+            alphabet[ letter ].classList.add( Guess.Correct );
+          }
+          else if ( this.answer.includes( letter ) ) {
+            letterDiv.classList.add( Guess.Partial );
+
+            alphabet[ letter ].classList.remove( Guess.Correct );
+            alphabet[ letter ].classList.add( Guess.Partial );
+          }
+          else {
+            letterDiv.classList.add( Guess.Wrong );
+            alphabet[ letter ].classList.add( Guess.Wrong );
+          }
         }
-        else if ( this.answer.includes( letter ) ) {
-          letterDiv.classList.add( Guess.Partial );
 
-          alphabet[ letter ].classList.remove( Guess.Correct );
-          alphabet[ letter ].classList.add( Guess.Partial );
-        }
-        else {
-          letterDiv.classList.add( Guess.Wrong );
-          alphabet[ letter ].classList.add( Guess.Wrong );
-        }
-      }
-
-      this.#guessIndex ++;
-      this.#letterIndex = 0;
+        this.#guessIndex ++;
+        this.#letterIndex = 0;
+      }      
     }
   }
 
