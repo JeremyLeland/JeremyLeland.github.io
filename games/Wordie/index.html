@@ -44,22 +44,6 @@
 </style>
 
 <body>
-  <!-- <div class="board">
-    <div class="guess">
-      <div class="letter wrong">W</div>
-      <div class="letter partial">O</div>
-      <div class="letter correct">R</div>
-      <div class="letter wrong">D</div>
-      <div class="letter partial">S</div>
-    </div>
-    <div class="guess">
-      <div class="letter">G</div>
-      <div class="letter">U</div>
-      <div class="letter">E</div>
-      <div class="letter">S</div>
-      <div class="letter">S</div>
-    </div>
-  </div> -->
 </body>
 
 <script>
@@ -96,16 +80,28 @@
       }
     }
 
-    addWord( word ) {
-      const letters = word.split('');
+    addLetter( letter ) {
+      if ( this.#letterIndex < NUM_LETTERS ) {
+        const letterDiv = this.div.children[ this.#guessIndex ].children[ this.#letterIndex ];
+        letterDiv.textContent = letter;
+        this.#letterIndex ++;
+      }
+    }
 
+    clearLetter() {
+      if ( 0 < this.#letterIndex ) {
+        this.#letterIndex --;
+        const letterDiv = this.div.children[ this.#guessIndex ].children[ this.#letterIndex ];
+        letterDiv.textContent = '';
+      }
+    }
+
+    applyGuess() {
       const guess = this.div.children[ this.#guessIndex ];
 
       for ( let i = 0; i < NUM_LETTERS; i ++ ) {
-        const letter = letters[ i ] ?? '';
         const letterDiv = guess.children[ i ];
-
-        letterDiv.innerText = letter;
+        const letter = letterDiv.textContent;
 
         if ( letter == this.answer[ i ] ) {
           letterDiv.classList.add( Guess.Correct );
@@ -119,20 +115,7 @@
       }
 
       this.#guessIndex ++;
-    }
-
-    addLetter( letter ) {
-      if ( this.#letterIndex < NUM_LETTERS ) {
-        const letterDiv = this.div.children[ this.#guessIndex ].children[ this.#letterIndex ];
-        letterDiv.innerText = letter;
-        this.#letterIndex ++;
-      }
-    }
-
-    clearLetter() {
-      this.#letterIndex --;
-      const letterDiv = this.div.children[ this.#guessIndex ].children[ this.#letterIndex ];
-      letterDiv.innerText = '';
+      this.#letterIndex = 0;
     }
   }
 
@@ -140,16 +123,15 @@
 
   document.body.appendChild( board.div );
 
-  board.addWord( 'words' );
-  board.addWord( 'smart' );
-  board.addWord( 'braid' );
-
   document.onkeydown = ( e ) => {
     if ( e.key.length == 1 && /[a-z]/i.test( e.key ) ) {
       board.addLetter( e.key );
     }
     else if ( e.key == 'Backspace' ) {
       board.clearLetter();
+    }
+    else if ( e.key == 'Enter' ) {
+      board.applyGuess();
     }
   }
 
