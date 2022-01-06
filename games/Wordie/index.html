@@ -56,7 +56,7 @@
   <h1>Wordie</h1>
 </body>
 
-<script>
+<script type="module">
 
   const MAX_GUESSES = 6;
   const NUM_LETTERS = 5;
@@ -136,7 +136,11 @@
     }
   }
 
-  const board = new Board( 'draws' );
+  const words = ( await ( await fetch( 'sgb-words.txt' ) ).text() ).split( '\n' );
+  
+  const index = Math.floor( Math.random() * 1000 );
+
+  const board = new Board( words[ index ] );
 
   document.body.appendChild( board.div );
 
