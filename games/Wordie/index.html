@@ -17,6 +17,12 @@
     display: table-row;
   }
 
+  .message {
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+  }
+
   .letter {
     display: table-cell;
     border: 2px solid black;
@@ -62,6 +68,8 @@
   const MAX_GUESSES = 6;
   const NUM_LETTERS = 5;
 
+  const DEFAULT_MESSAGE = 'Choose your letters then click Guess.';
+
   const Guess = { Wrong: 'wrong', Partial: 'partial', Correct: 'correct' };
 
   class Board {
@@ -96,6 +104,11 @@
         const letterDiv = this.div.children[ this.#guessIndex ].children[ this.#letterIndex ];
         letterDiv.textContent = letter;
         this.#letterIndex ++;
+
+        messageDiv.textContent = DEFAULT_MESSAGE;
+      }
+      else {
+        messageDiv.textContent = 'Too many letters!';
       }
     }
 
@@ -104,39 +117,68 @@
         this.#letterIndex --;
         const letterDiv = this.div.children[ this.#guessIndex ].children[ this.#letterIndex ];
         letterDiv.textContent = '';
+
+        messageDiv.textContent = DEFAULT_MESSAGE;
+      }
+      else {
+        messageDiv.textContent = 'Already empty!';
       }
     }
 
     applyGuess() {
+      if ( this.#letterIndex != NUM_LETTERS ) {
+        messageDiv.textContent = `Not enough letters!`;
+        return;
+      }
+
       const guess = this.div.children[ this.#guessIndex ];
-      const word = [ ...guess.children ].map( child => child.textContent ).join('');
+      const word = [ ...guess?.children ].map( child => child.textContent ).join('');
 
-      if ( words.includes( word ) ) {
-        for ( let i = 0; i < NUM_LETTERS; i ++ ) {
-          const letterDiv = guess.children[ i ];
-          const letter = letterDiv.textContent;
+      if ( !words.includes( word ) ) {
+        messageDiv.textContent = `'${ word.toUpperCase() }' is not an allowed word.`;
+        return;
+      }
 
-          if ( letter == this.answer[ i ] ) {
-            letterDiv.classList.add( Guess.Correct );
+      let numTotal = 0, numCorrect = 0;
 
-            alphabet[ letter ].classList.remove( Guess.Partial );
-            alphabet[ letter ].classList.add( Guess.Correct );
-          }
-          else if ( this.answer.includes( letter ) ) {
-            letterDiv.classList.add( Guess.Partial );
+      for ( let i = 0; i < NUM_LETTERS; i ++ ) {
+        const letterDiv = guess.children[ i ];
+        const letter = letterDiv.textContent;
 
-            alphabet[ letter ].classList.remove( Guess.Correct );
-            alphabet[ letter ].classList.add( Guess.Partial );
-          }
-          else {
-            letterDiv.classList.add( Guess.Wrong );
-            alphabet[ letter ].classList.add( Guess.Wrong );
-          }
+        if ( letter == this.answer[ i ] ) {
+          letterDiv.classList.add( Guess.Correct );
+
+          alphabet[ letter ].classList.remove( Guess.Partial );
+          alphabet[ letter ].classList.add( Guess.Correct );
+
+          numCorrect ++;
+          numTotal ++;
         }
+        else if ( this.answer.includes( letter ) ) {
+          letterDiv.classList.add( Guess.Partial );
 
-        this.#guessIndex ++;
-        this.#letterIndex = 0;
-      }      
+          alphabet[ letter ].classList.remove( Guess.Correct );
+          alphabet[ letter ].classList.add( Guess.Partial );
+
+          numTotal ++;
+        }
+        else {
+          letterDiv.classList.add( Guess.Wrong );
+          alphabet[ letter ].classList.add( Guess.Wrong );
+        }
+      }
+
+      messageDiv.textContent = `Found ${ numTotal } letters, ${ numCorrect } in correct spot.`;
+
+      this.#guessIndex ++;
+      this.#letterIndex = 0;
+      
+      if ( word == this.answer ) {
+        messageDiv.textContent = `Correctly guessed with ${ this.#guessIndex } tries!`;
+      }
+      else if ( this.#guessIndex == MAX_GUESSES ) {
+        messageDiv.textContent = `Out of tries! Answer was: '${ this.answer.toUpperCase() }'.`;
+      }
     }
   }
 
@@ -152,13 +194,18 @@
 
   const clearButton = document.createElement( 'div' );
   clearButton.className = 'letter';
-  clearButton.innerHTML = '&nbsp;Clear&nbsp;'
+  clearButton.innerHTML = '&nbsp;Clear&nbsp;';
   clearButton.onclick = () => board.clearLetter();
   document.body.appendChild( clearButton );
 
+  const messageDiv = document.createElement( 'div' );
+  messageDiv.className = 'message';
+  messageDiv.textContent = DEFAULT_MESSAGE;
+  document.body.appendChild( messageDiv );
+
   const applyButton = document.createElement( 'div' );
   applyButton.className = 'letter';
-  applyButton.innerHTML = '&nbsp;Guess&nbsp;'
+  applyButton.innerHTML = '&nbsp;Guess&nbsp;';
   applyButton.onclick = () => board.applyGuess();
   document.body.appendChild( applyButton );
 
