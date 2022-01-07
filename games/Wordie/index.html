@@ -1,4 +1,4 @@
-<title>Wordie v0.5</title>
+<title>Wordie v0.51</title>
 <meta name="viewport" content="width=device-width, user-scalable=no">
 <meta charset="utf-8">
 <style>
@@ -229,9 +229,9 @@
   const clearButton = document.createElement( 'div' );
   clearButton.className = 'letter';
   clearButton.style = 'font-size: 20px; height: 20px';
-  clearButton.textContent = '⌫';
+  clearButton.innerHTML = '&nbsp;Clear&nbsp;';
   clearButton.onclick = () => board.clearLetter();
-  alphabetDiv.lastChild.appendChild( clearButton );
+  document.body.appendChild( clearButton );
 
   const messageDiv = document.createElement( 'div' );
   messageDiv.className = 'message';
