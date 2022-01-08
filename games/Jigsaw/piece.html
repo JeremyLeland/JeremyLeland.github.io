@@ -2,6 +2,12 @@
   .shadows {
     filter: drop-shadow( 1px 1px gray );
   }
+  .piece {
+    position: absolute;
+    background-image: url(https://asset.bloomnation.com/c_pad,d_vendor:global:catalog:product:image.png,f_auto,fl_preserve_transparency,q_auto/v1605326787/vendor/364/catalog/product/s/h/shutterstock_90055534_30.jpg);
+    width: 150px;
+    height: 150px;
+  }
 </style>
 <body>
   <div class="shadows">
@@ -10,10 +16,34 @@
 
 <script>
 
-  const path = 'M 0,0 L 40,0 C 30,25 70,25 60,0 L 100,0 L 100,40 C 125,30 125,70 100,60 L 100,100 L 60,100 C 70,75 30,75, 40,100 L 0,100 Z';
+  const image = '';
 
-  const piece = document.createElement( 'img' );
-  piece.src = 'https://interactive-examples.mdn.mozilla.net/media/examples/balloon-small.jpg';
-  piece.style.clipPath = `path(' ${ path } ')`;
-  document.body.appendChild( piece );
+  // NOTE: Array looks like:
+  //   N
+  //  W E
+  //   S 
+  const offsets = [
+      [  25 ],
+    [ -25, -25 ],
+      [ 25 ],
+  ];
+
+  for ( let row = 0; row < 2; row ++ ) {
+    for ( let col = 0; col < 2; col ++ ) {
+      const path = `m 0,0 ` +
+        `l  40,   0 c -10,${ offsets[ 0 ][ 0 ] } 30,${ offsets[ 0 ][ 0 ] } 20,0 l 40,0 ` + 
+        `l   0,  40 c ${ offsets[ 1 ][ 0 ] },-10 ${ offsets[ 1 ][ 0 ] },30 0,20 l 0,40 ` +
+        `l -40,   0 c 10,${ offsets[ 1 ][ 1 ] } -30,${ offsets[ 1][ 1 ] } -20,0 l -40,0 ` +
+        `l   0, -40 c ${ offsets[ 2 ][ 0 ] },10 ${ offsets[ 2 ][ 0 ] },-30 0,-20 l 0,-40`;
+
+      const piece = document.createElement( 'div' );
+      piece.className = 'piece';
+      piece.style.clipPath = `path(' ${ path } ')`;
+      piece.style.backgroundPositionX = `${ -col * 100 }px`;
+      piece.style.backgroundPositionY = `${ -row * 100 }px`;
+      piece.style.transform = `translate( ${ col * 200 }px, ${ row * 200 }px )`;
+      document.body.appendChild( piece );
+    }
+  }
+  
 </script>
