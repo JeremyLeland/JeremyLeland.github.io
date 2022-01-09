@@ -29,13 +29,25 @@
       piece.style.transform = `translate( ${ col * 102 }px, ${ row * 102 }px )`;
 
       piece.onclick = () => {
-        piece.col ++;
-        piece.animate( {
-          transform: [ `translate( ${ piece.col * 102 }px, ${ piece.row * 102 }px )` ],
-        }, {
-          duration: 500,
-          fill: 'forwards',
-        } );
+        let dx = 0, dy = 0;
+        if ( piece.row > 0 && !board[ piece.col ][ piece.row - 1 ] )  dy = -1;
+        if ( piece.col > 0 && !board[ piece.col - 1 ][ piece.row ] )  dx = -1;
+        if ( piece.row < rows - 1 && !board[ piece.col ][ piece.row + 1 ] )  dy = 1;
+        if ( piece.col < cols - 1 && !board[ piece.col + 1 ][ piece.row ] )  dx = 1;
+
+        if ( dx != 0 || dy != 0 ) {
+          board[ piece.col ][ piece.row ] = null;
+          piece.col += dx;
+          piece.row += dy;
+          board[ piece.col ][ piece.row ] = piece;
+
+          piece.animate( {
+            transform: [ `translate( ${ piece.col * 102 }px, ${ piece.row * 102 }px )` ],
+          }, {
+            duration: 200,
+            fill: 'forwards',
+          } );
+        }
       }
 
       document.body.appendChild( piece );
