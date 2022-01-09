@@ -1,0 +1,46 @@
+<style>
+  .piece {
+    position: absolute;
+    background-image: url(https://thumbs.dreamstime.com/b/frangipani-flowers-10997030.jpg);
+    width: 100px;
+    height: 100px;
+    border: 1px solid black;
+  }
+</style>
+
+<body>
+</body>
+
+<script>
+
+  const cols = 3, rows = 3;
+  const board = Array( cols ).fill().map( _ => Array( rows ).fill() );
+
+  for ( let row = 0; row < rows; row ++ ) {
+    for ( let col = 0; col < cols; col ++ ) {
+      if ( row == rows - 1 && col == cols - 1 )   break;
+      
+      const piece = document.createElement( 'div' );
+      piece.className = 'piece';
+      piece.col = col;
+      piece.row = row;
+      piece.style.backgroundPositionX = `${ -col * 100 }px`;
+      piece.style.backgroundPositionY = `${ -row * 100 }px`;
+      piece.style.transform = `translate( ${ col * 102 }px, ${ row * 102 }px )`;
+
+      piece.onclick = () => {
+        piece.col ++;
+        piece.animate( {
+          transform: [ `translate( ${ piece.col * 102 }px, ${ piece.row * 102 }px )` ],
+        }, {
+          duration: 500,
+          fill: 'forwards',
+        } );
+      }
+
+      document.body.appendChild( piece );
+      board[ col ][ row ] = piece;
+    }
+  }
+
+</script>
