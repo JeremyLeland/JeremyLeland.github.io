@@ -55,6 +55,10 @@
   .alpha-row {
     display: table-row;
   }
+
+  .bottom {
+    margin: auto;
+  }
   
   .wrong {
     background-color: dimgray;
@@ -195,7 +199,7 @@
   }
 
   const words = ( await ( await fetch( 'sgb-words.txt' ) ).text() ).split( '\n' );
-  const board = new Board( words[ Math.floor( Math.random() * 1000 ) ] );
+  const board = new Board( words[ Math.floor( Math.random() * words.length ) ] );
 
   document.body.appendChild( board.div );
 
@@ -226,24 +230,29 @@
 
   document.body.appendChild( alphabetDiv );
 
+  const bottomDiv = document.createElement( 'div' );
+  bottomDiv.className = 'bottom';
+
   const clearButton = document.createElement( 'div' );
   clearButton.className = 'letter';
   clearButton.style = 'font-size: 20px; height: 20px';
   clearButton.innerHTML = '&nbsp;Clear&nbsp;';
   clearButton.onclick = () => board.clearLetter();
-  document.body.appendChild( clearButton );
+  bottomDiv.appendChild( clearButton );
 
   const messageDiv = document.createElement( 'div' );
   messageDiv.className = 'message';
   messageDiv.textContent = DEFAULT_MESSAGE;
-  document.body.appendChild( messageDiv );
+  bottomDiv.appendChild( messageDiv );
 
   const applyButton = document.createElement( 'div' );
   applyButton.className = 'letter';
   applyButton.style = 'font-size: 20px; height: 20px';
   applyButton.innerHTML = '&nbsp;Guess&nbsp;';
   applyButton.onclick = () => board.applyGuess();
-  document.body.appendChild( applyButton );
+  bottomDiv.appendChild( applyButton );
+
+  document.body.appendChild( bottomDiv );
 
   document.onkeydown = ( e ) => {
     if ( e.key.length == 1 && /[a-z]/i.test( e.key ) ) {
