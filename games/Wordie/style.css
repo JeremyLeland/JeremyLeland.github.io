@@ -1,0 +1,93 @@
+body {
+  margin: 0;
+  overscroll-behavior: none; /* Disable Chrome two fingers back/forward swipe */
+  user-select: none;  /* Prevent accidental selection while dragging mouse */
+
+  display: flex;
+  flex-flow: column;
+
+  font-family: sans-serif;
+}
+
+.wrapper {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.title {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 2em;
+  font-weight: bold;
+}
+
+h1 {
+  text-align: center;
+  vertical-align: middle;
+  margin: 4px;
+}
+
+#board {
+  display: table;
+  border-spacing: 4px;
+  font-size: 32px;
+  margin: auto;
+}
+
+.guess {
+  display: table-row;
+}
+
+.message {
+  flex-grow: 1;
+  text-align: center;
+}
+
+.button {
+  border: 2px solid black;
+  font-weight: bold;
+
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+
+  text-align: center;
+  vertical-align: middle;
+  text-transform: uppercase;
+
+  width: 72px;
+  height: 48px;
+}
+
+.letter {
+  display: table-cell;
+  width: 48px;
+}
+
+#alphabet {
+  display: table;
+  border-spacing: 2px;
+  margin: auto;
+}
+
+.alpha-row {
+  display: table-row;
+}
+
+.bottom {
+  display: flex;
+  align-items: center;
+}
+
+.wrong {
+  background-color: dimgray;
+  color: white;
+}
+.partial {
+  background-color: goldenrod;
+  color: white;
+}
+.correct {
+  background-color: green;
+  color: white;
+}
