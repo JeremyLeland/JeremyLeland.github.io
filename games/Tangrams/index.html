@@ -1,0 +1,328 @@
+<title>Tangrams v0.5</title>
+<meta name="viewport" content="width=device-width, user-scalable=no">
+<link rel='stylesheet' href='./style.css'>
+
+<style>
+  body {
+    display: flex;
+    touch-action: none;
+  }
+  svg {
+    stroke: black;
+    stroke-width: 0.04;
+  }
+  #main {
+    position: absolute;
+    background-color: gray;
+    width: 100%;
+    height: 100%;
+  }
+  #ui {
+    transform: translateY( -4.9px );
+  }
+  #button {
+    fill: lightslategray;
+    width: 2px;
+    height: 2px;
+  }
+</style>
+
+<body>
+  <svg id="main" viewBox="-6 -6 12 12" preserveAspectRatio="xMidYMin">
+    <defs id="defs">
+      <rect id="button" x="-1" y="-1" rx="0.5px"></rect>
+    </defs>
+    <g id="ui"></g>
+    <g id="blocks"></g>
+  </svg>
+</body>
+
+<script>
+  const svg = document.getElementById( 'main' );
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const TRI_HEIGHT = Math.sqrt( 3 ) / 2;
+  const THIN_WIDTH = Math.cos( Math.PI / 12 );
+
+  const BlockInfo = {
+    hexagon: {
+      points: [ 
+        [ -1, 0 ], [ -1/2, -TRI_HEIGHT ], [ 1/2, -TRI_HEIGHT ], [ 1, 0 ], [ 1/2, TRI_HEIGHT ], [ -1/2, TRI_HEIGHT ]
+      ],
+      color: 'yellow',
+    },
+    trapezoid: {
+      points: [ 
+        [ -1/2, -TRI_HEIGHT / 2 ], [ 1/2, -TRI_HEIGHT / 2 ], 
+        [ 1, TRI_HEIGHT / 2 ], [ 0, TRI_HEIGHT / 2 ], [ -1, TRI_HEIGHT / 2 ]
+      ],
+      color: 'red',
+    },
+    diamond: {
+      points: [ [ 0, -TRI_HEIGHT ], [ 1/2, 0 ], [ 0, TRI_HEIGHT ], [ -1/2, 0 ] ],
+      color: 'blue',
+    },
+    triangle: {
+      points: [ [ 0, -2 * TRI_HEIGHT / 3 ], [ 1/2, TRI_HEIGHT / 3 ], [ -1/2, TRI_HEIGHT / 3 ] ],
+      color: 'green',
+    },
+    square: {
+      points: [ [ -1/2, -1/2 ], [ 1/2, -1/2 ], [ 1/2, 1/2 ], [ -1/2, 1/2 ] ],
+      color: 'orange',
+    },
+    thin: {
+      points: [ [ 0, -THIN_WIDTH ], [ 1/4, 0 ], [ 0, THIN_WIDTH ], [ -1/4, 0 ] ],
+      color: 'tan',
+    },
+  };
+
+  function prepareDefs() {
+    const defs = document.getElementById( 'defs' );
+
+    for ( const type in BlockInfo ) {
+      const path = document.createElementNS( SVG_NS, 'path' );
+      path.id = type;
+
+      const info = BlockInfo[ type ];
+      path.setAttribute( 'd', `M ${ info.points.join( ' L ' ) } Z` );
+      path.setAttribute( 'fill', info.color );
+
+      defs.appendChild( path );
+    }
+  }
+  prepareDefs();
+
+  function prepareUI() {
+    const uiSvg = document.getElementById( 'ui' );
+
+    let x = -5;
+    for ( const type in BlockInfo ) {
+      const g = document.createElementNS( SVG_NS, 'g' );
+      g.style.transform = `translateX( ${ x }px )`;
+      x += 2;
+
+      [ '#button', `#${ type }` ].forEach( href => {
+        const use = document.createElementNS( SVG_NS, 'use' );
+        use.setAttribute( 'href', href );
+        g.appendChild( use );
+      } );
+
+      g.addEventListener( 'mousedown', ( e ) => addBlock( type, e ) );
+      g.addEventListener( 'touchstart', ( e ) => addBlock( type, e ) );
+
+      uiSvg.appendChild( g );
+    }
+  }
+  prepareUI();
+
+  const SNAP_DIST = 0.5;
+
+  class Edge {
+    x1;
+    y1;
+    x2;
+    y2;
+    owner;
+
+    constructor( info ) {
+      Object.assign( this, info );
+    }
+  }
+  
+  class Block {
+    type;
+    x = 0;
+    y = 0;
+    angle = 0;
+
+    edges = [];
+    #svg;
+
+    constructor( info ) {
+      Object.assign( this, info );
+
+      this.#svg = document.createElementNS( SVG_NS, 'use' );
+      this.#svg.setAttribute( 'href', `#${ this.type }` );
+      
+      this.#svg.addEventListener( 'wheel', wheel );
+      this.#svg.addEventListener( 'mousedown', inputStart );
+      this.#svg.addEventListener( 'touchstart', inputStart );
+
+      this.#svg.parent = this;
+
+      this.updateSVG();
+
+      blocksSVG.appendChild( this.#svg );
+    }
+
+    getEdges() {
+      const cos = Math.cos( this.angle );
+      const sin = Math.sin( this.angle );
+      
+      const edges = [];
+      const points = BlockInfo[ this.type ].points;
+      for ( let i = 0; i < points.length; i ++ ) {
+        const current = points[ i ], next = points[ ( i + 1 ) % points.length ];
+
+        edges.push( new Edge( {
+          x1: this.x + cos * current[ 0 ] - sin * current[ 1 ],
+          y1: this.y + sin * current[ 0 ] + cos * current[ 1 ],
+          x2: this.x + cos * next[ 0 ] - sin * next[ 1 ],
+          y2: this.y + sin * next[ 0 ] + cos * next[ 1 ],
+        } ) );
+      }
+
+      return edges;
+    }
+
+    updateSVG() {
+      this.#svg.style.transform = `translate( ${ this.x }px,${ this.y }px ) rotate( ${ this.angle }rad )`;
+    }
+  }
+
+
+  const blocks = [];
+
+  
+  const blocksSVG = document.getElementById( 'blocks' );
+
+  const level = [
+    { type: 'hexagon', x: -4, y: 0, angle: 0 },
+    { type: 'trapezoid', x: -2, y: 0, angle: 0 },
+    { type: 'diamond', x: 0, y: 0, angle: 0 },
+    { type: 'triangle', x: 2, y: 0, angle: 0 },
+    { type: 'square', x: 4, y: 0, angle: 0 },
+    { type: 'thin', x: 5, y: 0, angle: 0 },
+  ]
+
+  level.forEach( block => blocks.push( new Block( block ) ) );
+
+
+  blocks.forEach( block => block.updateSVG() );
+
+  
+  // // For later, if we ever try to save level state in URL
+  // const levelAscii = JSON.stringify( level );
+  // const levelBase64 = btoa( levelAscii );
+
+  // console.log( levelBase64 );
+
+  // 
+  // Input
+  //
+  document.addEventListener( 'mousemove', inputMove );
+  document.addEventListener( 'touchmove', inputMove );
+  document.addEventListener( 'mouseup', inputStop );
+  document.addEventListener( 'touchend', inputStop );
+
+  function getSVGPoint( e ) {
+    const pos = e.touches?.[ 0 ] ?? e;
+    const pt = svg.createSVGPoint();
+    pt.x = pos.pageX;
+    pt.y = pos.pageY;
+    return pt.matrixTransform( svg.getScreenCTM().inverse() );
+  }
+
+  let activeBlock, lastPos;
+  function wheel( e ) {
+    const block = activeBlock ?? e.currentTarget.parent;
+
+    block.angle -= ( e.wheelDelta / 120 ) * ( Math.PI / 12 );
+    block.updateSVG();
+  }
+
+  function inputStart( e ) {
+    activeBlock = e.currentTarget.parent;
+    lastPos = getSVGPoint( e );
+  }
+
+  function inputMove( e ) {
+    if ( activeBlock ) {
+      const pos = getSVGPoint( e );
+      const dx = pos.x - lastPos.x;
+      const dy = pos.y - lastPos.y;
+      lastPos = pos;
+
+      activeBlock.x += dx;
+      activeBlock.y += dy;
+
+      const activeEdges = activeBlock.getEdges();
+      const otherEdges = blocks.filter( b => b != activeBlock ).flatMap( b => b.getEdges() );
+      
+      const edgeDists = activeEdges.flatMap( a => otherEdges.map( b => {
+        // Since edges are running opposite directions, we will compare x1,y1 to x2,y2 and vice versa
+        const dAngle = deltaAngle(
+          Math.atan2( a.y2 - a.y1, a.x2 - a.x1 ),
+          Math.atan2( b.y1 - b.y2, b.x1 - b.x2 ),
+        );
+
+        const px = activeBlock.x - a.x1;
+        const py = activeBlock.y - a.y1;
+
+        const cos = Math.cos( dAngle );
+        const sin = Math.sin( dAngle );
+        const newX = px * cos - py * sin;
+        const newY = px * sin + py * cos;
+
+        const snapX = b.x2 + newX - activeBlock.x;
+        const snapY = b.y2 + newY - activeBlock.y;
+
+        // Only snap in direction we are already moving
+        const snapDir = snapX * dx + snapY * dy;
+
+        return {
+          snapX: snapX,
+          snapY: snapY,
+          snapDist: snapDir < -0.01 ? Infinity : Math.hypot( snapX, snapY ),
+          dAngle: dAngle
+        };
+      } ) );
+
+      // TODO: Take dx/dy into account when snapping -- are we moving toward snap or away from it?
+      //       We need to be able to move pieces again after they've snapped the first time
+
+      // Find closest edge with smallest difference in angle
+      edgeDists.sort( ( a, b ) => a.snapDist - b.snapDist );
+
+      // NOTE: Need to be generous with distances here since since the wrong lines sometimes appear closer
+      // TODO: Another possible way to do this would be some sort of "average distance" of x1,y1 and x2,y2
+      //       If both of those points are closer to segment, it would have lower "average distance" than an
+      //       edge where only one point touches
+      // TODO: Could also do the movement calculation below as part of distance detection, 
+      //       and use whichever has smallest move instead of the actual distance
+      const nearest = edgeDists.filter( e => e.snapDist - edgeDists[ 0 ].snapDist < 0.1 );
+      nearest.sort( ( a, b ) => Math.abs( a.dAngle ) - Math.abs( b.dAngle ) );
+
+      const bestSnap = nearest[ 0 ];
+      if ( bestSnap && bestSnap.snapDist < SNAP_DIST ) {
+        activeBlock.x += bestSnap.snapX;
+        activeBlock.y += bestSnap.snapY;
+        activeBlock.angle += bestSnap.dAngle;
+      }
+
+      activeBlock.updateSVG();
+    }
+  }
+
+  function inputStop( e ) {
+    activeBlock = null;
+  }
+
+  function addBlock( type, e ) {
+    lastPos = getSVGPoint( e );
+
+    const block = new Block( { type: type, x: lastPos.x, y: lastPos.y } );
+    
+    blocks.push( block );
+    activeBlock = block;
+  }
+
+
+  function fixAngle( a ) {
+    return a > Math.PI ? a - Math.PI * 2 : a < -Math.PI ? a + Math.PI * 2 : a;
+  }
+
+  function deltaAngle( a, b ) {
+    return fixAngle( b - a );
+  }
+
+</script>
