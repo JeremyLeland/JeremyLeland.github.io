@@ -2,18 +2,17 @@
 <link rel="stylesheet" href="./style.css">
 
 <style>
-  
+  .piece {
+    background-image: url( "https://w0.peakpx.com/wallpaper/962/451/HD-wallpaper-red-poppies-painted-flowers-drawing-red-flowers-wild-flowers.jpg" );
+    /* background-image: url( "https://imagesvc.meredithcorp.io/v3/mm/image?url=https%3A%2F%2Fstatic.onecms.io%2Fwp-content%2Fuploads%2Fsites%2F37%2F2021%2F10%2F22%2Fpink-camellias.jpg" ); */
+  }
 </style>
 
 <script type="module">
   import { Curve } from './Curve.js';
 
-  const imageSrc = 'https://w0.peakpx.com/wallpaper/962/451/HD-wallpaper-red-poppies-painted-flowers-drawing-red-flowers-wild-flowers.jpg';
-  // const imageSrc = 'https://imagesvc.meredithcorp.io/v3/mm/image?url=https%3A%2F%2Fstatic.onecms.io%2Fwp-content%2Fuploads%2Fsites%2F37%2F2021%2F10%2F22%2Fpink-camellias.jpg';
-  // const imageSrc = 'https://imagesvc.meredithcorp.io/v3/mm/image?url=https%3A%2F%2Fstatic.onecms.io%2Fwp-content%2Fuploads%2Fsites%2F37%2F2021%2F08%2F24%2Ffire-halo-orange-garden-mum.jpeg&q=60';
-
   const POINTS_PER_SIDE = 6;
-  const size = 100;
+  const size = 100;G
 
   const cols = [], rows = [];
   const NUM_COLS = 5, NUM_ROWS = 5;
@@ -83,10 +82,10 @@
       const right  = col == NUM_COLS - 1 ? printLine( col + 1, row     ) : printCurves( cols[ col     ].slice( POINTS_PER_SIDE * row, 1 + POINTS_PER_SIDE * ( row + 1 ) ).reverse() );
       const top    = row == 0            ? printLine( col    , row     ) : printCurves( rows[ row - 1 ].slice( POINTS_PER_SIDE * col, 1 + POINTS_PER_SIDE * ( col + 1 ) ).reverse() );
       
-      const piece = document.createElement( 'img' );
+      const piece = document.createElement( 'div' );
       piece.className = 'piece';
       piece.draggable = false;
-      piece.src = imageSrc;
+      piece.onmousedown = mouseDown;
       piece.style.clipPath = 'path( \'' +
         `M ${ col * size },${ row * size } ` + 
         left + bottom + right + top +
@@ -98,7 +97,6 @@
       group.className = 'group';
       group.style.left = size / 3 + dest.col * size * 5/3 - col * size;
       group.style.top  = size / 3 + dest.row * size * 5/3 - row * size;
-      group.onmousedown = mouseDown;
       group.appendChild( piece );
 
       groups.push( group );
@@ -127,7 +125,7 @@
 
   let activeGroup, offset, nextZ = 1;
   function mouseDown( e ) {
-    activeGroup = e.currentTarget;
+    activeGroup = e.currentTarget.parentElement;
     activeGroup.style.zIndex = nextZ ++;
     offset = { 
       x: parseInt( activeGroup.style.left ) - e.clientX,
