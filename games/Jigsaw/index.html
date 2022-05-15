@@ -1,0 +1,170 @@
+<title>Jigsaw Puzzle</title>
+<link rel="stylesheet" href="./style.css">
+
+<style>
+  
+</style>
+
+<script type="module">
+  import { Curve } from './Curve.js';
+
+  const imageSrc = 'https://w0.peakpx.com/wallpaper/962/451/HD-wallpaper-red-poppies-painted-flowers-drawing-red-flowers-wild-flowers.jpg';
+  // const imageSrc = 'https://imagesvc.meredithcorp.io/v3/mm/image?url=https%3A%2F%2Fstatic.onecms.io%2Fwp-content%2Fuploads%2Fsites%2F37%2F2021%2F10%2F22%2Fpink-camellias.jpg';
+  // const imageSrc = 'https://imagesvc.meredithcorp.io/v3/mm/image?url=https%3A%2F%2Fstatic.onecms.io%2Fwp-content%2Fuploads%2Fsites%2F37%2F2021%2F08%2F24%2Ffire-halo-orange-garden-mum.jpeg&q=60';
+
+  const POINTS_PER_SIDE = 6;
+  const size = 100;
+
+  const cols = [], rows = [];
+  const NUM_COLS = 5, NUM_ROWS = 5;
+
+  // TODO: Randomize these for variety  
+  function getOffsets() {
+    const neckWidth = 0.25, neckDepth = -0.05, headWidth = 0.3, headDepth = 0.15, tipDepth = 0.25;
+    const notchOffset = 0.4 + 0.2 * Math.random();
+    // const neckWidth = 0.1 + 0.1 * Math.random();
+    // const neckDepth = -0.05 - 0.1 * Math.random();
+    // const headWidth = neckWidth + 0.1 + 0.1 * Math.random(); 
+    // const headDepth = 0.1 + 0.1 * Math.random();
+    // const tipDepth  = headDepth + 0.1 + 0.05 * Math.random();
+    // const notchOffset = 0.3 + 0.4 * Math.random();
+    const dir = Math.random() < 0.5 ? -1 : 1;
+
+    return [
+      { width: 0                          , depth: 0               },
+      { width: notchOffset - neckWidth / 2, depth: dir * neckDepth },
+      { width: notchOffset - headWidth / 2, depth: dir * headDepth },
+      { width: notchOffset                , depth: dir * tipDepth  },
+      { width: notchOffset + headWidth / 2, depth: dir * headDepth },
+      { width: notchOffset + neckWidth / 2, depth: dir * neckDepth },
+    ];
+  }
+
+  for ( let col = 1; col < NUM_COLS; col ++ ) {
+    const colPoints = [];
+
+    for ( let row = 0; row < NUM_ROWS; row ++ ) {
+      colPoints.push(...getOffsets().map( o => ( {
+        x: size * ( col + o.depth ), 
+        y: size * ( row + o.width ),
+      } ) ) );
+    }
+
+    colPoints.push( { x: size * col, y: size * NUM_ROWS } );
+
+    cols.push( colPoints );
+  }
+
+  for ( let row = 1; row < NUM_ROWS; row ++ ) {
+    const rowPoints = [];
+
+    for ( let col = 0; col < NUM_COLS; col ++ ) {
+      rowPoints.push(...getOffsets().map( o => ( {
+        x: size * ( col + o.width ), 
+        y: size * ( row + o.depth ),
+      } ) ) );
+    }
+
+    rowPoints.push( { x: size * NUM_COLS, y: size * row } );
+
+    rows.push( rowPoints );
+  }
+
+  let groups = [];
+
+  const destinations = Array.from( Array( NUM_COLS * NUM_ROWS ), ( _, index ) => (
+    { col: index % NUM_ROWS, row: Math.floor( index / NUM_ROWS ) }
+  ) );
+
+  for ( let row = 0; row < NUM_ROWS; row ++ ) {
+    for ( let col = 0; col < NUM_COLS; col ++ ) {
+      const left   = col == 0            ? printLine( col    , row + 1 ) : printCurves( cols[ col - 1 ].slice( POINTS_PER_SIDE * row, 1 + POINTS_PER_SIDE * ( row + 1 ) ) );
+      const bottom = row == NUM_ROWS - 1 ? printLine( col + 1, row + 1 ) : printCurves( rows[ row     ].slice( POINTS_PER_SIDE * col, 1 + POINTS_PER_SIDE * ( col + 1 ) ) );
+      const right  = col == NUM_COLS - 1 ? printLine( col + 1, row     ) : printCurves( cols[ col     ].slice( POINTS_PER_SIDE * row, 1 + POINTS_PER_SIDE * ( row + 1 ) ).reverse() );
+      const top    = row == 0            ? printLine( col    , row     ) : printCurves( rows[ row - 1 ].slice( POINTS_PER_SIDE * col, 1 + POINTS_PER_SIDE * ( col + 1 ) ).reverse() );
+      
+      const piece = document.createElement( 'img' );
+      piece.className = 'piece';
+      piece.draggable = false;
+      piece.src = imageSrc;
+      piece.style.clipPath = 'path( \'' +
+        `M ${ col * size },${ row * size } ` + 
+        left + bottom + right + top +
+      '\')';
+
+      const dest = destinations.splice( Math.floor( Math.random() * destinations.length ), 1 )[ 0 ];
+      
+      const group = document.createElement( 'div' );
+      group.className = 'group';
+      group.style.left = size / 3 + dest.col * size * 5/3 - col * size;
+      group.style.top  = size / 3 + dest.row * size * 5/3 - row * size;
+      group.onmousedown = mouseDown;
+      group.appendChild( piece );
+
+      groups.push( group );
+
+      document.body.appendChild( group );
+    }
+  }
+
+  //#region printing
+
+  function printLine( col, row ) {
+    return `L ${ col * size },${ row * size } `;
+  }
+
+  function printCurves( points ) {
+    const curves = Curve.getCurvesThroughPoints( points );
+
+    return curves.map( 
+      c => `C ${ printPoint( c.control1 ) } ${ printPoint( c.control2 ) } ${ printPoint( c.end ) }`
+    ).join(' ');
+  }
+
+  function printPoint( p ) { return `${ p.x },${ p.y }`; }
+
+  //#endregion
+
+  let activeGroup, offset, nextZ = 1;
+  function mouseDown( e ) {
+    activeGroup = e.currentTarget;
+    activeGroup.style.zIndex = nextZ ++;
+    offset = { 
+      x: parseInt( activeGroup.style.left ) - e.clientX,
+      y: parseInt( activeGroup.style.top ) - e.clientY,
+    };
+  }
+
+  document.onmouseup = ( e ) => {
+    if ( activeGroup ) {
+      groups.forEach( otherGroup => {
+        if ( otherGroup != activeGroup ) {
+          const cx = parseInt( otherGroup.style.left ) - parseInt( activeGroup.style.left ); 
+          const cy = parseInt( otherGroup.style.top ) - parseInt( activeGroup.style.top ); 
+          if ( Math.hypot( cx, cy ) < 10 ) {
+            Array.from( otherGroup.childNodes ).forEach(
+              child => activeGroup.appendChild( otherGroup.removeChild( child ) )
+            );
+
+            // Move active pieces to match others (less jarring)
+            activeGroup.style.left = otherGroup.style.left;
+            activeGroup.style.top = otherGroup.style.top;
+              
+            otherGroup.parentElement.removeChild( otherGroup );
+          }
+        }
+      } );
+      activeGroup = offset = null;
+
+      groups = groups.filter( g => g.childElementCount > 0 );
+    }
+  }
+  document.onmousemove = ( e ) => {
+    if ( activeGroup ) {
+      activeGroup.style.left = e.clientX + offset.x;
+      activeGroup.style.top = e.clientY + offset.y;
+    }
+  }
+
+
+</script>
