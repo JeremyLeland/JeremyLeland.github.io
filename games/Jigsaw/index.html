@@ -1,4 +1,5 @@
-<title>Jigsaw Puzzle</title>
+<title>Jigsaw Puzzle v0.7</title>
+<meta name="viewport" content="width=device-width, user-scalable=no">
 <link rel="stylesheet" href="./style.css">
 
 <style>
@@ -16,6 +17,8 @@
 
   const cols = [], rows = [];
   const NUM_COLS = 5, NUM_ROWS = 5;
+
+  const SNAP_DIST = 10;
 
   // TODO: Randomize these for variety  
   function getOffsets() {
@@ -84,8 +87,8 @@
       
       const piece = document.createElement( 'div' );
       piece.className = 'piece';
-      piece.draggable = false;
-      piece.onmousedown = mouseDown;
+      piece.addEventListener( 'mousedown',  inputStart );
+      piece.addEventListener( 'touchstart', inputStart );
       piece.style.clipPath = 'path( \'' +
         `M ${ col * size },${ row * size } ` + 
         left + bottom + right + top +
@@ -123,23 +126,44 @@
 
   //#endregion
 
+  function checkForSnaps() {
+    
+  }
+
+  //#region Input
+
+  document.addEventListener( 'mousemove', inputMove );
+  document.addEventListener( 'touchmove', inputMove );
+  document.addEventListener( 'mouseup', inputStop );
+  document.addEventListener( 'touchend', inputStop );
+  
   let activeGroup, offset, nextZ = 1;
-  function mouseDown( e ) {
+  function inputStart( e ) {
     activeGroup = e.currentTarget.parentElement;
     activeGroup.style.zIndex = nextZ ++;
+
+    const pos = e.touches?.[ 0 ] ?? e;
     offset = { 
-      x: parseInt( activeGroup.style.left ) - e.clientX,
-      y: parseInt( activeGroup.style.top ) - e.clientY,
+      x: parseInt( activeGroup.style.left ) - pos.pageX,
+      y: parseInt( activeGroup.style.top  ) - pos.pageY,
     };
   }
 
-  document.onmouseup = ( e ) => {
+  function inputMove( e ) {
+    if ( activeGroup ) {
+      const pos = e.touches?.[ 0 ] ?? e;
+      activeGroup.style.left = pos.pageX + offset.x;
+      activeGroup.style.top  = pos.pageY + offset.y;
+    }
+  }
+
+  function inputStop( e ) {
     if ( activeGroup ) {
       groups.forEach( otherGroup => {
         if ( otherGroup != activeGroup ) {
           const cx = parseInt( otherGroup.style.left ) - parseInt( activeGroup.style.left ); 
-          const cy = parseInt( otherGroup.style.top ) - parseInt( activeGroup.style.top ); 
-          if ( Math.hypot( cx, cy ) < 10 ) {
+          const cy = parseInt( otherGroup.style.top  ) - parseInt( activeGroup.style.top  ); 
+          if ( Math.hypot( cx, cy ) < SNAP_DIST ) {
             Array.from( otherGroup.childNodes ).forEach(
               child => activeGroup.appendChild( otherGroup.removeChild( child ) )
             );
@@ -157,12 +181,7 @@
       groups = groups.filter( g => g.childElementCount > 0 );
     }
   }
-  document.onmousemove = ( e ) => {
-    if ( activeGroup ) {
-      activeGroup.style.left = e.clientX + offset.x;
-      activeGroup.style.top = e.clientY + offset.y;
-    }
-  }
 
+  //#endregion
 
 </script>
