@@ -1,0 +1,131 @@
+<title>Tunnels v0.1</title>
+<link rel="stylesheet" href="./style.css">
+
+<body>
+  <div id="remaining"><span id="numLeft"></span> enemies left</div>
+  <div class="center" id="victory">Level Clear</div>
+</body>
+
+<script type="module">
+  import { Game } from './src/Game.js';
+  import { World } from './src/World.js';
+  import { Wall } from './src/Wall.js';
+  import { AvoidingActor } from './src/AvoidingActor.js';
+
+  import { ActorInfo } from './info/info.js';
+  
+  const game = new Game();
+  const ui = Object.fromEntries( [ 'numLeft', 'victory' ].map( e => [ e, document.getElementById( e ) ] ) );
+
+  let levelIndex = 0;
+  const levels = [
+    './levels/scrollTest.json',
+    './levels/test8.json',
+    './levels/test6.json',
+    './levels/test7.json',
+  ];
+
+  let world;
+
+  let remaining;
+  game.update = ( dt ) => {
+    world.update( dt );
+
+    const numEnemies = world.entities.filter( e => e.info.type == 'alien' ).length;
+    if ( remaining != numEnemies ) {
+      ui.numLeft.innerText = remaining = numEnemies;
+    }
+
+    if ( numEnemies == 0 ) {
+      ui.victory.style.visibility = 'visible';
+    }
+  };
+
+  game.draw = ( ctx ) => {
+    ctx.clearRect( 0, 0, ctx.canvas.width, ctx.canvas.height );
+    
+    const marines = world.entities.filter( e => e.info.type == 'marine' );
+    marines.forEach( marine => {
+      marine.drawUI( ctx );
+
+      if ( marine.moveTarget ) {
+        ctx.beginPath();
+        ctx.moveTo( marine.moveTarget.x, marine.moveTarget.y );
+        ctx.lineTo( marine.x, marine.y );
+        ctx.strokeStyle = 'cyan';
+        ctx.setLineDash( [ 5, 5 ] );
+        ctx.stroke();
+        ctx.setLineDash( [] );
+      }
+    } );
+
+    world.draw( ctx );
+
+    marines.forEach( marine => marine.drawUI( ctx ) );
+  }
+
+  loadLevel( levels[ 0 ] );
+
+  async function loadLevel( path ) {
+    game.stop();
+    ui.victory.style.visibility = 'hidden';
+
+    world = await World.fromFile( path );
+    game.start();
+  }
+
+  function prevLevel() {
+    levelIndex = Math.max( 0, levelIndex - 1 );
+    loadLevel( levels[ levelIndex ] );
+  }
+  
+  function nextLevel() {
+    levelIndex = Math.min( levels.length - 1, levelIndex + 1 );
+    loadLevel( levels[ levelIndex ] );
+  }
+
+  const SCROLL = 20;
+
+  document.addEventListener( 'keydown', ( e ) => {
+    switch( e.code ) {
+      case 'KeyN':  nextLevel();  break;
+      case 'KeyP':  prevLevel();  break;
+      case 'KeyW': case 'ArrowUp':    game.scroll.y += SCROLL;  break;
+      case 'KeyA': case 'ArrowLeft':  game.scroll.x += SCROLL;  break;
+      case 'KeyS': case 'ArrowDown':  game.scroll.y -= SCROLL;  break;
+      case 'KeyD': case 'ArrowRight': game.scroll.x -= SCROLL;  break;
+    }
+  } );
+
+  document.addEventListener( 'mousedown', ( e ) => {
+    const moveTarget = { x: e.offsetX - game.scroll.x, y: e.offsetY - game.scroll.y };
+
+    const marines = world.entities.filter( e => e.info.type == 'marine' );
+
+    const center = { x: 0, y: 0 };
+
+    marines.forEach( marine => {
+      center.x += marine.x;
+      center.y += marine.y;
+    } );
+
+    center.x /= marines.length;
+    center.y /= marines.length;
+
+    const moveAngle = Math.atan2( moveTarget.y - center.y, moveTarget.x - center.x );
+
+    const offsets = marines.map( marine => ( {
+      marine: marine,
+      offset: ( marine.x - moveTarget.x ) * Math.sin( moveAngle ) + ( marine.y - moveTarget.y ) * -Math.cos( moveAngle )
+    } ) ).sort( ( a, b ) => a.offset - b.offset );
+
+    const SPACING = ActorInfo.marine.size * 2.5;
+    const adjust = 0.5 * ( offsets.length - 1 );
+
+    offsets.forEach( ( e, index ) => e.marine.moveTarget = { 
+      x: moveTarget.x + ( index - adjust ) * SPACING * Math.sin( moveAngle ),
+      y: moveTarget.y + ( index - adjust ) * SPACING * -Math.cos( moveAngle ),
+    } );
+  } );
+
+</script>
