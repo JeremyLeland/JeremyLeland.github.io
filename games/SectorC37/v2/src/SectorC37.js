@@ -3,12 +3,12 @@ import { Actor } from './Actor.js';
 import { Gun } from './Gun.js';
 import { Trail } from './Trail.js';
 import { BoundingLines } from './BoundingLines.js';
+import { World } from './World.js';
 
 //
 // Rocks
 //
 export class Rock extends Entity {
-  
   constructor( values ) {
     super( values );
 
@@ -25,7 +25,7 @@ export class Rock extends Entity {
       ${ 20 + Math.random() * 10 }%
     )`;
 
-    this.life = this.size;
+    this.life = this.size * 1000;
     this.damage = this.size;
     this.mass = this.size;
   }
@@ -93,28 +93,39 @@ export class Player extends Actor {
 
   turnSpeed = 0.005;
   moveSpeed = 0.2;
+  sprintSpeed = 0.3;
 
   wanders = false;
 
   maxLife = 50;
   life = this.maxLife;
   maxEnergy = 100;
+  moveEnergy = 0.01;
+  sprintEnergy = 0.04;
+  energyRechargeRate = 0.03;
   energy = this.maxEnergy;
-  energyRechargeRate = this.maxEnergy / 5000;
 
   damage = 100;
   mass = 1;
 
-  guns = [
+  isShootingPrimary = false;
+  isShootingSecondary = false;
+
+  primaryGuns = [
     new PlayerGun( { offset: { front: 0, side: -1, angle: 0 } } ),
     new PlayerGun( { offset: { front: 0, side:  1, angle: 0 } } ),
   ];
+  
+  secondaryGuns = [
+    new MissleGun( { offset: { front: 2, side:  0, angle: 0 } } ),
+  ];
 
+  trailLength = 20;
   trails = [
     new Trail( { 
       offset: { front: -1, side: 0, angle: 0 }, 
       maxWidth: this.size / 3, 
-      goalLength: 20,
+      goalLength: this.trailLength,
       color: 'seagreen',
     } ),
   ];
@@ -122,6 +133,13 @@ export class Player extends Actor {
   boundingLines = new BoundingLines( [
     [ 1, 0 ], [ -1, 1 ], [ -1, -1 ],
   ] );
+
+  update( dt, world ) {
+    super.update( dt, world );
+
+    this.primaryGuns?.forEach( gun => gun.update( dt, this, this.isShootingPrimary ) );
+    this.secondaryGuns?.forEach( gun => gun.update( dt, this, this.isShootingSecondary ) );
+  }
 
   getBleedParticle() {
     return new Entity( {
@@ -163,7 +181,8 @@ export class Ship extends Actor {
 
   maxEnergy = 50;
   energy = this.maxEnergy;
-  energyRechargeRate = this.maxEnergy / 5000;
+  moveEnergy = 0.1;
+  energyRechargeRate = 0.2;
 
   damage = 50;
   mass = 1;
@@ -173,11 +192,12 @@ export class Ship extends Actor {
     new ShipGun( { offset: { front: 0, side:  1, angle: 0 } } ),
   ];
 
+  trailLength = 20;
   trails = [
     new Trail( { 
       offset: { front: -1, side: 0, angle: 0 }, 
       maxWidth: this.size / 3, 
-      goalLength: 20,
+      goalLength: this.trailLength,
       color: 'lightblue',
     } ),
   ];
@@ -216,8 +236,11 @@ function shipPath() {
 //
 
 class PlayerBullet extends Entity {
+  type = 'bullet';
   size = 1;
-  trail = new Trail( { maxWidth: this.size, goalLength: 40, dLength: 0.6, color: 'orange' } );
+  trails = [ 
+    new Trail( { maxWidth: this.size, goalLength: 40, dLength: 0.6, color: 'orange' } ) 
+  ];
   mass = 0.05;
   damage = 2;
   lifeSpan = 5000;
@@ -225,22 +248,15 @@ class PlayerBullet extends Entity {
   boundingLines = new BoundingLines( [
     [ -1, 0 ], [ 1, -1 ], [ 1, 1 ],
   ] );
-
-  update( dt, entities ) {
-    super.update( dt, entities );
-
-    this.trail.update( dt, this );
-  }
-
-  draw( ctx ) {
-    this.trail.draw( ctx );
-    super.draw( ctx );  // for debug visuals
-  }
+  nohit = [ 'bullet' ];
 }
 
 class ShipBullet extends Entity {
+  type = 'bullet';
   size = 1;
-  trail = new Trail( { maxWidth: this.size, goalLength: 40, dLength: 0.6, color: 'yellow' } );
+  trails = [
+    new Trail( { maxWidth: this.size, goalLength: 40, dLength: 0.6, color: 'yellow' } )
+  ];
   mass = 0.05;
   damage = 2;
   lifeSpan = 5000;
@@ -248,17 +264,39 @@ class ShipBullet extends Entity {
   boundingLines = new BoundingLines( [
     [ -1, 0 ], [ 1, -1 ], [ 1, 1 ],
   ] );
+  nohit = [ 'bullet' ];
+}
 
-  update( dt, entities ) {
-    super.update( dt, entities );
+class Missle extends Actor {
+  type = 'missle';
+  size = 7;
+  trailLength = 25;
+  trails = [
+    new Trail( { 
+      offset: { front: -1, side: 0, angle: 0 }, 
+      maxWidth: this.size / 3, 
+      goalLength: this.trailLength, 
+      dLength: 0.6, 
+      color: 'orange' 
+    } )
+  ];
+  mass = 0.5;
+  damage = 20;
+  lifeSpan = 10000;
 
-    this.trail.update( dt, this );
-  }
+  color = 'gray';
+  drawPath = shipPath();
 
-  draw( ctx ) {
-    this.trail.draw( ctx );
-    super.draw( ctx );  // for debug visuals
-  }
+  boundingLines = new BoundingLines( [
+    [ 1, 0 ], [ -1, 1 ], [ -1, -1 ],
+  ] );
+  nohit = [ 'bullet' ];
+
+  targets = [ 'ship' ];
+  turnSpeed = 0.004;
+  moveSpeed = 0.3;
+
+  // TODO: Limited energy? (so they eventually stop navigating and just crash)
 }
 
 class PlayerGun extends Gun {
@@ -278,6 +316,16 @@ class ShipGun extends Gun {
 
   getBullet( values ) {
     return new ShipBullet( values );
+  }
+}
+
+class MissleGun extends Gun {
+  timeBetweenShots = 2000;
+  bulletSpeed = 0.2;
+  energyCost = 5;
+
+  getBullet( values ) {
+    return new Missle( values );
   }
 }
 
@@ -304,3 +352,61 @@ class Fire extends Entity {
 }
 
 
+//
+// Level
+//
+
+export class Level {
+  world;
+  
+  rockSpawnDelay = 3000;
+  rockSpawnTimer = this.rockSpawnDelay;
+
+  constructor( playableSize = 1000, spawnSize = 500 ) {
+    this.playableSize = playableSize;
+    this.spawnSize = spawnSize;
+
+    this.world = new World( playableSize + spawnSize );
+
+    const numRocks = Math.pow( playableSize, 2 ) / 20000;
+
+    for ( let i = 0; i < numRocks; i ++ ) {
+      this.spawnRock();
+    }
+  }
+
+  update( dt ) {
+    this.world.update( dt );
+
+    if ( ( this.rockSpawnTimer -= dt ) < 0 ) {
+      this.rockSpawnTimer += this.rockSpawnDelay;
+      this.spawnRock( this.playableSize );
+    }
+  }
+
+  draw( ctx ) {
+    this.world.draw( ctx );
+  }
+
+  spawnRock( minRadius = 0 ) {
+    const rockSize = 10 + 50 * Math.random();
+
+    const spawn = this.world.getSpawnPoint( rockSize * 2, { minRadius: minRadius } );
+    if ( spawn ) {
+      const moveAngle = minRadius == 0 ? 
+        Math.random() * Math.PI * 2 : 
+        Math.atan2( -spawn.y, -spawn.x ) + 0.5 * ( -0.5 + Math.random() );
+      const moveSpeed = 0.05 + 0.05 * ( -0.5 + Math.random() );
+
+      this.world.entities.push( new Rock( { 
+        x: spawn.x,
+        y: spawn.y,
+        dx: Math.cos( moveAngle ) * moveSpeed,
+        dy: Math.sin( moveAngle ) * moveSpeed,
+        angle: Math.random() * Math.PI * 2,
+        dAngle: 0.004 * ( -0.5 + Math.random() ),
+        size: rockSize,
+      } ) );
+    }
+  }
+}

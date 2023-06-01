@@ -10,10 +10,10 @@ export class World {
   update( dt ) {
     const prevHits = [];
 
-    for ( let tries = 0; dt > 0 && tries < 8; tries ++ ) {
+    for ( let tries = 0; dt > 0 && tries < 16; tries ++ ) {
 
-      if ( tries == 7 ) {
-        debugger;
+      if ( tries == 15 ) {
+        debugger;   // TODO: Record how many tries for debug graphs?
       }
 
       let closestHit = { time: Infinity };
@@ -29,10 +29,17 @@ export class World {
             continue;
           }
 
-          const hit = A.getHit( B );
-          
-          if ( 0 <= hit.time && hit.time < closestHit.time ) {
-            closestHit = hit;
+          // Make sure these entities can hit each other
+          if ( A.nohit?.includes( B.type ) || B.nohit?.includes( A.type ) ) {
+            continue;
+          }
+
+          if ( A.getQuickHit( B ).time < dt ) {
+            const hit = A.getHit( B );
+            
+            if ( 0 <= hit.time && hit.time < closestHit.time ) {
+              closestHit = hit;
+            }
           }
         }
       }
@@ -100,7 +107,10 @@ export class World {
         e => createdEntities.push( ...e.createdEntities.splice( 0 ) )
       );
       this.entities.push( ...createdEntities );
-      this.entities = this.entities.filter( e => e.isAlive );
+      this.entities = this.entities.filter( e => e.isAlive && 
+        -this.size < e.x + e.size && e.x - e.size < this.size &&
+        -this.size < e.y + e.size && e.y - e.size < this.size
+      );
     }
   }
 
@@ -109,8 +119,34 @@ export class World {
 
     if ( World.DebugBounds ) {
       ctx.beginPath();
-      ctx.arc( 0, 0, this.size, 0, Math.PI * 2 );
+
+      const DIST_SPACING = 100;
+      for ( let d = 1; d <= this.size / DIST_SPACING; d ++ ) {
+        ctx.arc( 0, 0, d * DIST_SPACING, 0, Math.PI * 2 );
+      }
+
+      const ANGLE_SPACES = 8;
+      for ( let i = 0; i < ANGLE_SPACES; i ++ ) {
+        const angle = Math.PI * 2 * i / ANGLE_SPACES;
+        ctx.moveTo( 0, 0 );
+        ctx.lineTo( Math.cos( angle ) * this.size, Math.sin( angle ) * this.size );
+      }
+    
+      ctx.strokeStyle = 'rgba( 100, 100, 100, 0.2 )';
       ctx.stroke();
+    }
+  }
+
+  getSpawnPoint( radius, { minRadius = 0, maxRadius = this.size } = {} ) {
+    for ( let tries = 0; tries < 10; tries ++ ) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = minRadius + radius + ( maxRadius - minRadius - radius * 2 ) * Math.random();
+      const x = Math.cos( angle ) * dist;
+      const y = Math.sin( angle ) * dist;
+
+      if ( !this.entities.find( e => Math.hypot( e.x - x, e.y - y ) < e.size + radius ) ) {
+        return { x: x, y: y };
+      }
     }
   }
 }

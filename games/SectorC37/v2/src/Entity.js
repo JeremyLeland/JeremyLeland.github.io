@@ -28,6 +28,8 @@ export class Entity {
 
   boundingLines;
 
+  trails;
+
   createdEntities = [];
 
   constructor( values ) {
@@ -49,9 +51,13 @@ export class Entity {
 
     this.lifeSpan -= dt;
     this.isAlive = this.life > 0 && this.lifeSpan > 0;
+
+    this.trails?.forEach( trail => trail.update( dt, this ) );
   }
 
   draw( ctx ) {
+    this.trails?.forEach( trail => trail.draw( ctx ) );
+
     ctx.save();
 
     ctx.translate( this.x, this.y );
@@ -85,6 +91,36 @@ export class Entity {
       x: this.x + this.size * ( cos * offset.front - sin * offset.side ),
       y: this.y + this.size * ( sin * offset.front + cos * offset.side ),
       angle: this.angle + offset.angle,
+    }
+  }
+
+  getQuickHit( other ) {
+    if ( this.boundingLines && other.boundingLines ) {
+
+      // See https://stackoverflow.com/questions/33140999/at-what-delta-time-will-two-objects-collide
+    
+      const cx = this.x - other.x
+      const cy = this.y - other.y
+      const vx = this.dx - other.dx;
+      const vy = this.dy - other.dy;
+      const rr = this.size + other.size;
+
+      const a = vx * vx + vy * vy;
+      const b = 2 * ( cx * vx + cy * vy );
+      const c = cx * cx + cy * cy - rr * rr;
+
+      const disc = b * b - 4 * a * c;
+
+      // If the objects don't collide, the discriminant will be negative
+      // We only care about first intersection, so just return t0 (which uses -b)
+      
+      return {
+        time: disc < 0 ? Infinity : ( -b - Math.sqrt( disc ) ) / ( 2 * a ),
+        // entities: [ this, other ],
+      }
+    }
+    else {
+      return { time: Infinity };
     }
   }
 
@@ -144,7 +180,7 @@ export class Entity {
 
   die( hit ) {
     if ( this.getDieParticle ) {
-      for ( let i = 0; i < this.size * 4; i ++ ) {
+      for ( let i = 0; i < this.size * 3; i ++ ) {
         const angle = Math.random() * Math.PI * 2;
         const dist = Math.random() * this.size / 2;
 

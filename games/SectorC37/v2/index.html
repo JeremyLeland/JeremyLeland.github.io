@@ -2,7 +2,14 @@
 <link rel="stylesheet" href="./grid.css">
 
 <style>
-  body { cursor: crosshair; }
+  body {
+    cursor: crosshair;
+
+    display: flex;
+    /* align-items: center; */
+    justify-content: center;
+    height: 100%;
+  }
 
   #ui {
     position: absolute;
@@ -26,6 +33,20 @@
   #health { background-color: rgba( 255, 0, 0, 0.5 ); }
   #energy { background-color: rgba( 0, 200, 255, 0.5 ); }
   #minimap { background-color: rgba( 20, 20, 20, 0.5 ); }
+
+  #title {
+    position: absolute;
+    font-size: 100;
+    font-family: 'Courier New', Courier, monospace;
+    bottom: 50%;
+  }
+
+  #message {
+    position: absolute;
+    font-size: 20;
+    font-family: 'Courier New', Courier, monospace;
+    top: 60%;
+  }
 </style>
 
 <body>
@@ -34,65 +55,72 @@
     <div class="outer_bar">
       <div class="inner_bar" id="health"></div>
     </div>
+    <div>
+      <canvas id="minimap" width="100" height="100"></canvas>
+      <br>
+      <label for="enemies">Enemies: </label>
+      <span id="enemies"></span>
+    </div>
     Energy:
     <div class="outer_bar">
       <div class="inner_bar" id="energy"></div>
     </div>
-    <canvas id="minimap" width="100" height="100"></canvas>
-    <label for="enemies">Enemies: </label>
-    <span id="enemies"></span>
   </div>
+  <div id="title">Sector C37</div>
+  <div id="message">Click to Spawn</div>
 </body>
 
 <script type="module">
   import { AnimatedCanvas } from './src/AnimatedCanvas.js';
   import { World } from './src/World.js';
   import { Starfield } from './src/Starfield.js';
-  import { Player, Ship, Rock } from './src/SectorC37.js';
+  import { Player, Ship, Rock, Level } from './src/SectorC37.js';
   import * as Util from './src/Util.js';
+
+  const PLAYABLE_RADIUS = 1000, OUTSIDE_RADIUS = 500;
+
 
   const healthUI = document.getElementById( 'health' );
   const energyUI = document.getElementById( 'energy' );
   const minimapCtx = document.getElementById( 'minimap' ).getContext( '2d' );
   const enemiesUI = document.getElementById( 'enemies' );
 
+  const titleUI = document.getElementById( 'title' );
+  const messageUI = document.getElementById( 'message' );
+
   const PLAYER_RESPAWN_DELAY = 2000;
-  let playerSpawnTimer = PLAYER_RESPAWN_DELAY;
+  let playerSpawnTimer = 0;
 
   const ENEMY_SPAWN_DELAY = 5000;
   let enemySpawnTimer = ENEMY_SPAWN_DELAY;
 
-  let player = new Player( { x: 0, y: 0, angle: 0 } );
+  let player;
 
-  const world = new World( 1000 );
-  world.entities = [ player ];
+  // World.DebugBounds = true;
 
-  const numRocks = 10, rockSpacing = 300;
-  for ( let i = 0; i < numRocks; i ++ ) {
-    for ( let d = 1; d < world.size / rockSpacing; d ++ ) {
-      const angle = Math.PI * 2 * ( i + 0.25 + 0.5 * Math.random() ) / numRocks;
-      const dist = rockSpacing * ( d + 0.25 + 0.5 * Math.random() );
-      world.entities.push( new Rock( { 
-        x: Math.cos( angle ) * dist, 
-        y: Math.sin( angle ) * dist,
-        angle: Math.random() * Math.PI * 2,
-        dx: 0.1 * ( Math.random() - 0.5 ),
-        dy: 0.1 * ( Math.random() - 0.5 ),
-        dAngle: 0.004 * ( Math.random() - 0.5 ),
-        size: 10 + Math.random() * 50,
-      } ) );
-    }
-  }
+  const level = new Level( PLAYABLE_RADIUS, OUTSIDE_RADIUS );
 
-  const numShips = 10, shipSpacing = 200;
+  const numShips = 10;
   for ( let i = 0; i < numShips; i ++ ) {
     const angle = Math.PI * 2 * ( i + 0.25 + 0.5 * Math.random() ) / numShips;
-    const dist = world.size + shipSpacing * ( 0.25 + 0.5 * Math.random() );
+    const dist = PLAYABLE_RADIUS + OUTSIDE_RADIUS * ( 0.25 + 0.5 * Math.random() );
     spawnShip( angle, dist );
   }
 
+  function spawnPlayer() {
+    const spawn = level.world.getSpawnPoint( 100, { maxRadius: 0.5 * PLAYABLE_RADIUS } );
+    if ( spawn ) { 
+      playerSpawnTimer = PLAYER_RESPAWN_DELAY;
+      player = new Player( { x: spawn.x, y: spawn.y, angle: Math.atan2( -spawn.y, -spawn.x ) } );
+      level.world.entities.push( player );
+
+      title.style.visibility = 'hidden';
+      message.style.visibility = 'hidden';
+    }
+  }
+
   function spawnShip( angle, dist ) {
-    world.entities.push( 
+    level.world.entities.push( 
       new Ship( { 
         x: Math.cos( angle ) * dist,
         y: Math.sin( angle ) * dist,
@@ -101,35 +129,34 @@
     );
   }
 
-  const starfield = new Starfield( world.size * 2, world.size * 2 , 1000, 2 );
+  const starfield = new Starfield( level.world.size * 2, level.world.size * 2 , 1000, 2 );
 
-  let scrollX = 0, scrollY = 0;
+  let scrollX = window.innerWidth / 2, scrollY = window.innerHeight / 2;
+  const SCROLL_LIMIT = PLAYABLE_RADIUS / Math.SQRT2;
 
   const canvas = new AnimatedCanvas();
 
   canvas.update = ( dt ) => {
-    if ( player.isAlive ) {  
-      scrollX = Math.min( world.size, Math.max( window.innerWidth - world.size, window.innerWidth / 2 - player.x ) );
-      scrollY = Math.min( world.size, Math.max( window.innerHeight - world.size, window.innerHeight / 2 - player.y ) );
+    if ( player?.isAlive ) {  
+      scrollX = Math.min( SCROLL_LIMIT, Math.max( window.innerWidth - SCROLL_LIMIT, window.innerWidth / 2 - player.x ) );
+      scrollY = Math.min( SCROLL_LIMIT, Math.max( window.innerHeight - SCROLL_LIMIT, window.innerHeight / 2 - player.y ) );
 
       player.targetGoal = { x: mouseX - scrollX, y: mouseY - scrollY };
     }
     else {
       playerSpawnTimer -= dt;
+
+      if ( playerSpawnTimer < 0 ) {
+        message.style.visibility = 'visible';
+      }
     }
 
     if ( ( enemySpawnTimer -= dt ) < 0 ) {
       enemySpawnTimer += ENEMY_SPAWN_DELAY;
-      spawnShip( Math.random() * Math.PI * 2, world.size + 100 * Math.random() );
+      spawnShip( Math.random() * Math.PI * 2, level.world.size + 100 * Math.random() );
     }
 
-    world.update( dt );
-
-    // Keep rocks inside world (TODO: wrap around instead of bounce?)
-    world.entities.filter( e => e instanceof Rock ).forEach( rock => {
-      if ( rock.x + rock.size < -world.size || rock.x - rock.size > world.size )  rock.dx = -rock.dx;
-      if ( rock.y + rock.size < -world.size || rock.y - rock.size > world.size )  rock.dy = -rock.dy;
-    } );
+    level.update( dt );
   };
   
   canvas.draw = ( ctx ) => {
@@ -137,36 +164,28 @@
 
     ctx.save();
     ctx.translate( scrollX, scrollY );
-    world.draw( ctx );
-
-    // ctx.beginPath();
-    
-    // for ( let d = 1; d < world.size / rockSpacing; d ++ ) {
-    //   ctx.arc( 0, 0, rockSpacing * d, 0, Math.PI * 2 );
-    // }
-
-    // for ( let i = 0; i < numRocks; i ++ ) {
-    //   const angle = Math.PI * 2 * i / numRocks;
-    //   ctx.moveTo( 0, 0 );
-    //   ctx.lineTo( Math.cos( angle ) * world.size, Math.sin( angle ) * world.size );
-    // }
-    
-    // ctx.stroke();
+    level.draw( ctx );
 
     ctx.restore();
 
-    healthUI.style.width = `${ 100 * Math.max( 0, player.life ) / player.maxLife }%`;
-    energyUI.style.width = `${ 100 * Math.max( 0, player.energy ) / player.maxEnergy }%`;
+    if ( player?.isAlive ) {
+      healthUI.style.width = `${ 100 * Math.max( 0, player.life ) / player.maxLife }%`;
+      energyUI.style.width = `${ 100 * Math.max( 0, player.energy ) / player.maxEnergy }%`;
+    }
+    else {
+      healthUI.style.width = 0;
+      energyUI.style.width = 0;
+    }
 
     drawMinimap( minimapCtx );
 
-    const numEnemies = world.entities.filter( e => e instanceof Ship ).length;
+    const numEnemies = level.world.entities.filter( e => e instanceof Ship ).length;
     enemiesUI.innerText = numEnemies;
   };
 
   function drawMinimap( ctx ) {
     // Assume a square minimap
-    const scale = ctx.canvas.width / ( world.size * 2 );
+    const scale = ctx.canvas.width / ( level.world.size * 2 );
 
     ctx.clearRect( 0, 0, ctx.canvas.width, ctx.canvas.height );
 
@@ -174,10 +193,9 @@
     ctx.translate( ctx.canvas.width / 2, ctx.canvas.height / 2 );
     ctx.scale( scale, scale );
     
-    // world.entities.filter( e => e.size > 8 ).forEach( e => {
-    world.entities.filter( e => e.boundingLines ).forEach( e => {
+    level.world.entities.filter( e => e.boundingLines && e.size > 10 ).forEach( e => {
       ctx.beginPath();
-      ctx.arc( e.x, e.y, e.size, 0, Math.PI * 2 );
+      ctx.arc( e.x, e.y, Math.max( 2 / scale, e.size ), 0, Math.PI * 2 );
       ctx.fillStyle = e.color;
       ctx.fill();
     } );
@@ -200,16 +218,18 @@
   } );
   
   document.addEventListener( 'mousedown', ( e ) => {
-    if ( player.isAlive ) {
-      player.isShooting = true;
+    if ( player?.isAlive ) {
+      if ( e.button == 0 )  player.isShootingPrimary = true;
+      if ( e.button == 2 )  player.isShootingSecondary = true;
     }
     else if ( playerSpawnTimer < 0 ) {
-      playerSpawnTimer = PLAYER_RESPAWN_DELAY;
-      player = new Player( { x: 0, y: 0, angle: 0 } );
-      world.entities.push( player );
+      spawnPlayer();
     }
   } );
-  document.addEventListener( 'mouseup',   ( e ) => player.isShooting = false );
+  document.addEventListener( 'mouseup',   ( e ) => {
+    if ( e.button == 0 )  player.isShootingPrimary = false;
+    if ( e.button == 2 )  player.isShootingSecondary = false;
+  } );
   document.addEventListener( 'mousemove', ( e ) => {
     mouseX = e.clientX;
     mouseY = e.clientY;
