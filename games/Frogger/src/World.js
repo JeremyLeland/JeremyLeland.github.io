@@ -48,18 +48,25 @@ export class World
   static DebugGrid = false;
 
   static async fromFile( path ) {
-    const json = JSON.parse( await ( await fetch( path ) ).text() );    // TODO: error handling
+    const string = await ( await fetch( path ) ).text();  // TODO: error handling
+    return World.fromString( string );
+  }
+
+  static fromString( string ) {
+    const json = JSON.parse( string );    // TODO: error handling
     return new World( json );
   }
  
   entities = [];
   rescued = [];
   player;
-  needsRespawn = false;
   tiles;
   crop;
   maxTime;
   timeLeft = 0;
+  
+  needsRespawn = false;
+  defeat = false;
   victory = false;
 
   constructor( json ) {
@@ -112,7 +119,7 @@ export class World
 
     this.maxTime = json.time ?? 15000;
     
-    this.lives = Array.from( Array( 4 ), () => new Player( { color: 'green', dir: Direction.Up } ) );
+    this.lives = 4;
     
     [ this.spawnCol, this.spawnRow ] = json.player ?? [ Math.floor( this.cols / 2 ), Math.floor( this.rows / 2 ) ];
     this.respawnPlayer();
@@ -281,7 +288,16 @@ export class World
     this.player.kill();
     this.needsRespawn = true;
     
-    this.lives.pop();
+    // TODO: Lose when lives < 0
+    this.lives--;
+    this.defeat = this.lives < 0;
+
+    if ( this.ui ) {
+      this.ui.setLives( this.lives );
+      if ( this.defeat ) {
+        this.ui.showDefeat();
+      }
+    }
   }
 
   respawnPlayer() {
@@ -298,15 +314,22 @@ export class World
   }
 
   rescue( entity ) {
-    entity.x = entity.froggyIndex;
-    entity.y = 0;
-    entity.dir = Direction.Up;
     this.rescued.push( entity );
-
     this.entities = this.entities.filter( e => e != entity );
 
-    this.victory = this.entities.filter( e => e.canRescue ).length == 0;
+    this.lives = Math.min( 4, this.lives + 1 );
+
     this.needsRespawn = true;
+    this.victory = this.entities.filter( e => e.canRescue ).length == 0;
+
+    if ( this.ui ) {
+      this.ui.showFroggy( entity.froggyIndex );
+      this.ui.setLives( this.lives );
+
+      if ( this.victory ) {
+        this.ui.showVictory();
+      }
+    }
   }
 
   update( dt ) {
@@ -315,6 +338,9 @@ export class World
 
     if ( !this.needsRespawn ) {
       this.timeLeft = Math.max( 0, this.timeLeft - dt );
+      if ( this.ui ) {
+        this.ui.setTimeLeft( this.timeLeft / this.maxTime );
+      }
       
       if ( this.timeLeft == 0 ) {
         this.killPlayer();
@@ -383,32 +409,5 @@ export class World
     }
 
     ctx.restore();
-  }
-
-  drawUI( ctx ) {
-    ctx.fillStyle = 'gray';
-    ctx.fillRect( 0, 0, 15, 1 );
-
-    ctx.translate( 0.5, 0.5 );
-    
-    this.rescued.forEach( froggy => froggy.draw( ctx ) );
-    
-    ctx.translate( 6, 0 );
-    
-    const timerGrad = ctx.createLinearGradient( 0, 0, 3, 0 );
-    timerGrad.addColorStop( 0, 'red' );
-    timerGrad.addColorStop( 0.5, 'yellow' );
-    timerGrad.addColorStop( 1, 'green' );
-
-    ctx.fillStyle = timerGrad;
-    ctx.fillRect( 0, -0.15, 4 * ( this.timeLeft / this.maxTime ), 0.3 );
-    ctx.lineWidth = 0.02;
-    ctx.strokeRect( 0, -0.15, 4, 0.3 );
-
-    ctx.translate( 3 + 5, 0 );
-    this.lives.forEach( frog => {
-      frog.draw( ctx );
-      ctx.translate( -1, 0 );
-    } );
   }
 }

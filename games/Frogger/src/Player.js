@@ -12,13 +12,15 @@ export class Player extends Frog {
   #jumpQueue = [];
 
   move( dir ) {
-    this.#jumpQueue.push( dir );
+    if ( dir != this.#jumpQueue.at( -1 ) ) {
+      this.#jumpQueue.push( dir );
+    }
   }
 
   kill() {
     this.isAlive = false;
     this.animationTime = 0;   // TODO: death splat animation?
-    this.zIndex = 0;
+    this.zIndex = -2;
     this.#jumpQueue = [];
   }
 

@@ -1,0 +1,104 @@
+<title>Follow tile directions</title>
+<link rel="stylesheet" href="../grid.css">
+
+<script type="module">
+  import { Direction } from '../src/Entity.js';
+  import { Turtle } from '../src/Turtle.js';
+  import { World } from '../src/World.js';
+  
+  import { AnimatedCanvas } from '../src/common/AnimatedCanvas.js';
+
+  const TILE_SIZE = 64;
+
+  const turtles = [
+    new Turtle( { x: 0, y: 0 } ),
+    new Turtle( { x: 1, y: 0 } ),
+    new Turtle( { x: 0, y: 2 } ),
+    new Turtle( { x: 2, y: 2 } ),
+  ];
+
+  const world = new World();
+
+  // 0 - Up
+  // 1 - Left
+  // 2 - Down
+  // 3 - Right
+
+  world.tiles = [
+    [
+      {
+        dir: Direction.Right,
+      },
+      {
+        warp: { c: 4, r: 1 },
+      },
+      {
+        dir: Direction.Right,
+      },
+    ],
+    [
+      {
+        dir: Direction.Down,
+      },
+      {
+        dir: Direction.Left,
+      },
+      {
+        dir: Direction.Right,
+      },
+    ],
+    [
+      {
+        dir: Direction.Right,
+      },
+      {
+        dir: Direction.Up,
+      },
+      {
+        dir: Direction.Right,
+      },
+    ],
+    [
+      {
+        dir: Direction.Right,
+      },
+      {
+        dir: Direction.Left,
+      },
+      {
+        dir: Direction.Right,
+      },
+    ],
+    [
+      {
+        warp: { c: 0, r: 0 },
+      },
+      {
+        dir: Direction.Left,
+      },
+      {
+        warp: { c: 0, r: 2 },
+      },
+    ],
+  ];
+
+  const canvas = new AnimatedCanvas();
+
+  canvas.update = ( dt ) => {
+    turtles.forEach( turtle => turtle.update( dt, world ) );
+  }
+  
+  canvas.draw = ( ctx ) => {
+    ctx.save();
+    ctx.scale( TILE_SIZE, TILE_SIZE );
+    ctx.translate( 0.5, 0.5 );
+
+    turtles.forEach( turtle => turtle.draw( ctx ) );
+    world.draw( ctx );
+
+    ctx.restore();
+  };
+
+  canvas.start();
+
+</script>

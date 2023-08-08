@@ -1,8 +1,4 @@
-<style>
-  body {
-    margin: 0px;
-  }
-</style>
+<link rel="stylesheet" href="./grid.css">
 
 <body>
   <div id="world"></div>
@@ -24,7 +20,7 @@
 
   World.DebugGrid = true;
   
-  let world = new World( { cols: 15, rows: 15 } );
+  let world = World.fromString( localStorage.getItem( 'currentLevel' ) ) ?? new World( { cols: 15, rows: 15 } );
   
   const worldCanvas = new Canvas( world.cols * TILE_SIZE, world.rows * TILE_SIZE );
   
@@ -57,6 +53,9 @@
     ctx.fill();
 
     ctx.restore();
+
+    // Save progress
+    localStorage.setItem( 'currentLevel', JSON.stringify( world.toJson() ) );
   }
 
   redraw();

@@ -1,0 +1,132 @@
+<title>Frog ride turtles</title>
+<link rel="stylesheet" href="../grid.css">
+
+<script type="module">
+  import { Direction } from '../src/Entity.js';
+  import { Turtle } from '../src/Turtle.js';
+  import { Frog } from '../src/Frog.js';
+  import { World } from '../src/World.js';
+  
+  import { AnimatedCanvas } from '../src/common/AnimatedCanvas.js';
+
+  const TILE_SIZE = 64;
+
+  const world = new World();
+  world.entities = [
+    new Turtle( { x: 0, y: 0 } ),
+    new Turtle( { x: 1, y: 0 } ),
+    new Turtle( { x: 2, y: 0 } ),
+    new Turtle( { x: 1, y: 1 } ),
+    new Turtle( { x: 2, y: 1 } ),
+    new Turtle( { x: 3, y: 1 } ),
+    new Turtle( { x: 2, y: 2 } ),
+    new Turtle( { x: 3, y: 2 } ),
+    new Turtle( { x: 4, y: 2 } ),
+  ];
+  world.player = new Frog( { x: 4, y: 2, color: 'green' } );
+  world.tiles = [
+    [
+      {
+        dir: Direction.Right,
+      },
+      {
+        warp: { c: 5, r: 1 },
+      },
+      {
+        dir: Direction.Right,
+      },
+    ],
+    [
+      {
+        dir: Direction.Right,
+      },
+      {
+        dir: Direction.Left,
+      },
+      {
+        dir: Direction.Right,
+      },
+    ],
+    [
+      {
+        dir: Direction.Right,
+      },
+      {
+        dir: Direction.Left,
+      },
+      {
+        dir: Direction.Right,
+      },
+    ],
+    [
+      {
+        dir: Direction.Right,
+      },
+      {
+        dir: Direction.Left,
+      },
+      {
+        dir: Direction.Right,
+      },
+    ],
+    [
+      {
+        dir: Direction.Right,
+      },
+      {
+        dir: Direction.Left,
+      },
+      {
+        dir: Direction.Right,
+      },
+    ],
+    [
+      {
+        warp: { c: 0, r: 0 },
+      },
+      {
+        dir: Direction.Left,
+      },
+      {
+        warp: { c: 0, r: 2 },
+      },
+    ],
+  ];
+
+  const canvas = new AnimatedCanvas();
+
+  canvas.update = ( dt ) => {
+    world.update( dt );
+  }
+  
+  canvas.draw = ( ctx ) => {
+    ctx.save();
+    ctx.scale( TILE_SIZE, TILE_SIZE );
+    ctx.translate( 0.5, 0.5 );
+
+    world.draw( ctx );
+
+    ctx.restore();
+  };
+
+  canvas.start();
+
+  const moveUp =    () => world.player.move( Direction.Up );
+  const moveDown =  () => world.player.move( Direction.Down );
+  const moveLeft =  () => world.player.move( Direction.Left );
+  const moveRight = () => world.player.move( Direction.Right );
+
+  const KeyBindings = {
+    KeyW: moveUp,
+    KeyA: moveLeft,
+    KeyS: moveDown,
+    KeyD: moveRight,
+    ArrowUp: moveUp,
+    ArrowLeft: moveLeft,
+    ArrowDown: moveDown,
+    ArrowRight: moveRight,
+  };
+
+  document.addEventListener( 'keydown', e => KeyBindings[ e.code ]?.() );
+
+</script>

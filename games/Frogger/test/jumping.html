@@ -1,0 +1,50 @@
+<title>Player Jumping</title>
+<link rel="stylesheet" href="../grid.css">
+
+<script type="module">
+  import { Direction } from '../src/Entity.js';
+  import { Frog } from '../src/Frog.js';
+  
+  import { AnimatedCanvas } from '../src/common/AnimatedCanvas.js';
+
+  const TILE_SIZE = 64;
+
+  const player = new Frog( { x: 1, y: 2, color: 'green' } );
+
+  const canvas = new AnimatedCanvas();
+
+  canvas.update = ( dt ) => {
+    player.update( dt );
+  }
+
+  canvas.draw = ( ctx ) => {
+    ctx.save();
+    ctx.scale( TILE_SIZE, TILE_SIZE );
+    ctx.translate( 0.5, 0.5 );
+
+    player.draw( ctx );
+
+    ctx.restore();
+  };
+
+  canvas.start();
+
+  const moveUp =    () => player.move( Direction.Up );
+  const moveDown =  () => player.move( Direction.Down );
+  const moveLeft =  () => player.move( Direction.Left );
+  const moveRight = () => player.move( Direction.Right );
+
+  const KeyBindings = {
+    KeyW: moveUp,
+    KeyA: moveLeft,
+    KeyS: moveDown,
+    KeyD: moveRight,
+    ArrowUp: moveUp,
+    ArrowLeft: moveLeft,
+    ArrowDown: moveDown,
+    ArrowRight: moveRight,
+  };
+
+  document.addEventListener( 'keydown', e => KeyBindings[ e.code ]?.() );
+
+</script>

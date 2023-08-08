@@ -1,0 +1,142 @@
+<title>Runway</title>
+<link rel="stylesheet" href="../grid.css">
+
+<script type="module">
+  import { Frog } from '../src/Frog.js';
+  import { Turtle } from '../src/Turtle.js';
+  import { Log } from '../src/Log.js';
+  import { Car } from '../src/Car.js';
+  import { Tiles } from '../src/Tiles.js';
+
+  import { AnimatedCanvas } from '../src/common/AnimatedCanvas.js';
+
+  const TILE_SIZE = 64;
+
+  const entities = [];
+
+  const frogs = [ 'red', 'orange', 'yellow', 'lime', 'dodgerblue', 'blueviolet' ].map( ( color, i ) =>
+    new Frog( { x: i, y: 0, size: 0.6, color: color } )
+  );
+
+  const car = new Car( { x: 3, y: 5, color: 'red' } );
+
+  const player = new Frog( { x: 1, y: 2, color: 'green' } );
+  player.isAlive = false;
+  
+  const turtle = new Turtle( { x: 1, y: 4 } );
+  const logs = [
+    new Log( { x: 1, y: 3, logType: 'start' } ),
+    new Log( { x: 2, y: 3, logType: 'middle' } ),
+    new Log( { x: 3, y: 3, logType: 'end' } ),
+  ];
+
+  const canvas = new AnimatedCanvas();
+
+  canvas.update = ( dt ) => {
+    turtle.animationTime += dt;
+    frogs.forEach( e => e.animationTime += dt );
+    player.animationTime += dt;
+  }
+
+  canvas.draw = ( ctx ) => {
+
+    ctx.save();
+    ctx.scale( TILE_SIZE, TILE_SIZE );
+    ctx.translate( 0.5, 0.5 );
+
+    ctx.save();
+    
+    ctx.translate( 0, 1 );
+    Tiles.Grass.draw( ctx );
+
+    ctx.translate( 1, 0 );
+    Tiles.Bush.draw( ctx );
+
+    ctx.translate( 1, 0 );
+    Tiles.Sidewalk.draw( ctx );
+    
+    ctx.translate( 1, 0 );
+    Tiles.Water.draw( ctx );
+    
+    ctx.translate( 1, 0 );
+    Tiles.Road.draw( ctx );
+
+    ctx.restore();
+
+    // Grass
+    // ctx.fillStyle = 'darkgreen';
+    // ctx.fillRect( 0, 0, 640, 640 );
+
+    // Bush
+
+    // Road
+    // drawRoad( ctx, new Path2D( 'M 32,32 L 320,32 Q 352,32 352,64 L 352,320' ) );
+
+    // Sidewalk
+
+    // Snake
+    // (yellow, red, black stripes, or whatever the deadly order is...)
+    // slither across the screen
+
+    // Car
+    car.draw( ctx );
+
+    // Water
+    // ctx.fillStyle = 'darkblue';
+    // ctx.fillRect( 32, 128, 256, 320 );
+
+    // // Log
+    logs.forEach( log => log.draw( ctx ) );
+
+    // Turtle
+    turtle.draw( ctx );
+
+    // Lilypad
+
+    // Frog
+    frogs.forEach( e => e.draw( ctx ) );
+    player.draw( ctx );
+
+    ctx.restore();
+  };
+
+  canvas.redraw();
+  // canvas.start();
+
+  function drawRoad( ctx, path ) {
+    ctx.save();
+
+    ctx.strokeStyle = 'gray';
+    ctx.lineWidth = 64;
+    ctx.lineCap = 'square';
+    ctx.stroke( path );
+
+    ctx.strokeStyle = 'yellow';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'butt';
+    ctx.setLineDash( [ 16, 16 ] );
+    ctx.stroke( path );
+
+    ctx.restore();
+  }
+
+  function drawLog( ctx, path ) {
+    ctx.save();
+
+    ctx.strokeStyle = 'brown';
+    ctx.lineWidth = 32;
+    ctx.lineCap = 'round';
+    ctx.stroke( path );
+
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1;
+    ctx.lineCap = 'butt';
+    ctx.setLineDash( [ 8, 16, 8, 32, 8, 64 ] );
+    ctx.stroke( path );
+
+    ctx.restore();
+  }
+
+
+
+</script>
