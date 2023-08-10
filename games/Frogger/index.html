@@ -1,30 +1,106 @@
-<title>Frogger v0.6</title>
+<title>Frogger v0.7</title>
 <head>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="./ui.css">
 </head>
 
+<style>
+  body {
+    font-size: 16px;
+  }
+
+  svg {
+    margin-top: 20%;
+    margin-bottom: 10%;
+  }
+
+  path { 
+    fill: transparent;
+  }
+
+  text {
+    fill: url( #gradient );
+    filter: drop-shadow( 0.75px 0.75px 0.1px black );
+  }
+
+  button {
+    width: 60%;
+
+    color: white;
+    background-color: #00aa00;
+    text-shadow: 1px 1px 1px black;
+
+    font-family: 'Silly';
+    font-size: 32px;
+    
+    border-radius: 25px;
+    border-top: 2px #00cc00 solid;
+    border-left: 2px #00cc00 solid;
+    border-right: 2px #008800 solid;
+    border-bottom: 2px #008800 solid;
+
+    margin: 4% 0% 4% 0%;
+  }
+
+  .disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  #splash {
+    position: absolute;
+    top: 0;
+    background-color: dimgray;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+</style>
+
 <body onunload="">
   <div id="wrapper">
     <div id="game">
       <canvas id="canvas"></canvas>
-      <div id="victory" class="message">
-        <span class="bar">Victory!</span>
+      <div id="victory" class="message center">
+        <span class="bar center">Victory!</span>
       </div>
-      <div id="defeat" class="message">
-        <span class="bar">Defeat!</span>
+      <div id="defeat" class="message center">
+        <span class="bar center">Defeat!</span>
       </div>
     </div>
     <div id="ui">
       <div id="rescued"></div>
-      <div id="timer">
+      <div id="timer" class="center">
         <div id="timerBar">
           <div id="timeLeft"></div>
         </div>
       </div>
       <div id="lives"></div>
     </div>
-    <div id="paused">Paused</div>
+    <div id="paused" class="center">Paused</div>
+    <div id="splash">
+      <svg viewBox="0 -5 85 30">
+        <defs>
+          <radialGradient id="gradient">
+            <stop offset="5%" stop-color="lightgreen" />
+            <stop offset="99%" stop-color="lime" />
+          </radialGradient>
+        </defs>
+        <path id="curve" d="M 10,25 Q 40,0 75,20" />
+        <text font-size="20">
+          <textPath xlink:href="#curve">
+            Frogger
+          </textPath>
+        </text>
+      </svg>
+      <button id="continue">Continue</button>
+      <button id="new">New Game</button>
+      <span style="position: absolute; bottom: 0">
+        (c) Jeremy Leland <a href="https://github.com/JeremyLeland/frogger">GitHub</a>
+      </span>
+    </div>
   </div>
 </body>
 
@@ -65,7 +141,7 @@
   //
   // Levels
   //
-  let levelIndex = localStorage.getItem( 'levelIndex' ) ?? 0;
+  let levelIndex = 0;
   const levels = [
     './levels/classic/road.json',
     './levels/classic/retro.json',
@@ -78,7 +154,7 @@
     './levels/classic/superhighway.json',
   ];
 
-  loadLevel( levels[ levelIndex ] );
+  const splashUI = document.getElementById( 'splash' );
 
   async function loadLevel( path ) {
     canvas.stop();
@@ -86,6 +162,7 @@
     world = await World.fromFile( path );
     ui.reset();
     world.ui = ui;
+    splashUI.style.visibility = 'hidden';
     
     canvas.setSize(
       ( world.crop.maxCol - world.crop.minCol + 1 ) * TILE_SIZE,
@@ -94,18 +171,46 @@
     canvas.start();
   }
 
+  function startLevel() {
+    localStorage.setItem( 'levelIndex', levelIndex );
+    loadLevel( levels[ levelIndex ] );
+  }
+
   function prevLevel() {
     levelIndex = Math.max( 0, levelIndex - 1 );
-    localStorage.setItem( 'levelIndex', levelIndex );
-
-    loadLevel( levels[ levelIndex ] );
+    startLevel();
   }
   
   function nextLevel() {
+    console.log( 'next level' );
+    console.log( 'levelIndex was ' + levelIndex );
     levelIndex = Math.min( levels.length - 1, levelIndex + 1 );
-    localStorage.setItem( 'levelIndex', levelIndex );
+    console.log( 'levelIndex now ' + levelIndex );
+    startLevel();
+  }
 
-    loadLevel( levels[ levelIndex ] );
+  function continueGame() {
+    levelIndex = parseInt( localStorage.getItem( 'levelIndex' ) );
+    startLevel();
+  }
+
+  function newGame() {
+    levelIndex = 0;
+    startLevel();
+  }
+
+  const continueButton = document.getElementById( 'continue' );
+  const newButton = document.getElementById( 'new' );
+  
+  newButton.addEventListener( 'click', newGame );
+
+  if ( localStorage.getItem( 'levelIndex' ) ) {
+    continueButton.addEventListener( 'click', continueGame );
+    continueButton.focus();
+  }
+  else {
+    continueButton.classList.add( 'disabled' );
+    newButton.focus();
   }
 
   // 
@@ -119,12 +224,15 @@
 
   function move( dir ) {
     if ( !paused ) {
+      if ( !world ) {
+        startLevel();
+      }
       if ( world.victory ) {
         nextLevel();
       }
       else if ( world.defeat ) {
         // previousLevel();   // maybe this is too mean
-        loadLevel( levels[ levelIndex ] );  // just restart for now
+        startLevel();  // just restart for now
       }
       else if ( world.needsRespawn ) {
         world.respawnPlayer();
