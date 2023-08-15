@@ -1,58 +1,54 @@
 <link rel="stylesheet" href="./grid.css">
 
+<style>
+  #ui {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 140px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 64px 64px;
+  }
+</style>
+
 <body>
-  <div id="world"></div>
+  <div id="world">
+    <canvas id="canvas"></canvas>
+  </div>
   <div id="ui">
-    <div id="tiles"></div>
-    <div id="entities"></div>
+    Tiles
+    <div id="tiles" class="grid"></div>
+    Entities
+    <div id="entities" class="grid"></div>
   </div>
 </body>
 
 <script type="module">
+  import * as Constants from './src/Constants.js';
   import { Canvas } from './src/common/Canvas.js';
   import { Tiles } from './src/Tiles.js';
   import { Direction } from './src/Entity.js';
   import { Entities } from './src/Entities.js';
   import { Froggy } from './src/Froggy.js';
   import { World } from './src/World.js';
+
+  import { FroggerCanvas } from './src/FroggerCanvas.js';
   
-  const TILE_SIZE = 48;
 
   World.DebugGrid = true;
   
+
+  const worldCanvas = new FroggerCanvas( document.getElementById( 'canvas' ) );
+  worldCanvas.showCropped = true;
+
   let world = World.fromString( localStorage.getItem( 'currentLevel' ) ) ?? new World( { cols: 15, rows: 15 } );
+  worldCanvas.setWorld( world );
   
-  const worldCanvas = new Canvas( world.cols * TILE_SIZE, world.rows * TILE_SIZE );
   
   function redraw() {
-    const ctx = worldCanvas.ctx;
-
-    ctx.save();
-
-    ctx.scale( TILE_SIZE, TILE_SIZE );
-    world.draw( ctx );
-
-    ctx.beginPath();
-    ctx.moveTo( world.crop.minCol,     world.crop.minRow     );
-    ctx.lineTo( world.crop.minCol,     world.crop.maxRow + 1 );
-    ctx.lineTo( world.crop.maxCol + 1, world.crop.maxRow + 1 );
-    ctx.lineTo( world.crop.maxCol + 1, world.crop.minRow     );
-    ctx.lineTo( world.crop.minCol,     world.crop.minRow     );
-
-    ctx.setLineDash( [ 0.1, 0.1 ] );
-    ctx.lineWidth = 0.05;
-    ctx.stroke();
-
-    ctx.lineTo( 0, 0 );
-    ctx.lineTo( world.cols, 0 );
-    ctx.lineTo( world.cols, world.rows );
-    ctx.lineTo( 0, world.rows );
-    ctx.lineTo( 0, 0 );
-
-    ctx.fillStyle = "#000b";
-    ctx.fill();
-
-    ctx.restore();
+    worldCanvas.redraw();
 
     // Save progress
     localStorage.setItem( 'currentLevel', JSON.stringify( world.toJson() ) );
@@ -63,15 +59,25 @@
   let activeBrush = 'Grass', activeType = 'Tiles';
   
   const worldDiv = document.getElementById( 'world' );
-  worldDiv.appendChild( worldCanvas.canvas );
 
   const uiDiv = document.getElementById( 'ui' );
 
   const tilesDiv = document.getElementById( 'tiles' );
-  tilesDiv.appendChild( document.createTextNode( 'Tiles: ' ) );
   for ( const tile in Tiles ) {
     const button = document.createElement( 'button' );
-    button.textContent = tile;
+
+    // TODO: Use AnimatedCanvas for these, and just don't start it?
+    const icon = new Canvas( 48, 48 );
+    icon.ctx.scale( 48, 48 );
+    icon.ctx.translate( 0.5, 0.5 );
+    Tiles[ tile ].draw( icon.ctx );
+    button.appendChild( icon.canvas );
+    button.appendChild( document.createElement( 'br' ) );
+
+    const text = document.createElement( 'div' );
+    text.innerHTML = tile;
+    button.appendChild( text );
+
     button.addEventListener( 'click', ( e ) => { 
       activeBrush = tile;
       activeType = 'Tiles';
@@ -81,12 +87,23 @@
 
   // TODO: Combine similar code with above?
   const entitiesDiv = document.getElementById( 'entities' );
-  entitiesDiv.appendChild( document.createTextNode( 'Entities: ' ) );
-  for ( const type in Entities ) {
+  for ( const id in Entities ) {
     const button = document.createElement( 'button' );
-    button.textContent = type;
+
+    const icon = new Canvas( 48, 48 );
+    icon.ctx.scale( 48, 48 );
+    icon.ctx.translate( 0.5, 0.5 );
+    icon.ctx.lineWidth = 1 / 48;
+    Entities[ id ].drawEntity( icon.ctx );
+    button.appendChild( icon.canvas );
+    button.appendChild( document.createElement( 'br' ) );
+
+    const text = document.createElement( 'div' );
+    text.innerHTML = id;
+    button.appendChild( text );
+
     button.addEventListener( 'click', ( e ) => { 
-      activeBrush = type;
+      activeBrush = id;
       activeType = 'Entities';
     } );
     entitiesDiv.appendChild( button );
@@ -115,8 +132,7 @@
     numInputUI.style.width = 50;
     numInputUI.oninput = _ => {
       world.crop[ val ] = parseInt( numInputUI.value );
-      updateCropUI();
-      redraw();
+      levelResized()
     };
 
     cropUI[ val ] = numInputUI;
@@ -135,23 +151,32 @@
   uiDiv.appendChild( timeUI );
   uiDiv.appendChild( document.createTextNode( 'ms' ) );
   
-  uiDiv.appendChild( document.createTextNode( 'Load: ' ) );
 
-  // TODO: Hidden file input, triggered by Load button
-  const loadButton = document.createElement( 'input' );
-  loadButton.type = 'file';
-  loadButton.onchange = _ => {
+  const loadInput = document.createElement( 'input' );
+  loadInput.type = 'file';
+  loadInput.onchange = _ => {
     const reader = new FileReader();
     reader.onload = loadLevel;
-    reader.readAsText( loadButton.files[ 0 ] );
+    reader.readAsText( loadInput.files[ 0 ] );
   }
-  uiDiv.appendChild( loadButton );
 
-  uiDiv.appendChild( document.createTextNode( 'Save: ' ) );
-  const saveButton = document.createElement( 'button' );
-  saveButton.textContent = 'Save';
-  saveButton.addEventListener( 'click', saveLevel );
-  uiDiv.appendChild( saveButton );
+  const fileDiv = document.createElement( 'div' );
+ 
+  makeButton( 'Clear', clearLevel, fileDiv );
+  makeButton( 'Load', _ => loadInput.click(), fileDiv );
+  makeButton( 'Save', saveLevel, fileDiv );
+  makeButton( 'Play', _ => worldCanvas.start(), fileDiv );
+  makeButton( 'Pause', _ => worldCanvas.stop(), fileDiv );
+  makeButton( 'Stop', restoreLevel, fileDiv );
+
+  uiDiv.appendChild( fileDiv );
+
+  function makeButton( text, func, parent ) {
+    const button = document.createElement( 'button' );
+    button.textContent = text;
+    button.addEventListener( 'click', func );
+    parent.appendChild( button );
+  }
 
   function updateCropUI() {
     for ( const val in world.crop ) {
@@ -174,8 +199,8 @@
   let warpStart;
 
   worldCanvas.canvas.addEventListener( 'mousemove', ( e ) => {
-    mouseCol = Math.floor( e.offsetX / TILE_SIZE );
-    mouseRow = Math.floor( e.offsetY / TILE_SIZE );
+    mouseCol = Math.floor( e.offsetX / Constants.TileSize );
+    mouseRow = Math.floor( e.offsetY / Constants.TileSize );
 
     if ( mouseDown && activeBrush == 'warp') {
       // TODO: Draw warp-in-progress?
@@ -210,6 +235,8 @@
   // TODO: Moving entities with Click-Drag?
   // (how do I know not to change the tile instead? modifier key?)
 
+
+  // TODO: Inhibit adding entities if currently playing
   function doMouse() {
     if ( mouseDown && ( mouseCol != lastCol || mouseRow != lastRow ) ) {
       lastCol = mouseCol;
@@ -250,10 +277,24 @@
 
   document.addEventListener( 'keydown', e => KeyBindings[ e.code ]?.() );
 
+  
+
+  function clearLevel() {
+    world = new World( { cols: 17, rows: 17, crop: [ 1, 1, 15, 15 ] } );
+    worldCanvas.setWorld( world );
+    levelResized();
+  }
+
   function loadLevel( e ) {
-    world = new World( JSON.parse( e.target.result ) );
-    worldCanvas.setSize( world.cols * TILE_SIZE, world.rows * TILE_SIZE );
-    updateCropUI();
+    world = World.fromString( e.target.result );
+    worldCanvas.setWorld( world );
+    levelResized();
+  }
+
+  function restoreLevel() {
+    worldCanvas.stop();
+    world = World.fromString( localStorage.getItem( 'currentLevel' ) );
+    worldCanvas.setWorld( world );
     redraw();
   }
 
@@ -289,11 +330,13 @@
     if ( rows > 0 )   world.addRow( mouseRow ); 
     if ( rows < 0 )   world.removeRow( mouseRow );
 
-    updateCropUI();
-
-    worldCanvas.setSize( world.cols * TILE_SIZE, world.rows * TILE_SIZE );
-    redraw();
+    levelResized();
   }
   
+  function levelResized() {
+    worldCanvas.setSize( world.cols * Constants.TileSize, world.rows * Constants.TileSize );
+    updateCropUI();
+    redraw();
+  }
 
 </script>

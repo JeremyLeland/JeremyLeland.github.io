@@ -1,6 +1,6 @@
 
 
-import { Frog } from './Frog.js';
+import { Death, Frog } from './Frog.js';
 
 const MOVE_SPEED = 0.003;
 const JUMP_TIME = 1 / MOVE_SPEED;
@@ -17,8 +17,9 @@ export class Player extends Frog {
     }
   }
 
-  kill() {
+  kill( mannerOfDeath ) {
     this.isAlive = false;
+    this.mannerOfDeath = mannerOfDeath;
     this.animationTime = 0;   // TODO: death splat animation?
     this.zIndex = -2;
     this.#jumpQueue = [];
@@ -42,12 +43,8 @@ export class Player extends Frog {
         this.dx = 0;
         this.dy = 0;
 
-        //
-        // TODO: Use hitbox from entity (smaller hitbox for rides, larger for cars)
-        //
-
         const collidingWith = world.entities.find( 
-          e => Math.abs( e.x - this.x ) < 0.5 && Math.abs( e.y - this.y ) < 0.5 
+          e => Math.abs( e.x - this.x ) < e.hitDist && Math.abs( e.y - this.y ) < e.hitDist
         );
 
         if ( collidingWith?.canRescue ) {
@@ -55,7 +52,13 @@ export class Player extends Frog {
           this.#jumpQueue = [];
         }
         else if ( collidingWith?.killsPlayer ) {
-          world.killPlayer();
+          if ( ( this.dir.x == 0 && collidingWith.dir.x == 0 ) ||
+               ( this.dir.y == 0 && collidingWith.dir.y == 0 ) ) {
+            world.killPlayer( Death.SquishedHorizontal );
+          }
+          else {
+            world.killPlayer( Death.SquishedVertical );
+          }
         }
         else {
           this.ride = collidingWith;
@@ -66,20 +69,27 @@ export class Player extends Frog {
           this.y = this.ride.y;
         }
         else {
-          this.x = Math.round( this.x );
-          this.y = Math.round( this.y );
+          const tileX = Math.round( this.x );
+          const tileY = Math.round( this.y );
 
-          const tile = world.getTile( this.x, this.y );
+          const tile = world.getTile( tileX, tileY );
           if ( !tile || Tiles[ tile.tileInfoKey ].KillsPlayer ) {
-            world.killPlayer();
+            world.killPlayer( Death.Drowned );
+          }
+          else {
+            this.x = tileX;
+            this.y = tileY;
           }
         }
 
         if ( this.#jumpQueue.length > 0 ) {
           const dir = this.#jumpQueue.shift();
           this.dir = dir;
-    
-          const nextTile = world.getTile( Math.round( this.x + dir.x ), Math.round( this.y + dir.y ) );
+
+          // Take into account ride speed while determining next tile
+          const nextX = this.x + dir.x + ( this.ride?.dx ?? 0 ) * JUMP_TIME;
+          const nextY = this.y + dir.y + ( this.ride?.dy ?? 0 ) * JUMP_TIME;
+          const nextTile = world.getTile( Math.round( nextX ), Math.round( nextY ) );
 
           if ( nextTile && !Tiles[ nextTile.tileInfoKey ].Solid ) {
             this.#jumpTimeLeft += JUMP_TIME;
