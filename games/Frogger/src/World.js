@@ -12,29 +12,16 @@ arrow.closePath();
 const ARROW_COLOR = '#ff05';
 const TILE_BORDER = 1 / 64;
 
-function drawDashedArrow( ctx, x1, y1, x2, y2 ) {
-  ctx.beginPath();
-  ctx.moveTo( x1, y1 );
-  ctx.lineTo( x2, y2 );
-  ctx.setLineDash( [ 0.1, 0.1 ] );
-  ctx.stroke();
-  ctx.setLineDash( [] );
-
-  const HEAD = 0.5;
-  const angle = Math.atan2( y1 - y2, x1 - x2 );
-  ctx.beginPath();
-  ctx.moveTo( x2, y2 );
-  ctx.arc( x2, y2, 0.1, angle - HEAD, angle + HEAD );
-  ctx.closePath();
-  ctx.fill();
-}
-
 import { Direction } from './Entity.js';
-import { Tiles } from './Tiles.js';
+import { Props } from './Props.js';
+import { TileMap } from './TileMap.js';
 import { Entity } from './Entity.js';
 import { Entities } from './Entities.js';
 import { Death } from './Frog.js';
 import { Player } from './Player.js';
+
+import * as Constants from './Constants.js';
+import * as Utility from './common/Utility.js';
 
 const DirArray = [
   Direction.Up,
@@ -69,6 +56,8 @@ export class World
   needsRespawn = false;
   defeat = false;
   victory = false;
+
+  #tileMap;
 
   constructor( json ) {
     this.cols = json.cols;
@@ -112,6 +101,8 @@ export class World
       this.tiles[ coords[ 0 ] ][ coords [ 1 ] ].warp = { col: coords[ 2 ], row: coords[ 3 ] }
     );
 
+    this.#tileMap = new TileMap( this.tiles );
+
     for ( const type in json.entities ) {
       json.entities[ type ]?.forEach( coords => 
         this.addEntity( type, coords[ 0 ], coords[ 1 ] ) 
@@ -120,7 +111,7 @@ export class World
 
     this.maxTime = json.time ?? 15000;
     
-    this.lives = 4;
+    this.lives = Constants.MaxLives;
     
     [ this.spawnCol, this.spawnRow ] = json.player ?? [ Math.floor( this.cols / 2 ), Math.floor( this.rows / 2 ) ];
     this.respawnPlayer();
@@ -292,13 +283,6 @@ export class World
     // TODO: Lose when lives < 0
     this.lives--;
     this.defeat = this.lives < 0;
-
-    if ( this.ui ) {
-      this.ui.setLives( this.lives );
-      if ( this.defeat ) {
-        this.ui.showDefeat();
-      }
-    }
   }
 
   respawnPlayer() {
@@ -318,19 +302,10 @@ export class World
     this.rescued.push( entity );
     this.entities = this.entities.filter( e => e != entity );
 
-    this.lives = Math.min( 4, this.lives + 1 );
+    this.lives = Math.min( Constants.MaxLives, this.lives + 1 );
 
     this.needsRespawn = true;
     this.victory = this.entities.filter( e => e.canRescue ).length == 0;
-
-    if ( this.ui ) {
-      this.ui.showFroggy( entity.froggyIndex );
-      this.ui.setLives( this.lives );
-
-      if ( this.victory ) {
-        this.ui.showVictory();
-      }
-    }
   }
 
   update( dt ) {
@@ -339,9 +314,6 @@ export class World
 
     if ( !this.needsRespawn ) {
       this.timeLeft = Math.max( 0, this.timeLeft - dt );
-      if ( this.ui ) {
-        this.ui.setTimeLeft( this.timeLeft / this.maxTime );
-      }
       
       if ( this.timeLeft == 0 ) {
         this.killPlayer( Death.Expired );
@@ -357,25 +329,17 @@ export class World
       ctx.translate( -this.crop.minCol, -this.crop.minRow );
     }
 
-    // Was trying to not draw cropped tiles, but that threw off positioning...
-    const startCol = 0; //showCropped ? 0 : this.crop.minCol;
-    const startRow = 0; // showCropped ? 0 : this.crop.minRow;
-    const endCol = this.cols - 1; //showCropped ? this.cols - 1 : this.crop.maxCol;
-    const endRow = this.rows - 1; //showCropped ? this.rows - 1 : this.crop.maxRow;
+    this.#tileMap.draw( ctx );
 
     ctx.save();
 
-    for ( let r = startRow; r <= endRow; r ++ ) {
+    for ( let row = 0; row < this.rows; row ++ ) {
       ctx.save();
       
-      for ( let c = startCol; c <= endCol; c ++ ) {
-        const tile = this.tiles[ c ][ r ];
-        const nTile = r > 0 ? this.tiles[ c ][ r - 1 ] : null;
-        const wTile = c > 0 ? this.tiles[ c - 1 ][ r ] : null;
-        
-        if ( tile.tileInfoKey ) {
-          Tiles[ tile.tileInfoKey ].draw( ctx, tile, nTile, wTile );
-        }
+      for ( let col = 0; col < this.cols; col ++ ) {
+    
+        const prop = Props[ this.tiles[ col ][ row ].tileInfoKey ];
+        prop?.draw( ctx );
 
         ctx.translate( 1, 0 );
       }
@@ -396,8 +360,8 @@ export class World
       ctx.textAlign = 'center';
       ctx.font = '10px Arial';      // work around https://bugzilla.mozilla.org/show_bug.cgi?id=1845828
       
-      for ( let r = startRow; r <= endRow; r ++ ) {
-        for ( let c = startCol; c <= endCol; c ++ ) {
+      for ( let r = 0; r < this.rows; r ++ ) {
+        for ( let c = 0; c < this.cols; c ++ ) {
           const tile = this.tiles[ c ][ r ];
 
           ctx.save();
@@ -418,7 +382,9 @@ export class World
           ctx.restore();
           
           if ( tile.warp ) {
-            drawDashedArrow( ctx, c, r, tile.warp.col, tile.warp.row );
+            ctx.setLineDash( [ 0.1, 0.1 ] );
+            Utility.drawArrow( ctx, c, r, tile.warp.col, tile.warp.row );
+            ctx.setLineDash( [] );
           }
         }
       }
