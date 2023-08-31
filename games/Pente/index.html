@@ -1,0 +1,115 @@
+<title>Pente v0.5</title>
+<link rel="stylesheet" href="./base.css">
+
+<style>
+  body {
+    width: 100%;
+    height: 100%;
+  }
+  
+  #wrapper {
+    position: relative;
+    aspect-ratio: 0.95;
+    min-width: 0%;
+    max-width: 100%;
+    min-height: 0%;
+    max-height: 100%;
+    margin: 0 auto;
+  }
+
+  h1 {
+    text-align: center;
+    margin: 0;
+  }
+
+  canvas {
+    width: 100%;
+    /* height: 100%; */
+  }
+
+  #ui {
+    display: flex;
+    gap: 3vmin;
+  }
+
+  .playerName {
+    font-weight: bold;
+    margin-right: 1vmin;
+  }
+
+</style>
+
+<body>
+  <div id="wrapper">
+    <!-- <h1>Pente</h1> -->
+    <canvas id="canvas"></canvas>
+    <div id="ui">
+    </div>
+  </div>
+</body>
+
+<script type="module">
+  import { PenteCanvas } from './src/PenteCanvas.js';
+  import { Piece } from './src/Piece.js';
+
+  const ui = document.getElementById( 'ui' );
+
+  const playerDiv = [];
+  const captureUI = [];
+
+  [ 1, 2 ].forEach( team => {
+    const div = document.createElement( 'div' );
+
+    const playerName = document.createElement( 'span' );
+    playerName.className = 'playerName';
+    playerName.innerText = `Player ${ team }`;
+
+    const span = document.createElement( 'span' );
+    span.id = `capture${ team }`;
+    span.textContent = 0;
+    
+    const label = document.createElement( 'label' );
+    label.textContent = 'Captures: ';
+    label.htmlFor = span.id;
+
+    playerDiv.push( div );
+    captureUI.push( span );
+
+    div.appendChild( playerName );
+    div.appendChild( label );
+    div.appendChild( span );
+
+    ui.appendChild( div );
+
+    return span;
+  } );
+
+  const newButton = document.createElement( 'button' );
+  newButton.innerText = 'New';
+  newButton.addEventListener( 'click', _ => pente.newGame() );
+  ui.appendChild( newButton );
+
+  const undoButton = document.createElement( 'button' );
+  undoButton.innerText = 'Undo';
+  undoButton.addEventListener( 'click', _ => pente.undo() );
+  ui.appendChild( undoButton );
+
+  function onUIUpdate( board ) {
+    board.captures.forEach( ( number, index ) => {
+      captureUI[ index ].innerText = number;
+
+      playerDiv[ index ].style.backgroundColor = board.currentTeam - 1 == index ? Piece.TeamColor[ index ] : 'black';
+    } );
+  }
+
+  const pente = new PenteCanvas( document.getElementById( 'canvas' ), onUIUpdate );
+
+  const wrapper = document.getElementById( 'wrapper' );
+  window.onresize = ( e ) => {
+    pente.updateSize();
+  };
+  window.onresize();
+
+  
+
+</script>

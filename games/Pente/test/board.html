@@ -1,0 +1,52 @@
+<link rel="stylesheet" href="../base.css">
+
+<canvas id="canvas" style="width: 100%; height: 100%"></canvas>
+
+<script type="module">
+  import { AnimatedCanvas } from '../src/common/AnimatedCanvas.js';
+
+  import { Board } from '../src/Board.js';
+  
+  
+  const Scale = 36;
+  const GameStateKey = 'penteGameState';
+  
+  const canvas = new AnimatedCanvas( Scale * Board.Size, Scale * Board.Size, document.getElementById( 'canvas' ) );
+
+  let board = Object.assign( new Board(), JSON.parse( localStorage.getItem( GameStateKey ) ) );
+  
+  canvas.update = ( dt ) => {
+    if ( !board.update( dt ) ) {
+      canvas.stop();
+    }
+  }
+
+  canvas.draw = ( ctx ) => {
+    ctx.scale( Scale, Scale );
+    board.draw( ctx, Scale );
+  }
+
+  function boardUpdated() {
+    localStorage.setItem( GameStateKey, JSON.stringify( board ) );
+    canvas.start();
+  }
+  boardUpdated();
+
+  document.addEventListener( 'click', ( e ) => {
+    const col = Math.round( e.clientX / Scale );
+    const row = Math.round( e.clientY / Scale );
+
+    const move = board.getMove( col, row );
+    if ( move ) {
+      board.applyMove( move );
+      boardUpdated();
+    }
+  } );
+
+  const KeyBindings = {
+    KeyU: _ => { board.undo(); boardUpdated(); },
+    KeyC: _ => { board = new Board(); boardUpdated(); }
+  };
+  document.addEventListener( 'keydown', ( e ) => KeyBindings[ e.code ]?.() );
+
+</script>
