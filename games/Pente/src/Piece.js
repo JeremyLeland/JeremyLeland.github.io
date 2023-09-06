@@ -10,21 +10,18 @@ piece.arc( 0, 0, Size, 0, Math.PI * 2 );
 const specular = new Path2D();
 specular.arc( SpecularOffset, SpecularOffset, SpecularSize, 0, Math.PI * 2 );
 
-// TODO: Make these setable elsewhere
-const PlayerColors = {
-  Red: '#e00a',
-  Orange: '#e80a',
-  Yellow: '#fd0a',
-  Green: '#084a',
-  Blue: '#08fa',
-  Violet: '#808a',
-};
-
 
 export class Piece {
-  static TeamColor = [ PlayerColors.Red, PlayerColors.Yellow ];
+  static PlayerColors = {
+    Red: '#e00a',
+    Orange: '#e80a',
+    Yellow: '#fd0a',
+    Green: '#084a',
+    Blue: '#08fa',
+    Violet: '#808a',
+  };
 
-  team = 0;
+  colorKey;
   #size = 0;
 
   grow( dt ) {
@@ -42,11 +39,11 @@ export class Piece {
   }
 
   draw( ctx ) {
-    if ( this.team > 0 ) {
+    if ( this.colorKey ) {
       ctx.save();
       ctx.scale( this.#size, this.#size );
       
-      ctx.fillStyle = Piece.TeamColor[ this.team - 1 ];
+      ctx.fillStyle = Piece.PlayerColors[ this.colorKey ];
       ctx.fill( piece );
       ctx.stroke( piece );
 

@@ -72,11 +72,15 @@ export class Board {
   );
 
   history = [];
-
-  teams = 2;
+  
   currentTeam = 1;
-
+  
+  teams = 2;
+  color = [ 'Red', 'Yellow' ];
+  ai = Array( this.teams ).fill( 0 );
   captures = Array( this.teams ).fill( 0 );
+
+
   victory = 0;
 
   #pieces = Array.from( 
@@ -97,6 +101,49 @@ export class Board {
     else {
       return -1;
     }
+  }
+
+  getBestMove() {
+    let bestScore = 0;
+    let bestMoves = [];
+    
+    for ( let row = 0; row <= BoardSize; row ++ ) {
+      for ( let col = 0; col <= BoardSize; col ++ ) {
+        const move = this.getMove( col, row );
+        if ( move ) {
+
+          // For now, score by how long a series this gives us,
+          // as well as how long an enemy series it prevents
+          // TODO: Weight our gain differently than others potential gains?
+          let score = 0;
+          for ( let i = 1; i <= this.teams; i ++ ) {
+            const weight = i == this.currentTeam ? 1.5 : 1;
+            score += Math.pow( this.getLongest( col, row, i ), 2 ) * weight;
+          }
+
+          // TODO: How to weight captures compared to adds?
+          move.captures?.forEach( captured => {
+            score += this.getLongest( captured.col, captured.row, captured.team );
+          } );
+
+          if ( score > bestScore ) {
+            bestScore = score;
+            bestMoves = [ move ];
+          }
+          else if ( score == bestScore ) {
+            bestMoves.push( move );
+          }
+        }
+      }
+    }
+
+    console.log( 'best score = ' + bestScore );
+
+    return bestMoves[ Math.floor( Math.random() * bestMoves.length ) ];
+  }
+
+  getScore( team ) {
+    // TODO: number of captures it provides, longest 
   }
 
   getMove( col, row ) {
@@ -130,22 +177,45 @@ export class Board {
     }
   }
 
+  // How long a series would we make by going here?
+  getLongest( col, row, team ) {
+    let longest = 0;
+    [ [ -1, -1 ], [ 0, -1 ], [ 1, -1 ], [ -1, 0 ] ].forEach( dir => {
+      let numSame = 1;    // assume team placed at col,row
+      let numEmpty = 0;
+      
+      [ -1, 1 ].forEach( posneg => {
+        const dCol = dir[ 0 ] * posneg;
+        const dRow = dir[ 1 ] * posneg;
+
+        let c = col + dCol;
+        let r = row + dRow;
+
+        for ( ;
+          this.getTeam( c, r ) == team;
+          c += dCol, r += dRow, numSame ++ );
+
+          for ( ;
+            this.getTeam( c, r ) == 0;
+            c += dCol, r += dRow, numEmpty ++ );
+      } );
+
+      // Since we only care about length in terms of victory, we can help
+      // the AI by ignoring lengths when there aren't enough empties to
+      // make it up to 5
+      if ( numSame + numEmpty >= 5 ) {
+        longest = Math.max( longest, numSame );
+      }
+    } );
+
+    return longest;
+  }
+
   applyMove( move ) {
     // In a row
     this.board[ move.col ][ move.row ] = move.team;
 
-    let longest = 0;
-    [ [ -1, -1 ], [ 0, -1 ], [ 1, -1 ], [ -1, 0 ] ].forEach( dir => {
-      let numSame = -1;   // since we'll be counting col,row twice
-
-      [ -1, 1 ].forEach( posneg => {
-        for ( let col = move.col, row = move.row;
-          this.getTeam( col, row ) == move.team;
-          col += dir[ 0 ] * posneg, row += dir[ 1 ] * posneg, numSame ++ );
-      } );
-      
-      longest = Math.max( longest, numSame );
-    } );
+    const longest = this.getLongest( move.col, move.row, move.team );
 
     console.log( 'longest made = ' + longest );
 
@@ -170,13 +240,16 @@ export class Board {
     if ( this.victory ) {
       this.#victoryText = `Player ${ move.team } Wins!`;
     }
-
-    this.currentTeam = this.currentTeam % this.teams + 1;
+    else {
+      this.currentTeam = this.currentTeam % this.teams + 1;
+    }
 
     this.history.push( move );
   }
 
   undo() {
+    // TODO: Undo to last human move? (Otherwise, AI moves will immediately redo)
+
     const move = this.history.pop();
 
     if ( move ) {
@@ -196,6 +269,8 @@ export class Board {
     }
   }
 
+  onUIUpdate() {}
+  onReady() {}
 
   update( dt ) {
     let changed = false;
@@ -207,7 +282,7 @@ export class Board {
         const piece = this.#pieces[ col ][ row ];
 
         if ( team > 0 ) {
-          piece.team = team;
+          piece.colorKey = this.color[ team - 1 ];
           changed |= piece.grow( dt );
         }
       }
@@ -224,6 +299,18 @@ export class Board {
             changed |= piece.shrink( dt );
           }
         }
+      }
+    }
+
+    if ( !changed ) {
+      this.onUIUpdate();
+
+      if ( !this.victory && this.ai[ this.currentTeam - 1 ] ) {
+        this.applyMove( this.getBestMove() );
+        return true;
+      }
+      else {
+        this.onReady();
       }
     }
 
