@@ -1,16 +1,17 @@
 <title>Load levels</title>
-<link rel="stylesheet" href="../grid.css">
+<link rel="stylesheet" href="../ui.css">
 
 <script type="module">
+  import { Level } from '../src/Level.js';
   import { World } from '../src/World.js';
   
   import { AnimatedCanvas } from '../src/common/AnimatedCanvas.js';
 
-  World.DebugGrid = true;
+  Level.DebugGrid = true;
 
-  const TILE_SIZE = 64;
+  const level = Object.assign( new Level(), await ( await fetch( '../levels/classic/road.json' ) ).json() );
 
-  const world = await World.fromFile( '../levels/test/test1.json' );
+  const world = new World( level );
 
   const canvas = new AnimatedCanvas();
 
@@ -20,14 +21,13 @@
   
   canvas.draw = ( ctx ) => {
     ctx.save();
-    ctx.scale( TILE_SIZE, TILE_SIZE );
-    ctx.translate( 0.5, 0.5 );
+    ctx.scale( 48, 48 );
 
     world.draw( ctx );
 
     ctx.restore();
   };
 
-  canvas.redraw();
+  canvas.start();
 
 </script>

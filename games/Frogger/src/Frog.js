@@ -39,29 +39,24 @@ exes.lineTo( EYE_OFFSET_X + EYE_SIZE, EYE_OFFSET_Y + EYE_SIZE );
 exes.moveTo( EYE_OFFSET_X + EYE_SIZE, EYE_OFFSET_Y - EYE_SIZE );
 exes.lineTo( EYE_OFFSET_X - EYE_SIZE, EYE_OFFSET_Y + EYE_SIZE );
 
-import { Direction, Entity } from './Entity.js';
+export class Frog {
+  static Status = {
+    Alive: 'alive',
+    Expired: 'expired',
+    Drowned: 'drowned',
+    SquishedHorizontal: 'squishedHorizontal',
+    SquishedVertical: 'squishedVertical',
+  };
 
-export const Death = {
-  Expired: 0,
-  Drowned: 1,
-  SquishedHorizontal: 2,
-  SquishedVertical: 3,
-};
-
-export class Frog extends Entity {
-  isAlive = true;
-  
-  drawEntity( ctx ) {
-    Frog.drawFrog( ctx, this.color, this.animationTime, this.isAlive, this.mannerOfDeath );
-  }
-
-  static drawFrog( ctx, color = 'green', animationTime = 0, isAlive = true, mannerOfDeath ) {
-    // TODO: Is there a way to reuse this? Is it worth it performance-wise?
+  static getFrogGradient( ctx, color ) {
     const gradient = ctx.createRadialGradient( 0, 0, 0, 0, 0, 1.5 );
     gradient.addColorStop( 0, color );
     gradient.addColorStop( 1, 'black' );
+    return gradient;
+  }
 
-    ctx.fillStyle = gradient;
+  static drawFrog( ctx, bodyGradient, animationAction, animationTime = 0 ) {
+    ctx.fillStyle = bodyGradient;
     
     const footOffset = -0.1 * Math.sin( animationTime * Math.PI );
 
@@ -69,8 +64,8 @@ export class Frog extends Entity {
 
     [ -1, 1 ].forEach( dir => {
       [ -1, 1 ].forEach( side => {
-        const x = dir * ( FOOT_OFFSET_X + ( mannerOfDeath == Death.SquishedHorizontal ? 0.1 : 0 ) ) + FOOT_SHIFT + footOffset;
-        const y = side * ( FOOT_OFFSET_Y + ( mannerOfDeath == Death.SquishedVertical ? 0.1 : 0 ) );
+        const x = dir * ( FOOT_OFFSET_X + ( animationAction == Frog.Status.SquishedHorizontal ? 0.1 : 0 ) ) + FOOT_SHIFT + footOffset;
+        const y = side * ( FOOT_OFFSET_Y + ( animationAction == Frog.Status.SquishedVertical ? 0.1 : 0 ) );
 
         feet.moveTo( x,             y - FOOT_SIZE / 2 );
         feet.lineTo( x + FOOT_SIZE, y - FOOT_SIZE     );
@@ -90,8 +85,8 @@ export class Frog extends Entity {
 
     [ -1, 1 ].forEach( dir => {
       [ -1, 1 ].forEach( side => {
-        const footX = dir * ( FOOT_OFFSET_X + ( mannerOfDeath == Death.SquishedHorizontal ? 0.1 : 0 ) ) + FOOT_SHIFT + footOffset;
-        const footY = FOOT_OFFSET_Y + ( mannerOfDeath == Death.SquishedVertical ? 0.1 : 0 );
+        const footX = dir * ( FOOT_OFFSET_X + ( animationAction == Frog.Status.SquishedHorizontal ? 0.1 : 0 ) ) + FOOT_SHIFT + footOffset;
+        const footY = FOOT_OFFSET_Y + ( animationAction == Frog.Status.SquishedVertical ? 0.1 : 0 );
 
         // TODO: Change magic numbers to named constants
         legs.moveTo( 0, side * ( footY - 0.2 ) );
@@ -112,11 +107,11 @@ export class Frog extends Entity {
     ctx.fill( legs );
     ctx.stroke( legs );
 
-    if ( mannerOfDeath == Death.SquishedHorizontal ) {
+    if ( animationAction == Frog.Status.SquishedHorizontal ) {
       ctx.fill( bodySquishHoriz );
       ctx.stroke( bodySquishHoriz );
     }
-    else if ( mannerOfDeath == Death.SquishedVertical ) {
+    else if ( animationAction == Frog.Status.SquishedVertical ) {
       ctx.fill( bodySquishVert );
       ctx.stroke( bodySquishVert );
     }
@@ -125,7 +120,12 @@ export class Frog extends Entity {
       ctx.stroke( body );
     }
       
-    if ( isAlive ) {
+    if ( animationAction && animationAction != Frog.Status.Alive ) {
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = EYE_SIZE / 2;
+      ctx.stroke( exes );
+    }
+    else {
       ctx.fillStyle = 'white';
       ctx.fill( sclera );
       ctx.stroke( sclera );
@@ -133,13 +133,10 @@ export class Frog extends Entity {
       ctx.fillStyle = 'black';
       ctx.fill( pupils );
     }
-    else {
-      ctx.strokeStyle = 'black';
-      ctx.lineWidth = EYE_SIZE / 2;
-      ctx.stroke( exes );
-    }
 
-    if ( mannerOfDeath == Death.Drowned ) {
+    // TODO: This rectangle is obvious near edges of water
+    //       Maybe change the colors instead of drawing a rectangle?
+    if ( animationAction == Frog.Status.Drowned ) {
       ctx.fillStyle = '#000080aa';
       ctx.fillRect( -0.5, -0.5, 1, 1 );
     }
