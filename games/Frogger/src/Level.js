@@ -1,18 +1,3 @@
-const BASE_W = 0.05, HEAD_W = 0.2, NECK = 0, LEN = 0.2;
-const arrow = new Path2D();
-arrow.moveTo( -LEN,  -BASE_W );
-arrow.lineTo(  NECK, -BASE_W );
-arrow.lineTo(  NECK, -HEAD_W );
-arrow.lineTo(  LEN,   0 );
-arrow.lineTo(  NECK,  HEAD_W );
-arrow.lineTo(  NECK,  BASE_W );
-arrow.lineTo( -LEN,   BASE_W );
-arrow.closePath();
-
-const ARROW_COLOR = '#ff05';
-const TILE_BORDER = 1 / 64;
-
-import { Dir } from './Entity.js';
 import { Tiles } from './Tiles.js';
 import { Props } from './Props.js';
 import { TileMap } from './TileMap.js';
@@ -42,7 +27,6 @@ export class Level
     this.directions = Array.from( this.tiles );
   }
 
-  // TODO: Make this take col,row instead, and have caller do Math.round()?
   getTileInfo( x, y ) {
     const col = Math.round( x );
     const row = Math.round( y );
@@ -53,42 +37,35 @@ export class Level
     }
   }
 
-  //
-  // TODO -- make all these use 1D arrays instead of 2D
-  //
-
-  setDirection( dir, col, row ) {
-    this.tiles[ col ][ row ].dir = dir;
-
-    let affected = this.entities.find( e => e.x == col && e.y == row );
-    
-    if ( affected ) {
-      affected.dir = dir;
+  setTileInfo( col, row, tileInfoKey ) {
+    let tileKeyIndex = this.tileInfoKeys.indexOf( tileInfoKey );
+    if ( tileKeyIndex < 0 ) {
+      tileKeyIndex = this.tileInfoKeys.length;
+      this.tileInfoKeys.push( tileInfoKey );
     }
-    else if ( this.player.x == col && this.player.y == row ) {
-      this.player.dir = dir;
-    }
+
+    this.tiles[ col + row * this.cols ] = tileKeyIndex;
+    this.#tileMap = null;
   }
 
-  addEntity( type, col, row ) {
-    this.removeEntity( col, row );
+  setDirection( col, row, dir ) {
+    this.directions[ col + row * this.cols ] = dir;
+    
+    // May need new tilemap, e.g. this might've affected road lines
+    this.#tileMap = null;
+  }
 
-    this.entities.push(
-      new Entity( 
-        Entities[ type ], 
-        {
-          x: col,
-          y: row,
-          // dir: this.tiles[ col ]?.[ row ]?.dir ?? Direction.Right,
-        }
-      )
-    );
+  addEntity( col, row, type ) {
+    this.entities.push( { type: type, x: col, y: row } );
   }
 
   removeEntity( col, row ) {
     this.entities = this.entities.filter( e => e.x != col || e.y != row );
   }
 
+  //
+  // TODO: Make all these work for 1D arrays
+  //
   addColumn( col ) {
     this.tiles.splice( col, 0, 
       Array.from( this.tiles[ col ], e => ( { tileInfoKey: e.tileInfoKey, dir: e.dir } ) ) 
@@ -154,28 +131,6 @@ export class Level
 
         if ( this.spawn.x == col && this.spawn.y == row ) {
           Props[ 'Bullseye' ].draw( ctx );
-        }
-
-        if ( Level.DebugGrid ) {
-          ctx.fillStyle = ctx.strokeStyle = ARROW_COLOR;
-          ctx.lineWidth = TILE_BORDER;
-          ctx.textAlign = 'center';
-          ctx.font = '10px Arial';      // work around https://bugzilla.mozilla.org/show_bug.cgi?id=1845828
-
-          ctx.strokeRect( -0.5, -0.5, 1, 1 );
-
-          const dir = this.directions[ col + row * this.cols ];
-          if ( dir > 0 ) {
-            ctx.save();
-            ctx.rotate( Dir[ dir ].angle );
-            ctx.fill( arrow );
-            ctx.restore();
-          }
-
-          ctx.save();
-          ctx.scale( 0.02, 0.02 );    // work around https://bugzilla.mozilla.org/show_bug.cgi?id=1845828
-          ctx.fillText( `(${ col },${ row })`, 0, 20 );
-          ctx.restore();
         }
 
         ctx.translate( 1, 0 );

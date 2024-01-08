@@ -23,6 +23,9 @@
     display: grid;
     grid-template-columns: 64px 64px;
   }
+  #time {
+    width: 70;
+  }
 </style>
 
 <body>
@@ -31,60 +34,94 @@
       <canvas id="canvas"></canvas>
     </div>
     <div id="ui">
-      Tiles
+      Tiles:
       <div id="tiles" class="grid"></div>
-      Entities
+      Directions: <button id="path" data-type="Path">Path</button>
+      Entities:
       <div id="entities" class="grid"></div>
+      Time: <input id="time" type="number" min="0"></input>ms
+      File:<br>
+      <button id="clear">Clear</button>
+      <button id="load">Load</button>
+      <button id="save">Save</button>
+      Playback:<br>
+      <button id="play">Play</button>
+      <button id="pause">Pause</button>
+      <button id="stop">Stop</button>
     </div>
   </div>
 </body>
 
 <script type="module">
-  import * as Constants from './src/Constants.js';
+  const BASE_W = 0.05, HEAD_W = 0.2, NECK = 0, LEN = 0.2;
+  const arrow = new Path2D();
+  arrow.moveTo( -LEN,  -BASE_W );
+  arrow.lineTo(  NECK, -BASE_W );
+  arrow.lineTo(  NECK, -HEAD_W );
+  arrow.lineTo(  LEN,   0 );
+  arrow.lineTo(  NECK,  HEAD_W );
+  arrow.lineTo(  NECK,  BASE_W );
+  arrow.lineTo( -LEN,   BASE_W );
+  arrow.closePath();
+
+  const ARROW_COLOR = '#ff05';
+  const TILE_BORDER = 1 / 64;
+
+  import { Constants } from './src/Constants.js';
   import { Canvas } from './src/common/Canvas.js';
   import { Tiles } from './src/Tiles.js';
-  import { Direction } from './src/Entity.js';
+  import { Direction, Dir } from './src/Entity.js';
   import { Entities } from './src/Entities.js';
+  import { Entity } from './src/Entity.js';
   import { Froggy } from './src/Froggy.js';
   import { Level } from './src/Level.js';
   import { World } from './src/World.js';
 
+  import { AnimatedCanvas } from './src/common/AnimatedCanvas.js';
   import { FroggerCanvas } from './src/FroggerCanvas.js';
   
   const TILE_SIZE = 48;
   const EditorLevelKey = 'froggerEditorLevel'
 
-  World.DebugGrid = true;
+  let DebugGrid = true;
 
   const Mode = { Edit: 0, Play: 1 };
   let mode = Mode.Edit;
+
+  const EditType = { Tiles: 'Tiles', Directions: 'Path', Entities: 'Entities' };
+  let activeBrush = 'Grass', activeType = EditType.Tiles;
+
+  let level = Object.assign( getEmptyLevel(), JSON.parse( localStorage.getItem( EditorLevelKey ) ) );
   
+  const canvas = new FroggerCanvas( document.getElementById( 'canvas' ) );
+  canvas.scale = TILE_SIZE;
 
-  const worldCanvas = new FroggerCanvas( document.getElementById( 'canvas' ) );
-  worldCanvas.showUI = false;
-  worldCanvas.scale = 48;
-
-  const EmptyLevel = {
-    cols: 15,
-    rows: 15,
-    entities: [],
-    spawn: { x: 7, y: 7, dir: 1 },
-    time: 15000,
-  }
-
-  const level = new Level();
-  Object.assign( level, JSON.parse( localStorage.getItem( EditorLevelKey ) ) );
-
-  const world = new World( level );
-  worldCanvas.world = world; 
 
   //
   // Load/Save/Clear
   //
+  function getEmptyLevel() {
+    const emptyLevel = new Level();
+    emptyLevel.setSize( 15, 15 );
+    emptyLevel.spawn = { x: 7, y: 7, dir: 0 };
+    return emptyLevel;
+  }
+
   function clearLevel() {
-    world = new World( { cols: 15, rows: 15 } );
-    worldCanvas.world = world;
+    level = getEmptyLevel();
+    
     levelResized();
+  }
+
+  const loadInput = document.createElement( 'input' );
+  loadInput.type = 'file';
+  loadInput.onchange = _ => {
+    const reader = new FileReader();
+    reader.onload = ( e ) => {
+      level = Object.assign( new Level(), JSON.parse( e.target.result ) );
+      levelResized();
+    };
+    reader.readAsText( loadInput.files[ 0 ] );
   }
 
   function loadLevel() {
@@ -93,7 +130,7 @@
 
   function saveLevel() {
     const filename = 'level.json';
-    const content = JSON.stringify( world );
+    const content = JSON.stringify( level );
     const blob = new Blob( [ content ], { type: 'text/plain' } );
     const link = document.createElement( 'a' );
     link.download = filename;
@@ -110,57 +147,106 @@
   //
   function startPlay() {
     mode = Mode.Play;
-    worldCanvas.start();
+    canvas.world = new World( level );
+    canvas.start();
   }
 
   function pausePlay() {
-    worldCanvas.stop();
+    canvas.world.paused = !canvas.world.paused;
   }
 
   function stopPlay() {
     mode = Mode.Edit;
-    worldCanvas.stop();
-    world = new World( level );
-    worldCanvas.world = world;
+    canvas.stop();
+    world = null;
     redraw();
   }
 
-  
+  let currentDirection = Direction.None;
 
-  function setDirection( dir ) {
-    world.setDirection( dir, mouseCol, mouseRow );
-    redraw();
+  function setEntityDirection( dir ) {
+    const entity = level.entities.find( e => e.x == mouseCol && e.y == mouseRow );
+    if ( entity ) {
+      entity.dir = dir;
+      redraw();
+    }
   }
 
   function toggleGrid() {
-    World.DebugGrid = !World.DebugGrid;
+    DebugGrid = !DebugGrid;
     redraw();
   }
 
   function resize( cols, rows ) {
     // TODO: multiple?
-    if ( cols > 0 )   world.addColumn( mouseCol );
-    if ( cols < 0 )   world.removeColumn( mouseCol );
-    if ( rows > 0 )   world.addRow( mouseRow ); 
-    if ( rows < 0 )   world.removeRow( mouseRow );
+    if ( cols > 0 )   level.addColumn( mouseCol );
+    if ( cols < 0 )   level.removeColumn( mouseCol );
+    if ( rows > 0 )   level.addRow( mouseRow ); 
+    if ( rows < 0 )   level.removeRow( mouseRow );
 
     levelResized();
   }
   
   function levelResized() {
-    worldCanvas.setSize( world.cols * TILE_SIZE, world.rows * TILE_SIZE );
+    canvas.setSize( level.cols * TILE_SIZE, level.rows * TILE_SIZE );
     redraw();
   }
   
   function redraw() {
-    worldCanvas.redraw();
+    const ctx = canvas.ctx;
 
-    // Save progress
-    localStorage.setItem( EditorLevelKey, JSON.stringify( world ) );
+    ctx.save(); {
+      ctx.scale( TILE_SIZE, TILE_SIZE );
+      ctx.translate( 0.5, 0.5 );
+      level.draw( ctx );
+      level.entities.forEach( entity =>
+        Entity.draw( entity, ctx, { dir: level.directions[ entity.x + entity.y * level.cols ] } )
+      );
+
+      if ( DebugGrid ) {
+        ctx.fillStyle = ctx.strokeStyle = ARROW_COLOR;
+        ctx.lineWidth = TILE_BORDER;
+        ctx.textAlign = 'center';
+        ctx.font = '10px Arial';      // work around https://bugzilla.mozilla.org/show_bug.cgi?id=1845828
+
+
+        for ( let row = 0; row < level.rows; row ++ ) {
+          ctx.save(); { 
+            for ( let col = 0; col < level.cols; col ++ ) {
+              ctx.strokeRect( -0.5, -0.5, 1, 1 );
+
+              const dir = level.directions[ col + row * level.cols ];
+              if ( dir > 0 ) {
+                ctx.save(); {
+                  ctx.rotate( Dir[ dir ].angle );
+                  ctx.fill( arrow );
+                }
+                ctx.restore();
+              }
+
+              ctx.save();
+              ctx.scale( 0.02, 0.02 );    // work around https://bugzilla.mozilla.org/show_bug.cgi?id=1845828
+              ctx.fillText( `(${ col },${ row })`, 0, 20 );
+              ctx.restore();
+
+              ctx.translate( 1, 0 );
+            }
+
+          }
+          ctx.restore();
+          ctx.translate( 0, 1 );
+        }
+      }
+    }
+    ctx.restore();
+
+    timeUI.value = level.time;
   }
 
 
-  let activeBrush = 'Grass', activeType = 'Tiles';
+  //
+  // UI
+  //
   
   const worldDiv = document.getElementById( 'world' );
 
@@ -168,117 +254,89 @@
 
   const tilesDiv = document.getElementById( 'tiles' );
   for ( const tile in Tiles ) {
+    tilesDiv.appendChild( getCanvasButton( Tiles[ tile ].draw, tile, 'Tiles' ) );
+  }
+
+  const entitiesDiv = document.getElementById( 'entities' );
+  for ( const id in Entities ) {
+    entitiesDiv.appendChild( getCanvasButton( Entities[ id ].draw, id, 'Entities' ) );
+  }
+
+  function getCanvasButton( drawFunc, brush, type ) {
     const button = document.createElement( 'button' );
 
     // TODO: Use AnimatedCanvas for these, and just don't start it?
     const icon = new Canvas( 48, 48 );
     icon.ctx.scale( 48, 48 );
     icon.ctx.translate( 0.5, 0.5 );
-    Tiles[ tile ].draw( icon.ctx );
+    icon.ctx.lineWidth = 1 / 48;          // TODO: Can we set this once and not deal with it anymore? bug #38
+    drawFunc( icon.ctx );
     button.appendChild( icon.canvas );
     button.appendChild( document.createElement( 'br' ) );
 
     const text = document.createElement( 'div' );
-    text.innerHTML = tile;
+    text.innerHTML = brush;
     button.appendChild( text );
 
-    button.addEventListener( 'click', ( e ) => { 
-      activeBrush = tile;
-      activeType = 'Tiles';
-    } );
-    tilesDiv.appendChild( button );
+    button.dataset.brush = brush;
+    button.dataset.type = type;
+
+    return button;
   }
 
-  // TODO: Combine similar code with above?
-  const entitiesDiv = document.getElementById( 'entities' );
-  for ( const id in Entities ) {
-    const button = document.createElement( 'button' );
+  tilesDiv.addEventListener( 'click', brushClick );
+  entitiesDiv.addEventListener( 'click', brushClick );
+  
+  function brushClick( e ) {
+    const button = e.target.closest( 'button' );
 
-    const icon = new Canvas( 48, 48 );
-    icon.ctx.scale( 48, 48 );
-    icon.ctx.translate( 0.5, 0.5 );
-    icon.ctx.lineWidth = 1 / 48;
-    Entities[ id ].draw( icon.ctx );
-    button.appendChild( icon.canvas );
-    button.appendChild( document.createElement( 'br' ) );
-
-    const text = document.createElement( 'div' );
-    text.innerHTML = id;
-    button.appendChild( text );
-
-    button.addEventListener( 'click', ( e ) => { 
-      activeBrush = id;
-      activeType = 'Entities';
-    } );
-    entitiesDiv.appendChild( button );
+    if ( button ) {
+      activeBrush = button.dataset.brush;
+      activeType = button.dataset.type;
+    }
   }
 
-  const playerButton = document.createElement( 'button' );
-  playerButton.textContent = 'Player';
-  playerButton.addEventListener( 'click', ( e ) => {
-    activeBrush = activeType = 'player';
-  } );
-  uiDiv.appendChild( playerButton );
-
-  uiDiv.appendChild( document.createTextNode( 'Time: ' ) );
-
-  const timeUI = document.createElement( 'input' );
-  timeUI.type = 'number';
-  timeUI.style.width = 70;
-  timeUI.value = world.maxTime;
-  timeUI.oninput = _ => world.maxTime = parseInt( timeUI.value );
-  uiDiv.appendChild( timeUI );
-  uiDiv.appendChild( document.createTextNode( 'ms' ) );
+  const timeUI = document.getElementById( 'time' );
+  timeUI.addEventListener( 'input', e => level.time = parseInt( e.target.value ) );
   
 
-  const loadInput = document.createElement( 'input' );
-  loadInput.type = 'file';
-  loadInput.onchange = _ => {
-    const reader = new FileReader();
-    reader.onload = ( e ) => {
-      world = World.fromString( e.target.result );
-      worldCanvas.world = world;
-      levelResized();
-    };
-    reader.readAsText( loadInput.files[ 0 ] );
+  const buttonFuncs = {
+    'path': _ => activeType = EditType.Directions,
+    'clear': clearLevel,
+    'load': loadLevel,
+    'save': saveLevel,
+    'play': startPlay,
+    'pause': pausePlay,
+    'stop': stopPlay,
   }
 
-  const fileDiv = document.createElement( 'div' );
- 
-  makeButton( 'Clear', clearLevel, fileDiv );
-  makeButton( 'Load', loadLevel, fileDiv );
-  makeButton( 'Save', saveLevel, fileDiv );
-  makeButton( 'Play', startPlay, fileDiv );
-  makeButton( 'Pause', pausePlay, fileDiv );
-  makeButton( 'Stop', stopPlay, fileDiv );
-
-  uiDiv.appendChild( fileDiv );
-
-  function makeButton( text, func, parent ) {
-    const button = document.createElement( 'button' );
-    button.textContent = text;
-    button.addEventListener( 'click', func );
-    parent.appendChild( button );
+  for ( const id in buttonFuncs ) {
+    document.getElementById( id ).addEventListener( 'click', buttonFuncs[ id ] );
   }
+
+
+  //
+  // Mouse input
+  //
 
   let mouseCol = 0, mouseRow = 0, mouseDown = false, mouseButton = 0;
   let lastCol, lastRow;
 
-  worldCanvas.canvas.addEventListener( 'mousemove', ( e ) => {
+  canvas.canvas.addEventListener( 'pointermove', ( e ) => {
     mouseCol = Math.floor( e.offsetX / Constants.TileSize );
     mouseRow = Math.floor( e.offsetY / Constants.TileSize );
 
     doMouse();
   } );
 
-  worldCanvas.canvas.addEventListener( 'mousedown', ( e ) => {
+  canvas.canvas.addEventListener( 'pointerdown', ( e ) => {
     mouseDown = true;
     mouseButton = e.button;
 
     doMouse();
   } );
 
-  worldCanvas.canvas.addEventListener( 'mouseup', ( e ) => {
+  canvas.canvas.addEventListener( 'pointerup', ( e ) => {
     mouseDown = false;
     mouseButton = null;
     lastCol = lastRow = null;
@@ -289,35 +347,58 @@
 
   function doMouse() {
     if ( mode == Mode.Edit && mouseDown && ( mouseCol != lastCol || mouseRow != lastRow ) ) {
-      lastCol = mouseCol;
-      lastRow = mouseRow;
+      if ( mouseButton == 0 ) {
+        // TODO: switch/case instead of ifs?
+        // TODO: enum for activeType?
+        if ( activeType == EditType.Tiles ) {
+          level.setTileInfo( mouseCol, mouseRow, activeBrush );
+        }
+        else if ( activeType == EditType.Directions ) {
+          if ( lastCol != null && lastRow != null ) {
+            const dx = mouseCol - lastCol;
+            const dy = mouseRow - lastRow;
+            const dir = Dir.findIndex( e => e.x == dx && e.y == dy );
+            
+            level.setDirection( lastCol, lastRow, dir );
+            level.setDirection( mouseCol, mouseRow, dir );
+          }
+        }
+        else if ( activeType == EditType.Entities ) {
+          level.removeEntity( mouseCol, mouseRow );
 
-      if ( mouseButton == 0 ) { 
-        if ( activeType == 'Tiles' ) {
-          world.tiles[ mouseCol ][ mouseRow ].tileInfoKey = activeBrush;
+          if ( activeBrush == 'Player' ) {
+            level.spawn = { x: mouseCol, y: mouseRow, dir: 1 };
+          }
+          else {
+            level.addEntity( mouseCol, mouseRow, activeBrush );
+          }
         }
-        else if ( activeType == 'Entities' ) {
-          world.addEntity( activeBrush, mouseCol, mouseRow );
-        }
-        else if ( activeBrush == 'player' ) {
-          world.player.x = world.spawnCol = mouseCol;
-          world.player.y = world.spawnRow = mouseRow;
-        }
+        
       }
       else if ( mouseButton == 2 ) {
-        world.removeEntity( mouseCol, mouseRow );
+        // if ( activeType == EditType.Tiles ) {
+        //   level.setTileInfo( mouseCol, mouseRow, level.tileInfoKeys[ 0 ] );
+        // }
+        if ( activeType == EditType.Directions ) {
+          level.setDirection( mouseCol, mouseRow, Direction.None );
+        }
+        else { //if ( activeType == EditType.Entities ) {
+          level.removeEntity( mouseCol, mouseRow );
+        }
       }
+
+      lastCol = mouseCol;
+      lastRow = mouseRow;
 
       redraw();
     }
   }
 
   const KeyBindings = {
-    KeyW: () => setDirection( Direction.Up ),
-    KeyA: () => setDirection( Direction.Left ),
-    KeyS: () => setDirection( Direction.Down ),
-    KeyD: () => setDirection( Direction.Right ),
-    Space: () => setDirection( null ),
+    KeyW: () => setEntityDirection( Direction.Up ),
+    KeyA: () => setEntityDirection( Direction.Left ),
+    KeyS: () => setEntityDirection( Direction.Down ),
+    KeyD: () => setEntityDirection( Direction.Right ),
     KeyG: toggleGrid,
     KeyC: () => resize( 1, 0 ),
     KeyX: () => resize( -1, 0 ),
@@ -329,6 +410,10 @@
 
 
   levelResized();
-  redraw();
+  // redraw();
+
+  window.addEventListener( 'beforeunload', ( e ) =>
+    localStorage.setItem( EditorLevelKey, JSON.stringify( level ) )
+  );
 
 </script>

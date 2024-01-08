@@ -1,10 +1,11 @@
 import { Dir } from './Entity.js';
 import { Entities } from './Entities.js';
+import { Entity } from './Entity.js';
 import { Frog } from './Frog.js';
 import { Froggy } from './Froggy.js';
 import { Player } from './Player.js';
 
-import * as Constants from './Constants.js';
+import { Constants } from './Constants.js';
 
 let animationTime = 0;
 
@@ -12,11 +13,12 @@ export class World
 { 
   entities = [];
   player;
+  lives = Constants.MaxLives;
   rescued = [];
   timeLeft = 0;
   paused = false;
-  needsRespawn = false;
-  // TODO: Spawn timer?
+  needsRespawn = true;
+  spawnTimer = 0;
 
   defeat = false;
   victory = false;
@@ -30,28 +32,7 @@ export class World
 
     this.timeLeft = level.time;
 
-    this.entities = Array.from( level.entities );
-    this.lives = Constants.MaxLives;
-
-    this.respawnPlayer();
-    // TODO: Don't spawn automaticaly?
-  }
-
-  respawnPlayer() {
-    this.timeLeft = this.#level.time;
-
-    this.needsRespawn = false;
-
-    this.player = {
-      type: 'Player',
-      // x: this.#level.spawn.x,
-      // y: this.#level.spawn.y,
-      // dir: this.#level.spawn.dir,
-      color: 'green',
-      status: Frog.Status.Alive,
-    };
-
-    Object.assign( this.player, this.#level.spawn );
+    this.entities = level.entities.map( e => ( { ...e } ) );
   }
 
   // TODO: Move this update()
@@ -66,8 +47,32 @@ export class World
   }
 
   requestPlayerMove( dir ) {
-    if ( this.needsRespawn || this.player.status != Frog.Status.Alive ) {
-      this.respawnPlayer();
+    if ( this.needsRespawn && this.spawnTimer < 0 ) {
+      // TODO: Should all this should go up in request move? I'd like to have everything down here, 
+      // but how do I set it up to request a respawn?
+      // Don't "request" anything, just create the player up there -- also means no initial spawn
+
+      this.needsRespawn = false;
+      this.spawnTimer = Constants.SpawnDelay;
+      
+      // TODO: assign() instead of making new?
+      this.player = {
+        type: 'Player',
+        color: 'green',
+        x: this.#level.spawn.x,
+        y: this.#level.spawn.y,
+        dir: this.#level.spawn.dir,
+        dx: 0,
+        dy: 0,
+        jumpTimeLeft: 0,
+        jumpQueue: [],
+        animationTime: 0,
+        status: Frog.Status.Alive,
+      };
+      
+      // Object.assign( this.player, this.#level.spawn );
+
+      this.timeLeft = this.#level.time;
     }
     else {
       if ( dir != this.player.jumpQueue.at( -1 ) ) {
@@ -91,6 +96,8 @@ export class World
         const speed = Entities[ entity.type ].Speed;
 
         if ( speed ) {
+          entity.dir ??= this.#level.directions[ entity.x + entity.y * this.#level.cols ];
+
           let totalTime = dt;
           while ( totalTime > 0 ) {
             const dist = Dir[ entity.dir ].dist( entity.x, entity.y );
@@ -176,11 +183,11 @@ export class World
       const MOVE_SPEED = 0.003;
       const JUMP_TIME = 1 / MOVE_SPEED;
 
-      if ( this.player.status == Frog.Status.Alive ) {
-        this.player.dx ??= 0;
-        this.player.dy ??= 0;
-        this.player.jumpTimeLeft ??= 0;
-        this.player.jumpQueue ??= [];
+      if ( this.needsRespawn ) {
+        this.spawnTimer -= dt;
+      }
+
+      if ( this.player?.status == Frog.Status.Alive ) {
         this.player.animationTime = 0;
 
         this.player.x += this.player.dx * dt;
@@ -203,6 +210,9 @@ export class World
             e => Math.abs( e.x - this.player.x ) < Entities[ e.type ].hitDist && Math.abs( e.y - this.player.y ) < Entities[ e.type ].hitDist
           );
 
+          let goalX = Math.round( this.player.x );
+          let goalY = Math.round( this.player.y );
+
           if ( collidingWith ) {   
             if ( Entities[ collidingWith.type ]?.canRescue ) {
               this.rescue( collidingWith );
@@ -213,24 +223,25 @@ export class World
                 Frog.Status.SquishedHorizontal : Frog.Status.SquishedVertical;
             }
             else {
-              this.player.x = collidingWith.x;
-              this.player.y = collidingWith.y;
+              goalX = collidingWith.x;
+              goalY = collidingWith.y;
               this.player.dx = collidingWith.dx;
               this.player.dy = collidingWith.dy;
             }
           }
           else {
-            const tileX = Math.round( this.player.x );
-            const tileY = Math.round( this.player.y );
-
-            const tile = this.#level.getTileInfo( tileX, tileY );
+            const tile = this.#level.getTileInfo( this.player.x, this.player.y );
             if ( !tile || tile.KillsPlayer ) {
               this.player.status = Frog.Status.Drowned;
             }
-            else {
-              this.player.x = tileX;
-              this.player.y = tileY;
-            }
+          }
+
+          if ( this.player.status == Frog.Status.Alive ) {
+            const cx = goalX - this.player.x;
+            const cy = goalY - this.player.y;
+            const p = 1 / ( 1 + 100 * Math.pow( Math.hypot( cx, cy ), 2 ) );
+            this.player.x += p * cx;
+            this.player.y += p * cy;
           }
 
           if ( !this.needsRespawn && this.player.status == Frog.Status.Alive && this.player.jumpQueue.length > 0 ) {
@@ -263,6 +274,8 @@ export class World
         if ( this.player.status != Frog.Status.Alive ) {
           this.lives --;
           this.defeat = this.lives < 0;
+
+          this.needsRespawn = true;
         }
       }
 
@@ -276,18 +289,21 @@ export class World
       ctx.lineWidth = 0.02;
 
       this.#level.draw( ctx );
-      
-      // TODO: Draw player after CanRide and before KillsPlayer, unless player is jumping (or already dead)
-      this.player.animationAction = this.player.status;
 
-      if ( this.player.status != Frog.Status.Alive ) {
-        drawEntity( ctx, this.player );
+      // TODO: If drowned, draw below level (with translucent water)
+      
+      if ( this.player ) {
+        this.player.animationAction = this.player.status;
+
+        if ( this.player.status != Frog.Status.Alive ) {
+          Entity.draw( this.player, ctx );
+        }
       }
 
-      this.entities.forEach( entity => drawEntity( ctx, entity ) );
+      this.entities.forEach( entity => Entity.draw( entity, ctx, { time: animationTime } ) );
 
-      if ( this.player.status == Frog.Status.Alive ) {
-        drawEntity( ctx, this.player );
+      if ( this.player && this.player.status == Frog.Status.Alive ) {
+        Entity.draw( this.player, ctx );
       }
     }
     ctx.restore();
@@ -345,7 +361,7 @@ export class World
 
     if ( this.paused ) {
       ctx.fillStyle = '#000b';
-      ctx.fillRect( 0, 0, 15, 16 );
+      ctx.fillRect( 0, 0, 16, 16 ); // make it extra big to cover everything
 
       ctx.textAlign = 'center';
       // NOTE: Safari doesn't seem to respect "textBaseline=middle", so offsetting manually
@@ -354,20 +370,6 @@ export class World
       ctx.fillText( 'Paused', 15 / 2, 7.8 );
     }
   }
-}
-
-function drawEntity( ctx, entity ) {
-  ctx.save();
-  ctx.translate( entity.x, entity.y );
-  ctx.rotate( Dir[ entity.dir ]?.angle ?? 0 );
-  // ctx.scale( entity.size, entity.size );   // nothing changes size for now
-
-  ctx.strokeStyle = 'black';
-  ctx.lineWidth = 0.02;
-
-  Entities[ entity.type ].draw( ctx, entity.animationAction, entity.animationTime ?? animationTime );
-
-  ctx.restore();
 }
 
 function drawBanner( ctx, text ) {
