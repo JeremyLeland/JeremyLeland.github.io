@@ -49,6 +49,7 @@
           <li>zypper install mozilla-openh264</li>
           <li><a href="https://docs.fedoraproject.org/en-US/quick-docs/installing-plugins-for-playing-movies-and-music/">On Fedora</a></li>
           <li><a href="https://discussion.fedoraproject.org/t/unable-to-play-h-265-video/70827">Simpler command here</a></li>
+          <li>sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm && sudo dnf groupupdate multimedia --setop="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin && sudo dnf groupupdate sound-and-video</li>
         </ul>
       </li>
       <li>
