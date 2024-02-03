@@ -72,7 +72,7 @@
   import { Tiles } from './src/Tiles.js';
   import { Direction, Dir } from './src/Entity.js';
   import { Entities } from './src/Entities.js';
-  import { Entity } from './src/Entity.js';
+  import * as Entity from './src/Entity.js';
   import { Froggy } from './src/Froggy.js';
   import { Level } from './src/Level.js';
   import { World } from './src/World.js';
@@ -84,165 +84,6 @@
   const EditorLevelKey = 'froggerEditorLevel'
 
   let DebugGrid = true;
-
-  const Mode = { Edit: 0, Play: 1 };
-  let mode = Mode.Edit;
-
-  const EditType = { Tiles: 'Tiles', Directions: 'Path', Entities: 'Entities' };
-  let activeBrush = 'Grass', activeType = EditType.Tiles;
-
-  let level = Object.assign( getEmptyLevel(), JSON.parse( localStorage.getItem( EditorLevelKey ) ) );
-  
-  const canvas = new FroggerCanvas( document.getElementById( 'canvas' ) );
-  canvas.scale = TILE_SIZE;
-
-
-  //
-  // Load/Save/Clear
-  //
-  function getEmptyLevel() {
-    const emptyLevel = new Level();
-    emptyLevel.setSize( 15, 15 );
-    emptyLevel.spawn = { x: 7, y: 7, dir: 0 };
-    return emptyLevel;
-  }
-
-  function clearLevel() {
-    level = getEmptyLevel();
-    
-    levelResized();
-  }
-
-  const loadInput = document.createElement( 'input' );
-  loadInput.type = 'file';
-  loadInput.onchange = _ => {
-    const reader = new FileReader();
-    reader.onload = ( e ) => {
-      level = Object.assign( new Level(), JSON.parse( e.target.result ) );
-      levelResized();
-    };
-    reader.readAsText( loadInput.files[ 0 ] );
-  }
-
-  function loadLevel() {
-    loadInput.click();
-  }
-
-  function saveLevel() {
-    const filename = 'level.json';
-    const content = JSON.stringify( level );
-    const blob = new Blob( [ content ], { type: 'text/plain' } );
-    const link = document.createElement( 'a' );
-    link.download = filename;
-    link.href = window.URL.createObjectURL( blob );
-    document.body.appendChild( link );  // TODO: do we need this?
-    link.click();
-    // should we do this at some point?
-    // document.body.removeChild( link );
-    // window.URL.revokeObjectURL( link.href );
-  }
-
-  //
-  // Playback
-  //
-  function startPlay() {
-    mode = Mode.Play;
-    canvas.world = new World( level );
-    canvas.start();
-  }
-
-  function pausePlay() {
-    canvas.world.paused = !canvas.world.paused;
-  }
-
-  function stopPlay() {
-    mode = Mode.Edit;
-    canvas.stop();
-    world = null;
-    redraw();
-  }
-
-  let currentDirection = Direction.None;
-
-  function setEntityDirection( dir ) {
-    const entity = level.entities.find( e => e.x == mouseCol && e.y == mouseRow );
-    if ( entity ) {
-      entity.dir = dir;
-      redraw();
-    }
-  }
-
-  function toggleGrid() {
-    DebugGrid = !DebugGrid;
-    redraw();
-  }
-
-  function resize( cols, rows ) {
-    // TODO: multiple?
-    if ( cols > 0 )   level.addColumn( mouseCol );
-    if ( cols < 0 )   level.removeColumn( mouseCol );
-    if ( rows > 0 )   level.addRow( mouseRow ); 
-    if ( rows < 0 )   level.removeRow( mouseRow );
-
-    levelResized();
-  }
-  
-  function levelResized() {
-    canvas.setSize( level.cols * TILE_SIZE, level.rows * TILE_SIZE );
-    redraw();
-  }
-  
-  function redraw() {
-    const ctx = canvas.ctx;
-
-    ctx.save(); {
-      ctx.scale( TILE_SIZE, TILE_SIZE );
-      ctx.translate( 0.5, 0.5 );
-      level.draw( ctx );
-      level.entities.forEach( entity =>
-        Entity.draw( entity, ctx, { dir: level.directions[ entity.x + entity.y * level.cols ] } )
-      );
-
-      if ( DebugGrid ) {
-        ctx.fillStyle = ctx.strokeStyle = ARROW_COLOR;
-        ctx.lineWidth = TILE_BORDER;
-        ctx.textAlign = 'center';
-        ctx.font = '10px Arial';      // work around https://bugzilla.mozilla.org/show_bug.cgi?id=1845828
-
-
-        for ( let row = 0; row < level.rows; row ++ ) {
-          ctx.save(); { 
-            for ( let col = 0; col < level.cols; col ++ ) {
-              ctx.strokeRect( -0.5, -0.5, 1, 1 );
-
-              const dir = level.directions[ col + row * level.cols ];
-              if ( dir > 0 ) {
-                ctx.save(); {
-                  ctx.rotate( Dir[ dir ].angle );
-                  ctx.fill( arrow );
-                }
-                ctx.restore();
-              }
-
-              ctx.save();
-              ctx.scale( 0.02, 0.02 );    // work around https://bugzilla.mozilla.org/show_bug.cgi?id=1845828
-              ctx.fillText( `(${ col },${ row })`, 0, 20 );
-              ctx.restore();
-
-              ctx.translate( 1, 0 );
-            }
-
-          }
-          ctx.restore();
-          ctx.translate( 0, 1 );
-        }
-      }
-    }
-    ctx.restore();
-
-    timeUI.value = level.time;
-  }
-
 
   //
   // UI
@@ -312,6 +153,167 @@
 
   for ( const id in buttonFuncs ) {
     document.getElementById( id ).addEventListener( 'click', buttonFuncs[ id ] );
+  }
+
+
+  const Mode = { Edit: 0, Play: 1 };
+  let mode = Mode.Edit;
+
+  const EditType = { Tiles: 'Tiles', Directions: 'Path', Entities: 'Entities' };
+  let activeBrush = 'Grass', activeType = EditType.Tiles;
+
+  let level = Object.assign( getEmptyLevel(), JSON.parse( localStorage.getItem( EditorLevelKey ) ) );
+  
+  const canvas = new FroggerCanvas( document.getElementById( 'canvas' ) );
+  canvas.ctx.scaleVal = TILE_SIZE;
+  levelResized();
+
+
+  //
+  // Load/Save/Clear
+  //
+  function getEmptyLevel() {
+    const emptyLevel = new Level();
+    emptyLevel.setSize( 15, 15 );
+    emptyLevel.spawn = { x: 7, y: 7, dir: 0 };
+    return emptyLevel;
+  }
+
+  function clearLevel() {
+    level = getEmptyLevel();
+
+    timeUI.value = level.time;
+    
+    levelResized();
+  }
+
+  const loadInput = document.createElement( 'input' );
+  loadInput.type = 'file';
+  loadInput.onchange = _ => {
+    const reader = new FileReader();
+    reader.onload = ( e ) => {
+      level = Object.assign( new Level(), JSON.parse( e.target.result ) );
+      levelResized();
+    };
+    reader.readAsText( loadInput.files[ 0 ] );
+  }
+
+  function loadLevel() {
+    loadInput.click();
+  }
+
+  function saveLevel() {
+    const filename = 'level.json';
+    const content = JSON.stringify( level );
+    const blob = new Blob( [ content ], { type: 'text/plain' } );
+    const link = document.createElement( 'a' );
+    link.download = filename;
+    link.href = window.URL.createObjectURL( blob );
+    document.body.appendChild( link );  // TODO: do we need this?
+    link.click();
+    // should we do this at some point?
+    // document.body.removeChild( link );
+    // window.URL.revokeObjectURL( link.href );
+  }
+
+  //
+  // Playback
+  //
+  function startPlay() {
+    mode = Mode.Play;
+    canvas.world = new World( level );
+    canvas.start();
+  }
+
+  function pausePlay() {
+    canvas.world.paused = !canvas.world.paused;
+  }
+
+  function stopPlay() {
+    mode = Mode.Edit;
+    canvas.stop();
+    world = null;
+    redraw();
+  }
+
+  let currentDirection = Direction.None;
+
+  function setEntityDirection( dir ) {
+    level.entities.filter( e => e.x == mouseCol && e.y == mouseRow ).forEach( e => e.dir = dir );
+
+    if ( level.spawn.x == mouseCol && level.spawn.y == mouseRow ) {
+      level.spawn.dir = dir;
+    }
+
+    redraw();
+  }
+
+  function toggleGrid() {
+    DebugGrid = !DebugGrid;
+    redraw();
+  }
+
+  function resize( cols, rows ) {
+    // TODO: multiple?
+    if ( cols > 0 )   level.addColumn( mouseCol );
+    if ( cols < 0 )   level.removeColumn( mouseCol );
+    if ( rows > 0 )   level.addRow( mouseRow ); 
+    if ( rows < 0 )   level.removeRow( mouseRow );
+
+    levelResized();
+  }
+  
+  function levelResized() {
+    canvas.setSize( level.cols * TILE_SIZE, level.rows * TILE_SIZE );
+    redraw();
+  }
+  
+  function redraw() {
+    const ctx = canvas.ctx;
+
+    ctx.clearRect( 0, 0, ctx.canvas.width, ctx.canvas.height );
+
+    ctx.save(); {
+      ctx.setTransform( ctx.scaleVal * devicePixelRatio, 0, 0, ctx.scaleVal * devicePixelRatio, 0, 0 );
+    
+      ctx.translate( 0.5, 0.5 );
+      level.draw( ctx );
+      level.entities.forEach( entity =>
+        Entity.draw( entity, ctx, { dir: level.directions[ entity.x + entity.y * level.cols ] } )
+      );
+
+      if ( DebugGrid ) {
+        ctx.fillStyle = ctx.strokeStyle = ARROW_COLOR;
+        ctx.lineWidth = TILE_BORDER;
+        ctx.textAlign = 'center';
+        ctx.font = '0.2px Arial';
+
+        for ( let row = 0; row < level.rows; row ++ ) {
+          ctx.save(); { 
+            for ( let col = 0; col < level.cols; col ++ ) {
+              ctx.strokeRect( -0.5, -0.5, 1, 1 );
+
+              const dir = level.directions[ col + row * level.cols ];
+              if ( dir > 0 ) {
+                ctx.save(); {
+                  ctx.rotate( Dir[ dir ].angle );
+                  ctx.fill( arrow );
+                }
+                ctx.restore();
+              }
+
+              ctx.fillText( `(${ col },${ row })`, 0, 0.4 );
+              
+              ctx.translate( 1, 0 );
+            }
+
+          }
+          ctx.restore();
+          ctx.translate( 0, 1 );
+        }
+      }
+    }
+    ctx.restore();
   }
 
 
@@ -407,10 +409,6 @@
   };
 
   document.addEventListener( 'keydown', e => KeyBindings[ e.code ]?.() );
-
-
-  levelResized();
-  // redraw();
 
   window.addEventListener( 'beforeunload', ( e ) =>
     localStorage.setItem( EditorLevelKey, JSON.stringify( level ) )
