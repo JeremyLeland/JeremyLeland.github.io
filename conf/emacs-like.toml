@@ -1,0 +1,30 @@
+device_name = "Telink Wireless Receiver"
+
+[[dual_role]]
+input = "KEY_CAPSLOCK"
+hold = ["KEY_F19"]
+tap = ["KEY_ESC"]
+
+[[remap]]
+input = ["KEY_F19", "KEY_B"]
+output = ["KEY_LEFT"]
+
+[[remap]]
+input = ["KEY_F19", "KEY_F"]
+output = ["KEY_RIGHT"]
+
+[[remap]]
+input = ["KEY_F19", "KEY_N"]
+output = ["KEY_DOWN"]
+
+[[remap]]
+input = ["KEY_F19", "KEY_P"]
+output = ["KEY_UP"]
+
+[[remap]]
+input = ["KEY_F19", "KEY_A"]
+output = ["KEY_HOME"]
+
+[[remap]]
+input = ["KEY_F19", "KEY_E"]
+output = ["KEY_END"]
