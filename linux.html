@@ -8,6 +8,13 @@
         Steam
         <ul>
           <li><a href="https://www.dedoimedo.com/computers/steam-linux-4k-scaling.html">Fix DPI</a> with -forcedesktopscaling=1.25</li>
+          <li>Turn off split-lock mitigation
+            <ul>
+              <li><a href="https://www.phoronix.com/news/Linux-Splitlock-Hurts-Gaming">Why</a></li>
+              <li>echo kernel.split_lock_mitigate=0 | sudo tee /etc/sysctl.d/10-farcry6-settings.conf</li>
+              <li>sudo sysctl -p</li>
+            </ul>
+          </li>
         </ul>
       </li>
       <li>
