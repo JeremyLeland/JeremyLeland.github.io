@@ -1,0 +1,21 @@
+<title>Command Line notes</title>>
+<ul>
+  <li>Separate PDF into pages (<a href="https://superuser.com/questions/345086/split-pdf-document-from-command-line-in-linux">SO</a>): pdfseparate -f # -l # input.pdf output.pdf</li>
+  <li>
+    YouTube Downloads
+    <ul>
+      <li><a href="https://github.com/yt-dlp/yt-dlp">YT-DLP</a></li>
+      <li>yt-dlp -f "bv*[vcodec^=avc]+ba[acodec^=mp4]" [URL/Playlist]</li>
+      <li>The Roku player that comes with our Roku TCL 55S515 seems to support video with avc1 encoding (but not vp09 or av01) and audio with mp4a encoding (but not opus).</li>
+      <li>The above command uses yt-dlp (the newer version of YouTube DL) and tells it to use the best video quality it finds with those encodings. In practice, this limited me to 1080p, but this is sufficient for our purposes.</li>
+      <li>Audio only (best m4a): yt-dlp -f 140 [URL]</li>
+    </ul>
+  </li>
+  <li>
+    Live CDs (ISO to USB)
+    <ul>
+      <li>sudo dd if=diskimage.iso of=/dev/sdc bs=8M status=progress oflag=direct</li>
+      <li>Use lsblk to confirm which device is USB drive</li>
+    </ul>
+  </li>
+</ul>
