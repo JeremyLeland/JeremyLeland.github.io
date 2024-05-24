@@ -7,10 +7,12 @@
       <li>
         Steam
         <ul>
-          <li><a href="https://www.dedoimedo.com/computers/steam-linux-4k-scaling.html">Fix DPI</a> with -forcedesktopscaling=1.25</li>
-          <li>Turn off split-lock mitigation
+          <strike><li><a href="https://www.dedoimedo.com/computers/steam-linux-4k-scaling.html">Fix DPI</a> with -forcedesktopscaling=1.25</li></strike>
+          <li>
+            HiDPI on Fedora: sudo flatpak override com.valvesoftware.Steam --env=STEAM_FORCE_DESKTOPUI_SCALING=1.25
+          </li>
+          <li><a href="https://www.phoronix.com/news/Linux-Splitlock-Hurts-Gaming">Turn off split-lock mitigation</a>
             <ul>
-              <li><a href="https://www.phoronix.com/news/Linux-Splitlock-Hurts-Gaming">Why</a></li>
               <li>echo kernel.split_lock_mitigate=0 | sudo tee /etc/sysctl.d/10-farcry6-settings.conf</li>
               <li>sudo sysctl -p</li>
             </ul>
@@ -21,7 +23,7 @@
         VS Code
         <ul>
           <li><a href="https://code.visualstudio.com/docs/setup/linux">Linux Setup</a></li>
-          <li>Or maybe opi vscode? Not sure what difference is</li>
+          <li>OpenSUSE: Or maybe opi vscode? Not sure what difference is</li>
           <li>Monaco font (<a href="https://github.com/probil/Monaco-IDE-font">GitHub</a>)
             <ol>
               <li>Put <a href="./conf/Monaco.ttf">Monaco.ttf</a> into your ~/.fonts</li>
@@ -31,8 +33,8 @@
           <li>
             Git
             <ol>
-              <li>Set your username: git config --global user.name "FIRST_NAME LAST_NAME"</li>
-              <li>Set your email address: git config --global user.email "MY_NAME@example.com"</li>
+              <li>Set your username: git config --global user.name "Jeremy Leland"</li>
+              <li>Set your email address: git config --global user.email "jeremy.leland@gmail.com"</li>
             </ol>
           </li>
         </ul>
@@ -110,6 +112,7 @@
           <li>yt-dlp -f "bv*[vcodec^=avc]+ba[acodec^=mp4]" [URL/Playlist]</li>
           <li>The Roku player that comes with our Roku TCL 55S515 seems to support video with avc1 encoding (but not vp09 or av01) and audio with mp4a encoding (but not opus).</li>
           <li>The above command uses yt-dlp (the newer version of YouTube DL) and tells it to use the best video quality it finds with those encodings. In practice, this limited me to 1080p, but this is sufficient for our purposes.</li>
+          <li>Audio only (best m4a): yt-dlp -f 140 [URL]</li>
         </ul>
       </li>
       <li>
