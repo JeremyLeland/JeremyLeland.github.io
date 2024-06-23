@@ -1,0 +1,284 @@
+<title>Tantrix</title>
+<link rel="stylesheet" href="./style.css">
+
+<style>
+  #new {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+  }
+</style>
+
+<canvas id="canvas"></canvas>
+<select id="new">
+  <option selected disabled hidden>New Game</option>
+  <option value="2">2 Players</option>
+  <option value="3">3 Players</option>
+  <option value="4">4 Players</option>
+</select>
+
+<script type="module">
+  import { Canvas } from './src/Canvas.js';
+  import { GameState } from './src/GameState.js';
+  import * as Tantrix from './src/Tantrix.js';
+
+  const SIZE = 20;
+  let scrollX = 0.5, scrollY = 0.5;
+
+  const HAND_OFFSET = 8, HAND_START = -5;
+  const HORIZ_HAND_OFFSET = Math.sqrt( 3 ) / 2;
+
+  const canvas = new Canvas( document.getElementById( 'canvas' ) );
+
+  let gameState = GameState.fromLocalStore() ?? GameState.newGame( 2 );
+
+  
+  let activePiece, pieceStartX, pieceStartY;
+
+  
+  let mouseX, mouseY;
+  const score = { 'R': 0, 'Y': 0, 'B': 0, 'G': 0 };
+
+  canvas.draw = ( ctx ) => {
+    ctx.translate( scrollX, scrollY );
+    ctx.scale( 1 / SIZE, 1 / SIZE );
+    ctx.lineWidth = 1 / SIZE;
+    
+    Tantrix.drawGrid( ctx, -4, -3, 4, 3 );
+    Tantrix.drawCoords( ctx, -4, -3, 4, 3 );
+    gameState.board.forEach( piece => Tantrix.drawPiece( ctx, piece ) );
+
+    const possibleMoves = Tantrix.getValidMoves( gameState.board, gameState.hands[ gameState.turn ].filter( id => id != null ) );
+    possibleMoves.forEach( move => {
+      if ( move.forced ) {
+        ctx.globalAlpha = 0.5;
+        Tantrix.drawPiece( ctx, move );
+        ctx.globalAlpha = 1;
+      }
+      else if ( activePiece && move.id == activePiece.id ) {
+        ctx.globalAlpha = 0.25;
+        Tantrix.drawPiece( ctx, move );
+        ctx.globalAlpha = 1;
+      }
+    } );
+    
+
+    // Hands 1 and 2 (left/right)
+    [ -1, 1 ].forEach( ( offset, index ) => {
+      ctx.save(); {
+        ctx.translate( offset * HAND_OFFSET, HAND_START );
+
+        if ( gameState.turn == index ) {
+          ctx.lineWidth = 0.05;
+          ctx.strokeStyle = 'white';
+          ctx.strokeRect( -1, -1, 2, Tantrix.HandSize * 2 );
+        }
+
+        gameState.hands[ index ].forEach( pieceId => {
+          if ( pieceId != null && pieceId != activePiece?.id ) {
+            Tantrix.drawTile( ctx, pieceId );
+          }
+          ctx.translate( 0, 2 );
+        } );
+      }
+      ctx.restore();
+    } );
+
+    // Hands 3 and 4 (top/bottom)
+    [ -1, 1 ].forEach( ( offset, index ) => {
+      if ( index + 2 < gameState.hands.length ) {
+        ctx.save(); {
+          ctx.translate( HAND_START, offset * HAND_OFFSET );
+
+          if ( gameState.turn == index + 2 ) {
+            ctx.lineWidth = 0.05;
+            ctx.strokeStyle = 'white';
+            ctx.strokeRect( -1, -1, Tantrix.HandSize * 2, 2 );
+          }
+
+          gameState.hands[ index + 2 ].forEach( pieceId => {
+            if ( pieceId != null && pieceId != activePiece?.id ) {
+              Tantrix.drawTile( ctx, pieceId );
+            }
+            ctx.translate( 2, 0 );
+          } );
+        }
+        ctx.restore();
+      }
+    } );
+
+    if ( activePiece ) {
+      Tantrix.drawPiece( ctx, activePiece );
+
+      const possibleMoves = Tantrix.getValidMoves( gameState.board, [ activePiece.id ] );
+
+      ctx.globalAlpha = 0.25;
+      possibleMoves.forEach( move => {
+        Tantrix.drawPiece( ctx, move );
+      } );
+      ctx.globalAlpha = 1;
+    }
+    
+    // Score above
+    ctx.translate( -3, -9.5 );
+
+    ctx.font = '0.4px Arial';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'black';
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+
+    for ( const team in Tantrix.Teams ) {
+      ctx.fillStyle = Tantrix.Colors[ team ];
+      ctx.fillText( `${ Tantrix.Teams[ team ] }: ${ score[ team ] }`, 0, 0 );
+      ctx.translate( 2, 0 );
+    }
+  }
+
+  canvas.redraw();
+
+  function updateActivePiece() {
+    if ( activePiece ) {
+      activePiece.x = mouseX;
+      activePiece.y = mouseY;
+      const mouseHexCoord = Tantrix.getHexCoord( mouseX, mouseY );
+      activePiece.col = mouseHexCoord.col;
+      activePiece.row = mouseHexCoord.row;
+
+      if ( Tantrix.isValidMove( gameState.board, activePiece ) ) {
+        activePiece.x = null;
+        activePiece.y = null;
+      }
+    }
+  }
+
+  document.addEventListener( 'pointermove', e => {
+    mouseX = SIZE * ( e.clientX / canvas.scale - scrollX )
+    mouseY = SIZE * ( e.clientY / canvas.scale - scrollY );
+    
+    updateActivePiece();
+
+    canvas.redraw();
+  } );
+
+  document.addEventListener( 'pointerdown', e => {
+    // TODO: Don't duplicate, put this logic in one place
+    mouseX = SIZE * ( e.clientX / canvas.scale - scrollX )
+    mouseY = SIZE * ( e.clientY / canvas.scale - scrollY );
+
+
+    if ( gameState.turn == 0 && mouseX < -HAND_OFFSET + 1 ) {
+      const index = Math.floor( ( mouseY + Tantrix.HandSize ) / 2 );
+
+      const id = gameState.hands[ 0 ][ index ];
+
+      if ( id != null ) {
+        // TODO: Figure out actual original spot, don't just use mouse coords
+        activePiece = { id: id, rot: 0, x: mouseX, y: mouseY, handIndex: index };
+        pieceStartX = mouseX;
+        pieceStartY = mouseY;
+      }
+    }
+
+    else if ( gameState.turn == 1 && mouseX > HAND_OFFSET - 1 ) {
+      const index = Math.floor( ( mouseY + Tantrix.HandSize ) / 2 );
+
+      const id = gameState.hands[ 1 ][ index ];
+
+      if ( id != null ) {
+        // TODO: Figure out actual original spot, don't just use mouse coords
+        activePiece = { id: id, rot: 0, x: mouseX, y: mouseY, handIndex: index };
+        pieceStartX = mouseX;
+        pieceStartY = mouseY;
+      }
+    }
+
+    else if ( gameState.turn == 2 && mouseY < -HAND_OFFSET + 1 ) {
+      const index = Math.floor( ( mouseX + Tantrix.HandSize ) / 2 );
+
+      const id = gameState.hands[ 2 ][ index ];
+
+      if ( id != null ) {
+        // TODO: Figure out actual original spot, don't just use mouse coords
+        activePiece = { id: id, rot: 0, x: mouseX, y: mouseY, handIndex: index };
+        pieceStartX = mouseX;
+        pieceStartY = mouseY;
+      }
+    }
+
+    else if ( gameState.turn == 3 && mouseY > HAND_OFFSET - 1 ) {
+      const index = Math.floor( ( mouseX + Tantrix.HandSize ) / 2 );
+
+      const id = gameState.hands[ 3 ][ index ];
+
+      if ( id != null ) {
+        // TODO: Figure out actual original spot, don't just use mouse coords
+        activePiece = { id: id, rot: 0, x: mouseX, y: mouseY, handIndex: index };
+        pieceStartX = mouseX;
+        pieceStartY = mouseY;
+      }
+    }
+    
+    canvas.redraw();
+  } );
+
+  document.addEventListener( 'pointerup', e => {
+    if ( activePiece ) {
+      if ( Tantrix.isValidMove( gameState.board, activePiece ) ) {
+        gameState.makeMove( activePiece );
+
+        // console.log( JSON.stringify( gameState ) );
+
+        const segments = Tantrix.getSegments( gameState.board );
+        // console.log( segments );
+
+        const lines = Tantrix.getLines( segments );
+        // console.log( lines );
+
+        const longest = {};
+
+        lines.forEach( line => {
+          const color = line[ 0 ].color;
+
+          if ( longest[ color ] == null || longest[ color ].length < line.length ) {
+            longest[ color ] = line;
+          }
+        } );
+
+        // console.log( longest );
+        for ( const color in longest ) {
+          score[ color ] = longest[ color ].length;
+        }
+
+        console.log( score );
+      }
+      else {
+        activePiece.x = pieceStartX;
+        activePiece.y = pieceStartY;
+        activePiece.col = null;
+        activePiece.row = null;
+        activePiece.rot = 0;
+      }
+
+      activePiece = null;
+    }
+
+    canvas.redraw();
+  } );
+
+  document.addEventListener( 'wheel', e => {
+    if ( activePiece ) {
+      activePiece.rot = activePiece.rot - Math.sign( e.wheelDelta ) % 6;
+      updateActivePiece();
+
+      canvas.redraw();
+    }
+  } );
+
+  document.getElementById( 'new' ).addEventListener( 'change', e => {
+    gameState = GameState.newGame( parseInt( e.target.value ) );
+    e.target.selectedIndex = 0;
+    canvas.redraw();
+  } );
+
+</script>
