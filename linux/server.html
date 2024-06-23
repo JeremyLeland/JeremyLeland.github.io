@@ -1,0 +1,33 @@
+<html>
+  <head>
+    <title>New Linux Machine Setup</title>
+  </head>
+  <body>
+    <ol>
+      <li>
+        External drive
+        <ul>
+          <li>sudo vim /etc/fstab</li>
+          <li>UUID=767E-687A          /mnt/external   exfat   defaults        0 1</li>
+          <li>Find UUID with: lsblk -f</li>
+        </ul>
+      </li>
+      <li>
+        Samba
+        <ul>
+          <li><a href="https://wiki.archlinux.org/title/Samba">Arch Wiki</a></li>
+          <li>sudo pacman -S samba</li>
+          <li>sudo vim /etc/samba/smb.conf</li>
+  [MEDIA]
+  path = /mnt/external
+  browsable = yes
+  guest ok = yes
+  writable = yes
+  read only = no
+          <li>sudo systemctl restart smb.service</li>
+          <li>sudo ufw allow samba</li>
+        </ul>
+      </li>
+    </ol>
+  </body>
+</html>

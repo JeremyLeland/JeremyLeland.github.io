@@ -140,6 +140,21 @@
           <li>More suggestions <a href="https://lemmy.world/post/12205671">here</a></li>
         </ul>
       </li>
+      <li>
+        Samba
+        <ul>
+          <li>sudo apt install samba</li>
+          <li>sudo vim /etc/samba/smb.conf</li>
+[MEDIA]
+path = /mnt/external
+browsable = yes
+guest ok = yes
+writable = yes
+read only = no
+          <li>sudo systemctl restart smbd</li>
+          <li>sudo ufw allow samba</li>
+        </ul>
+      </li>
     </ul>
   </body>
 </html>
