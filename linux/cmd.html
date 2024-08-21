@@ -10,6 +10,7 @@
       <li>The above command uses yt-dlp (the newer version of YouTube DL) and tells it to use the best video quality it finds with those encodings. In practice, this limited me to 1080p, but this is sufficient for our purposes.</li>
       <li>Audio only (best m4a): yt-dlp -f 140 [URL]</li>
       <li>Split audio into chapters: yt-dlp -f 140 --split-chapters -P 'chapters' [URL]</li>
+      <li>Chapter titles: yt-dlp --split-chapters -P 'chapters' -o "chapter:%(section_title)s.%(ext)s" [URL]</li>
     </ul>
   </li>
   <li>
