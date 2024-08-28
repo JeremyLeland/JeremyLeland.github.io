@@ -1,0 +1,2 @@
+# Jeremy's preferred prompt
+PS1='\[\e[01;32m\]\A\[\e[00m\]:\[\e[01;34m\]\W\[\e[00m\] \$ '

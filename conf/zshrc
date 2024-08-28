@@ -1,0 +1,5 @@
+autoload -U colors && colors
+
+PROMPT='%F{green}%D{%H:%M} %F{blue}%1~ %f%# '
+
+alias ls='ls -G'
