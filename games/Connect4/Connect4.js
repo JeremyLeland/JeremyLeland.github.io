@@ -122,36 +122,41 @@ export class Connect4 {
   }
 
   applyMove( move ) {
-    console.log( `Applying move for Player ${ this.turn }: ${ move }` );
+    // console.log( `Applying move for Player ${ this.turn }: ${ move }` );
 
     if ( this.victory > 0 ) {
       console.warn( `Player ${ this.victory } already won game` );
-      return;
+      return 0;
     }
 
     if ( move[ 0 ] < 0 || move[ 0 ] >= Cols ) {
       console.warn( `Invalid column: ${ move[ 0 ] }` );
-      return;
+      return 0;
     }
 
     if ( move[ 1 ] < 0 || move[ 1 ] >= Rows ) {
       console.warn( `Invalid row: ${ move[ 1 ] }` );
-      return;
+      return 0;
     }
 
     const current = this.getAt( move[ 0 ], move[ 1 ] );
     
     if ( current != 0 ) {
       console.warn( `Board already has Player ${ current } at ${ move }` );
-      return;
+      return 0;
     }
 
     this.setAt( move[ 0 ], move[ 1 ], this.turn );
 
-    const longest = this.getLongestAt( move[ 0 ], move[ 1 ], this.turn );
-    if ( longest >= 4 ) {
+    const longest = this.getLongestAt( move[ 0 ], move[ 1 ] );
+
+    if ( Math.abs( longest ) > 4 ) {
+      // debugger;
+    }
+
+    if ( Math.abs( longest ) >= 4 ) {
       this.victory = this.turn;
-      console.log( `Player ${ this.turn } wins with ${ longest } in a row!` );
+      // console.log( `Player ${ this.turn } wins with ${ longest } in a row!` );
     }
 
     this.turn = this.turn == Players ? 1 : this.turn + 1;
@@ -196,44 +201,121 @@ export class Connect4 {
     return moves;
   }
 
-  getLongestAt( col, row, team ) {
-    // console.log( `Finding longest line for Player ${ team } at ${ col },${ row }` );
+  getLongestAt( col, row ) {
+    // console.log( `Finding longest line score at ${ col },${ row }` );
     let longest = 0;
 
-    if ( this.getAt( col, row ) == team ) {
-      [
-        [ 1, 0 ],   // vertical
-        [ 0, 1 ],   // horizontal
-        [ 1, 1 ],   // diagonal 1
-        [ 1, -1 ],  // diagonal 2
-      ].forEach( orientation => {
-        let length = 1;
+    const team = this.getAt( col, row );
 
-        [ -1, 1 ].forEach( dir => {
-          let c = col, r = row;
+    if ( team == 0 ) {
+      return 0;
+    }
 
-          while ( true ) {
-            c += dir * orientation[ 0 ];
-            r += dir * orientation[ 1 ];
+    [
+      [ 1, 0 ],   // vertical
+      [ 0, 1 ],   // horizontal
+      [ 1, 1 ],   // diagonal 1
+      [ 1, -1 ],  // diagonal 2
+    ].forEach( orientation => {
+      let length = 1;
 
-            if ( 0 <= c && c < Cols && 0 <= r && r < Rows && this.getAt( c, r ) == team ) {
-              length ++;
-            }
-            else {
-              break;
-            }
+      [ -1, 1 ].forEach( dir => {
+        let c = col, r = row;
+
+        while ( true ) {
+          c += dir * orientation[ 0 ];
+          r += dir * orientation[ 1 ];
+
+          if ( 0 <= c && c < Cols && 0 <= r && r < Rows && this.getAt( c, r ) == team ) {
+            length ++;
+          }
+          else {
+            break;
+          }
+        }
+      } );
+
+      // console.log( `  Length for orientation ${ orientation } is ${ length }`);
+
+      longest = Math.max( longest, length );
+    } );
+
+    return ( team == 1 ? -1 : 1 ) * longest;
+  }
+
+  //
+  // NOTE: Currently, tied boards may give -# or # depending on which pieces it finds first
+  // TODO: Should tied boards be represented differently?
+  // NOW: Trying only win and loss numbers, zero otherwise
+
+  getScore() {
+    let longest = 0;
+
+    for ( let col = 0; col < Cols; col ++ ) {
+      for ( let row = 0; row < Rows; row ++ ) {
+        const longestAt = this.getLongestAt( col, row );
+
+        if ( Math.abs( longestAt ) >= 4 ) {
+          return longestAt;
+        }
+
+        // console.log( `Longest at ${ col },${ row } is ${ longestAt }` );
+
+        // if ( Math.abs( longestAt ) > Math.abs( longest ) ) {
+        //   longest = longestAt;
+        // }
+      }
+    }
+
+    // return longest;
+    return 0;
+  }
+
+  getNextMoves( depth ) {
+    const moves = [];
+  
+    this.getPossibleMoves().forEach( move => {
+      this.applyMove( move );
+    
+      const item = {
+        move: move,
+      };
+  
+      const score = this.getScore();
+  
+      if ( Math.abs( score ) >= 4 || depth <= 1 ) {
+        item.score = score;
+      }
+      else {
+        item.nextMoves = this.getNextMoves( depth - 1 );
+
+        // How to account for a move that gets 4 now being better than a move that gets 4 in several moves?
+  
+        // TODO: Need to min/max here. It's assuming best moves for same player in every case
+        //       Need to take in which player we are optimizing for to properly summarize
+
+        // FIXME: Why is it getting zero so often now?
+
+        const minFunc = ( a, b ) => a < b;
+        const maxFunc = ( a, b ) => a > b;
+
+        const func = this.turn == 1 ? minFunc : maxFunc;
+
+        let best = this.turn == 1 ? Infinity : -Infinity;
+        item.nextMoves.forEach( nextMove => {
+          if ( func( nextMove.score, best ) ) {
+            best = nextMove.score;
           }
         } );
-
-        // console.log( `  Length for orientation ${ orientation } is ${ length }`);
-
-        longest = Math.max( longest, length );
-      } );
-    }
-    else {
-      console.warn( `Player at ${ col },${ row } is actually ${ this.getAt( col, row ) }, expecting ${ team }` );
-    }
-
-    return longest;
+  
+        item.score = best;
+      }
+  
+      moves.push( item );
+  
+      this.undo();
+    } );
+  
+    return moves;
   }
 }
