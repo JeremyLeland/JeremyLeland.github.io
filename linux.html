@@ -154,9 +154,12 @@
 [MEDIA]
 path = /mnt/external
 browsable = yes
-guest ok = yes
+guest ok = no
 writable = yes
 read only = no
+          <li>sudo useradd [USER]</li>
+          <li>sudo userpass [USER]</li>
+          <li>sudo smbpassword -a [USER]</li>
           <li>sudo systemctl restart smbd</li>
           <li>sudo ufw allow samba</li>
         </ul>
