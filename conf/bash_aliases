@@ -4,4 +4,6 @@ PS1='\[\e[01;32m\]\A\[\e[00m\]:\[\e[01;34m\]\W\[\e[00m\] \$ '
 alias yt-dlp='~/Downloads/venv/bin/yt-dlp'
 alias yt-audio='yt-dlp -f 140 --split-chapters -o "chapter:%(title)s/%(section_number)02d - %(section_title)s.%(ext)s"'
 
-alias vlc-folder='vlc -Zf --recursive expand'
+alias play='cvlc -Zf --recursive expand'
+
+alias whynosleep='qdbus --literal org.kde.Solid.PowerManagement.PolicyAgent /org/kde/Solid/PowerManagement/PolicyAgent org.kde.Solid.PowerManagement.PolicyAgent.ListInhibitions'
