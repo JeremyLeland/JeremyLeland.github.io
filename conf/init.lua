@@ -52,6 +52,35 @@ require("lazy").setup({
 
   -- Rainbow brackets
   { "HiPhish/rainbow-delimiters.nvim" },
+
+  -- Git
+  {
+    "lewis6991/gitsigns.nvim",
+    config = function()
+      require("gitsigns").setup()
+    end
+  },
+  {
+    "sindrets/diffview.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    config = function()
+      require("diffview").setup()
+    end
+  },
+  {
+    "kdheepak/lazygit.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    cmd = { "LazyGit" },
+  },
+  -- needed by diffview
+  {
+    "nvim-tree/nvim-web-devicons",
+    lazy = true, -- Optional: load on demand
+    opts = {},   -- Use defaults
+  }
+
+
+
 })
 
 -- ─── LSP Config ──────────────────────────────────────────────────────
@@ -138,6 +167,13 @@ vim.g.rainbow_delimiters = {
   },
 }
 
+-- Git
+vim.keymap.set("n", "<leader>gd", "<cmd>DiffviewOpen<CR>", { desc = "Open diff view" })
+vim.keymap.set("n", "<leader>gD", "<cmd>DiffviewClose<CR>", { desc = "Close diff view" })
+
+vim.keymap.set("n", "<leader>lg", "<cmd>LazyGit<CR>", { desc = "Open Lazygit" })
+
+
 
 -- Other config
 
@@ -151,3 +187,7 @@ vim.opt.relativenumber = false
 vim.opt.tabstop = 2 -- number of visual spaces per TAB
 vim.opt.shiftwidth = 2 -- number of spaces for autoindent
 vim.opt.expandtab = true -- convert tabs to spaces
+
+-- Map Ctrl+S to save in normal, insert, and visual mode
+vim.keymap.set({ "n", "v", "i" }, "<C-s>", "<cmd>w<CR>", { desc = "Save file" })
+
