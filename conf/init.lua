@@ -13,11 +13,20 @@ require("lazy").setup({
   -- LSP base and installer
   { "neovim/nvim-lspconfig" },
   {
-    "williamboman/mason.nvim",
+    "mason-org/mason.nvim",
     build = ":MasonUpdate",
     config = true,
   },
-  { "williamboman/mason-lspconfig.nvim" },
+  {
+    "mason-org/mason-lspconfig.nvim",
+    opts = {},
+    dependencies = {
+      "mason-org/mason.nvim",
+      "neovim/nvim-lspconfig",
+      "hrsh7th/cmp-nvim-lsp", -- needed for capabilities
+    }
+  },
+
 
   -- Completion
   { "hrsh7th/nvim-cmp" },
@@ -77,8 +86,51 @@ require("lazy").setup({
     "nvim-tree/nvim-web-devicons",
     lazy = true, -- Optional: load on demand
     opts = {},   -- Use defaults
-  }
+  },
 
+
+  -- Telescope
+  {
+    'nvim-telescope/telescope.nvim', tag = '0.1.8',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      -- Optional performance booster
+      { 'nvim-telescope/telescope-fzf-native.nvim', build = 'make', cond = vim.fn.executable('make') == 1 }
+    },
+    config = function()
+      local telescope = require('telescope')
+      telescope.setup({
+        defaults = {
+          layout_strategy = 'horizontal',
+          layout_config = {
+            prompt_position = 'top',
+          },
+          sorting_strategy = 'ascending',
+          winblend = 0,
+        },
+      })
+  
+      -- Load fzf extension if installed
+      pcall(telescope.load_extension, 'fzf')
+    end
+  },
+
+  -- Indentation
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    main = "ibl",
+    opts = {
+      scope = {
+        enabled = true,
+        -- highlight = { "Function", "Label" }, -- uses Tree-sitter node types
+        -- include = {
+        --   node_type = {
+        --     ["*"] = { "class", "function", "method", "if_statement", "for_statement" }
+        --   },
+        -- },
+      },
+    },
+  },
 
 
 })
@@ -90,16 +142,16 @@ require("mason-lspconfig").setup({
   automatic_installation = true,
 })
 
-local lspconfig = require("lspconfig")
-local capabilities = require("cmp_nvim_lsp").default_capabilities()
+--local lspconfig = require("lspconfig")
+--local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-require("mason-lspconfig").setup_handlers({
-  function(server_name)
-    lspconfig[server_name].setup({
-      capabilities = capabilities,
-    })
-  end,
-})
+--require("mason-lspconfig").setup_handlers({
+--function(server_name)
+--    lspconfig[server_name].setup({
+--      capabilities = capabilities,
+--    })
+--  end,
+--})
 
 -- ─── Completion Config ───────────────────────────────────────────────
 local cmp = require("cmp")
@@ -173,6 +225,12 @@ vim.keymap.set("n", "<leader>gD", "<cmd>DiffviewClose<CR>", { desc = "Close diff
 
 vim.keymap.set("n", "<leader>lg", "<cmd>LazyGit<CR>", { desc = "Open Lazygit" })
 
+-- Telescope
+local builtin = require('telescope.builtin')
+vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Find Files' })
+vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = 'Live Grep' })
+vim.keymap.set('n', '<leader>fb', builtin.buffers, { desc = 'Find Buffers' })
+vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = 'Help Tags' })
 
 
 -- Other config
@@ -187,6 +245,17 @@ vim.opt.relativenumber = false
 vim.opt.tabstop = 2 -- number of visual spaces per TAB
 vim.opt.shiftwidth = 2 -- number of spaces for autoindent
 vim.opt.expandtab = true -- convert tabs to spaces
+
+--[[
+vim.opt.list = true
+vim.opt.listchars = {
+  space = "·",   -- or "⋅" or "•"
+  tab = "→ ",    -- tab character
+  trail = "·",   -- trailing spaces
+  extends = "»",
+  precedes = "«"
+}
+--]]
 
 -- Map Ctrl+S to save in normal, insert, and visual mode
 vim.keymap.set({ "n", "v", "i" }, "<C-s>", "<cmd>w<CR>", { desc = "Save file" })
