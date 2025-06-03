@@ -41,6 +41,11 @@ require("lazy").setup({
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate"
   },
+  {
+    "windwp/nvim-autopairs",
+    event = "InsertEnter",
+    opts = {}
+  },
 
   -- Tree-sitter aware themes
   { "catppuccin/nvim" },
@@ -242,9 +247,14 @@ vim.opt.signcolumn = 'yes'
 vim.opt.number = true
 vim.opt.relativenumber = false
 
-vim.opt.tabstop = 2 -- number of visual spaces per TAB
-vim.opt.shiftwidth = 2 -- number of spaces for autoindent
-vim.opt.expandtab = true -- convert tabs to spaces
+-- Global default settings
+vim.opt.expandtab = true      -- Use spaces instead of tabs
+vim.opt.shiftwidth = 2        -- Indent by 2 spaces
+vim.opt.tabstop = 2           -- A tab is 2 spaces
+vim.opt.softtabstop = 2       -- Insert 2 spaces when pressing Tab
+vim.opt.smartindent = true    -- Auto-indent new lines
+vim.opt.autoindent = true     -- Keep indentation from previous line
+
 
 --[[
 vim.opt.list = true
