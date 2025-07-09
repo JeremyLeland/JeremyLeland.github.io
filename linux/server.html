@@ -8,7 +8,7 @@
         External drive
         <ul>
           <li>sudo vim /etc/fstab</li>
-          <li>UUID=767E-687A          /mnt/external   exfat   umask=0022,gid=1000,uid=1000        0 1</li>
+          <li>UUID=767E-687A          /mnt/external   exfat   uid=iggames,gid=iggames,fmask=0002,dmask=0002,iocharset=utf8    0 0</li>
           <li>Find UUID with: lsblk -f</li>
         </ul>
       </li>
@@ -22,13 +22,16 @@
   # fix log file (see wiki)
   log file = /var/log/samba/%m.log
 
+  # Not sure which of these are necessary, but it's letting me create directories for now
   [Media]
   path = /mnt/external
   force user = iggames
+  force group = iggames
   browsable = yes
   guest ok = yes
   writable = yes
-  read only = no
+  create mask = 0664
+  directory mask = 0775
           <li>sudo systemctl restart smb.service</li>
           <li>sudo systemctl enable smb.service</li>
         </ul>
