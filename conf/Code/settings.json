@@ -1,0 +1,41 @@
+{
+    "editor.minimap.enabled": false,
+    "git.autofetch": true,
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "git.postCommitCommand": "push",
+    "editor.tabSize": 2,
+
+    // "workbench.colorCustomizations": {
+    //     "statusBar.background" : "#1A1A1A",
+    //     "statusBar.noFolderBackground" : "#212121",
+    //     "statusBar.debuggingBackground": "#263238"
+    // },
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": true,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": true,
+    "editor.cursorBlinking": "solid",
+    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": true,
+    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": true,
+    "typescript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces": true,
+    "terminal.integrated.fontSize": 12,
+    "vim.gdefault": true,
+    "vim.hlsearch": true,
+    "vim.whichwrap": "b,s, h, l",
+    "keyboard.dispatch": "keyCode",
+    "clock.alignment": "Right",
+    "clock.format": "HH:MM",
+    "editor.fontFamily": "Monaco, Consolas,  'Droid Sans Mono', 'monospace', monospace, 'Droid Sans Fallback'",
+    "workbench.colorTheme": "GitHub Dark Dimmed",
+    "editor.accessibilitySupport": "off",
+    "workbench.layoutControl.enabled": false,
+    "window.commandCenter": false,
+    "window.dialogStyle": "custom",
+    "workbench.activityBar.location": "hidden",
+    "redhat.telemetry.enabled": false,
+    "window.menuBarVisibility": "toggle",
+    "editor.fontSize": 12,
+    "githubPullRequests.createOnPublishBranch": "never",
+    "editor.unicodeHighlight.invisibleCharacters": false,
+    "editor.unicodeHighlight.ambiguousCharacters": false
+
+}
