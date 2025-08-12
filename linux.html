@@ -165,10 +165,17 @@
         EMACS-like keyboard navigation
         <ul>
           <li>On Windows, use <a href="https://github.com/usuyama/emacs-like-key-bindings-windows">this</a> AutoHotKey script</li>
-          <li>On Linux, I'm using <a href="https://github.com/wez/evremap">evremap</a> with <a href="./conf/emacs-like.toml">this</a> config</li>
-          <li>See directions for Systemd on GitHub page, remember to copy bin to /usr/bin/evremap and config file to /etc/evremap.toml</li>
-          <li>More suggestions <a href="https://lemmy.world/post/12205671">here</a></li>
-          <li>On Debian, I'm using <a href="https://github.com/rvaiya/keyd">keyd</a>, which has fewer dependencies</li>
+          <strike>
+            <li>On Linux, I'm using <a href="https://github.com/wez/evremap">evremap</a> with <a href="./conf/emacs-like.toml">this</a> config</li>
+            <li>See directions for Systemd on GitHub page, remember to copy bin to /usr/bin/evremap and config file to /etc/evremap.toml</li>
+            <li>More suggestions <a href="https://lemmy.world/post/12205671">here</a></li>
+          </strike>
+          <li>On Debian, I'm using <a href="https://github.com/rvaiya/keyd">keyd</a> (<strike>which has fewer dependencies</strike> now available in apt) with <a href=".conf/keyd/default.conf"></a></li>
+          <ul>
+            <li>Place config in /etc/keyd/default.conf</li>
+            <li>sudo systemctl enable --now keyd</li>
+            <li>sudo keyd.rvaiya reload</li>
+          </ul>
         </ul>
       </li>
       <li>
