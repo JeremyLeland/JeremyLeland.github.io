@@ -48,6 +48,7 @@
         Steam
         <ul>
           <li><a href="https://wiki.debian.org/Steam"></a>Debian Install Guide</li>
+          <li>Launch in command line first time to see download/setup progress (might be unclear if anything is happening otherwise)</li>
           <li><a href="https://www.phoronix.com/news/Linux-Splitlock-Hurts-Gaming">Turn off split-lock mitigation</a>
             <ul>
               <li>echo kernel.split_lock_mitigate=0 | sudo tee /etc/sysctl.d/10-farcry6-settings.conf</li>
@@ -57,7 +58,34 @@
           </li>
         </ul>
       </li>
+      <li>
+        VPN: Private Internet Access
+        <ul>
+          <li><a href="https://www.privateinternetaccess.com/download/linux-vpn">Download</a></li>
+          <li>Login saved in browser Password Manager</li>
+          <li><b>Inhibit sleep for downloads and uploads in QBittorrent!</b></li>
+        </ul>
+      </li>
+      <li>
+        EMACS-like keyboard navigation
+        <ul>
+          <li>On Debian, I'm using <a href="https://github.com/rvaiya/keyd">keyd</a> (<strike>which has fewer dependencies</strike> now available in apt) with <a href=".conf/keyd/default.conf"></a></li>
+          <ul>
+            <li>Place config in /etc/keyd/default.conf</li>
+            <li>sudo systemctl enable --now keyd</li>
+            <li>sudo keyd.rvaiya reload</li>
+          </ul>
+          <li>On Windows, use <a href="https://github.com/usuyama/emacs-like-key-bindings-windows">this</a> AutoHotKey script</li>
+        </ul>
+      </li>
+      <li>
+        RClone
+        <ul>
+          <li><a href="https://rclone.org/drive/">Instructions</a> for Google Drive</li>
+        </ul>
+      </li>
     </ol>
+    <!--
     <ul>
       <li>
         Steam
@@ -205,5 +233,6 @@ UUID=####-####          /mnt/external   exfat   uid=iggames,gid=iggames,fmask=00
         </ul>
       </li>
     </ul>
+  -->
   </body>
 </html>
