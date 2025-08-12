@@ -31,7 +31,26 @@
           <li>Preferences: Window: Menu Bar Visibility: toggle</li>
         </ul>
       </li>
-      <li>Steam</li>
+      <li>
+        Python
+        <ul>
+          <li>sudo apt install python3-pip</li>
+          <li>Shouldn't need pip, though -- try to find things in apt first</li>
+        </ul>
+      </li>
+      <li>
+        Steam
+        <ul>
+          <li><a href="https://wiki.debian.org/Steam"></a>Debian Install Guide</li>
+          <li><a href="https://www.phoronix.com/news/Linux-Splitlock-Hurts-Gaming">Turn off split-lock mitigation</a>
+            <ul>
+              <li>echo kernel.split_lock_mitigate=0 | sudo tee /etc/sysctl.d/10-farcry6-settings.conf</li>
+              <li>sudo systemctl restart systemd-sysctl</li>
+              <li>sudo sysctl kernel.split_lock_mitigate</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
     </ol>
     <ul>
       <li>
