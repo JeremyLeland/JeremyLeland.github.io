@@ -1,0 +1,20 @@
+# Save this file to ~/.config/systemd/user/httpserver.service
+# Then run:
+# systemctl --user daemon-reexec
+# systemctl --user daemon-reload
+# systemctl --user enable httpserver.service
+# systemctl --user start httpserver.service
+
+
+[Unit]
+Description=Simple Python HTTP Server
+After=network.target
+
+[Service]
+WorkingDirectory=%h/code
+ExecStart=/usr/bin/python3 -m http.server
+Restart=always
+
+[Install]
+WantedBy=default.target
+
