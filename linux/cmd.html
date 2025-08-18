@@ -12,6 +12,7 @@
       <li>Split audio into chapters: yt-dlp -f 140 --split-chapters -P 'chapters' [URL]</li>
       <li>Chapter titles: yt-dlp --split-chapters -P 'chapters' -o "chapter:%(section_title)s.%(ext)s" [URL]</li>
       <li>Audio playlist: yt-dlp -f 140 --split-chapters -o "chapter:%(title)s/%(section_number)02d - %(section_title)s.%(ext)s" [URL]</li>
+      <li>Force 1080p, delays between: yt-dlp -f "bv[height=1080]+ba/b[height=1080]" --min-sleep-interval 300 --max-sleep-interval 400 [URLs]</li>
     </ul>
   </li>
   <li>
