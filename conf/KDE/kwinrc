@@ -1,16 +1,22 @@
+[Activities][LastVirtualDesktop]
+21c3d23f-4e71-4201-a1dd-8f71a4646a09=1ada9193-b082-4cb3-b6a5-5c1d5d6557b5
+
 [Desktops]
-Id_1=f287160f-4b1f-4fbd-be02-fc7ffe72a79e
-Number=1
+Id_1=5bc31bad-927e-4d12-b790-fb6cf80d523d
+Id_2=1ada9193-b082-4cb3-b6a5-5c1d5d6557b5
+Id_3=5e26314f-36df-4a6e-b58e-d31873becafc
+Name_1=Main
+Name_2=Games
+Name_3=Work
+Number=3
 Rows=1
 
 [Plugins]
-dialogparentEnabled=false
 fadingpopupsEnabled=false
 fullscreenEnabled=false
 loginEnabled=false
 logoutEnabled=false
 maximizeEnabled=false
-overviewEnabled=false
 scaleEnabled=false
 screenedgeEnabled=false
 slideEnabled=false
@@ -19,8 +25,20 @@ squashEnabled=false
 windowapertureEnabled=false
 zoomEnabled=false
 
+[TabBox]
+LayoutName=modern_informative
+
 [Tiling]
 padding=4
+
+[Tiling][1ada9193-b082-4cb3-b6a5-5c1d5d6557b5][27ae42ac-7495-4dc0-b69e-46032ee025b4]
+tiles={"layoutDirection":"horizontal","tiles":[{"width":0.25},{"width":0.5},{"width":0.25}]}
+
+[Tiling][5bc31bad-927e-4d12-b790-fb6cf80d523d][27ae42ac-7495-4dc0-b69e-46032ee025b4]
+tiles={"layoutDirection":"horizontal","tiles":[{"width":0.25},{"width":0.5},{"width":0.25}]}
+
+[Tiling][5e26314f-36df-4a6e-b58e-d31873becafc][27ae42ac-7495-4dc0-b69e-46032ee025b4]
+tiles={"layoutDirection":"horizontal","tiles":[{"width":0.25},{"width":0.5},{"width":0.25}]}
 
 [Tiling][73218dbd-79d0-5f5d-9114-3e89dad09ec5]
 tiles={"layoutDirection":"horizontal","tiles":[{"width":0.25},{"width":0.5},{"width":0.25}]}
