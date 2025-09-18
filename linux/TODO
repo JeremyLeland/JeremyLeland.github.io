@@ -7,4 +7,19 @@ Debian:
   - OSS Code instead of VS Code?
   - Steam launching outside command line?
 
+Server
+  - Google Drive backup with rclone
+    - And make it a service that runs regularly
+      - or at least an alias
+  - Apple Photos backup
+    - Make it a service that runs at boot and does watch
+      - How to re-authenticate when needed?
+        - Seems like it's good for a couple of weeks, at least
+      - At least make aliases of these
+  - Gmail backup
+    - https://wiki.archlinux.org/title/Isync ?
+
 Backup latest KDE config files from Arch
+  - Maybe better to make a list of which settings I change?
+    - Feeling less good about just copying config files around
+    - They seem to have a lot of other stuff that could mess things up
