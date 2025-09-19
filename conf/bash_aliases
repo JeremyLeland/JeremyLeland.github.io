@@ -7,3 +7,5 @@ alias yt-audio='yt-dlp -f 140 --split-chapters -o "chapter:%(title)s/%(section_n
 alias play='cvlc -Zf --recursive expand'
 
 alias whynosleep='qdbus --literal org.kde.Solid.PowerManagement.PolicyAgent /org/kde/Solid/PowerManagement/PolicyAgent org.kde.Solid.PowerManagement.PolicyAgent.ListInhibitions'
+
+HISTCONTROL=ignoreboth
