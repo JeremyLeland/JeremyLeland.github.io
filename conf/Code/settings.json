@@ -32,6 +32,7 @@
     "window.dialogStyle": "custom",
     "workbench.activityBar.location": "hidden",
     "redhat.telemetry.enabled": false,
+    "window.titleBarStyle": "native",
     "window.menuBarVisibility": "toggle",
     "editor.fontSize": 12,
     "githubPullRequests.createOnPublishBranch": "never",

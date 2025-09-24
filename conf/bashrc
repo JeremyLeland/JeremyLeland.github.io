@@ -1,2 +1,29 @@
+#
+# ~/.bashrc
+#
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+# Enable bash completion
+if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+fi
+
+
+alias ls='ls --color=auto'
+alias grep='grep --color=auto'
+#PS1='[\u@\h \W]\$ '
+
 # Jeremy's preferred prompt
 PS1='\[\e[01;32m\]\A\[\e[00m\]:\[\e[01;34m\]\W\[\e[00m\] \$ '
+
+alias yt-audio='yt-dlp -f 140 --split-chapters -o "chapter:%(title)s/%(section_number)02d - %(section_title)s.%(ext)s"'
+
+alias play='cvlc -Zf --recursive expand'
+
+play2() {
+  find $1 -type f,l -print0 | xargs -0 mpv --shuffle
+}
+
+HISTCONTROL=ignoreboth
