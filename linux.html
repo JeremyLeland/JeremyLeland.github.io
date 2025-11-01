@@ -119,6 +119,15 @@ fi
           <li>Scan with Skanlite in KDE</li>
         </ul>
       </li>
+      <li>
+        Hibernation (MacBookAir5,1)
+        <ul>
+          <li>Make sure there's 8GB swap partition</li>
+          <li>Edit /etc/default/grub:</li>
+          <li>GRUB_CMDLINE_LINUX_DEFAULT="quiet acpi_osi=!Darwin acpi_sleep=nonvs"</li>
+          <li>The acpi_osi=!Darwin seems key -- didn't work until I did that</li>
+        </ul>
+      </li>
     </ol>
     <!--
     <ul>
