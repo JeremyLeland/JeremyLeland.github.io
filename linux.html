@@ -128,6 +128,16 @@ fi
           <li>The acpi_osi=!Darwin seems key -- didn't work until I did that</li>
         </ul>
       </li>
+      <li>
+        WiFi (MacBookAir5,1)
+        <ul>
+          <li>Add "non-free" to /etc/apt/sources.list</li>
+          <li>deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware</li>
+          <li>sudo apt install build-essential dkms linux-headers-$(uname -r)</li>
+          <li>sudo apt install broadcom-sta-dkms</li>
+          <li>After installation make sure to reboot. The “wl” module should be loaded (you can check via lsmod | grep wl).</li>
+        </ul>
+      </li>
     </ol>
     <!--
     <ul>
