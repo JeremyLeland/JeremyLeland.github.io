@@ -28,4 +28,18 @@
       <li>watch -n 3600 "python ~/Downloads/nfl-streams.py > /mnt/external/Streams/nfl-streams.m3u8"</li>
     </ul>
   </li>
+  <li>
+    Remove non-English audio and subtitles
+    <ul>
+      <li>ffmpeg -i input.mkv -map 0:v -map 0:a:m:language:eng -map 0:s:m:language:eng -c copy output.mkv</li>
+    </ul>
+  </li>
+  <li>
+    Adjust volume
+    <ul>
+      <li>ffmpeg -i input.mkv -filter_complex ebur128 -f null - 2> stats.txt</li>
+      <li>Analyze: ffmpeg -i input.mkv -af loudnorm=I=-20:TP:-1.5:LRA=11:print_format=summary -f null -</li>
+      <li>Equalize (using values from above): ffmpeg -i input.mkv -af loudnorm=I=-20:TP=-1.5:LRA=11:measured_I=-23.5:measured_TP=-6.1:measured_LRA=8.6:measured_thresh=-34.0:offset=9.5:linear=true normalized.mp4</li>
+    </ul>
+  </li>
 </ul>
