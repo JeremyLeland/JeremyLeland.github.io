@@ -24,7 +24,7 @@ alias yt-vp9='yt-dlp -f "bv*[vcodec^=vp9][height=1080]+ba"'
 alias play='cvlc -Zf --recursive expand'
 
 play2() {
-  find $1 -type f,l -print0 | xargs -0 mpv -fs --no-osd-bar --shuffle
+  find "$1" -type f,l -print0 | xargs -0 mpv -fs --no-osd-bar --shuffle
 }
 
 HISTCONTROL=ignoreboth
