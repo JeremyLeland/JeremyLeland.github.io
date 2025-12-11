@@ -141,8 +141,14 @@ fi
           <li>deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware</li>
           <li>sudo apt install build-essential dkms linux-headers-$(uname -r)</li>
           <li>sudo apt install broadcom-sta-dkms</li>
-          <li>After installation make sure to reboot. The “wl” module should be loaded (you can check via lsmod | grep wl).</li>
-        </ul>
+          <li>After installation make sure to reboot. The "wl" module should be loaded (you can check via lsmod | grep wl).</li>
+          <li>After kernel updates:
+            <ul>
+              <li>sudo apt install linux-headers-$(uname -r)</li>
+              <li>sudo dkms autoinstall</li>
+              <li>Do this before rebooting, if possible (or at least the apt install!)
+            </ul>
+          </li>
       </li>
     </ol>
     <!--
