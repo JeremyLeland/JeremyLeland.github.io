@@ -13,6 +13,15 @@
         </ul>
       </li>
       <li>
+        DNS
+        <ul>
+          <li>Stop advertising IPv6 via mDNS. This may be causing flakiness with Jellyfin and Samba.</li>
+          <li>On the server: /etc/avahi/avahi-daemon.conf</li>
+          <li>Set: use-ipv6=no</li>
+          <li>Then: sudo systemctl restart avahi-daemon</li>
+        </ul>
+      </li>
+      <li>
         Samba
         <ul>
           <li><a href="https://wiki.archlinux.org/title/Samba">Arch Wiki</a></li>
