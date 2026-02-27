@@ -18,13 +18,19 @@ alias grep='grep --color=auto'
 # Jeremy's preferred prompt
 PS1='\[\e[01;32m\]\A\[\e[00m\]:\[\e[01;34m\]\W\[\e[00m\] \$ '
 
+# YT-DLP helpers
 alias yt-audio='yt-dlp -f 140 --split-chapters -o "chapter:%(title)s/%(section_number)02d - %(section_title)s.%(ext)s"'
 alias yt-vp9='yt-dlp -f "bv*[vcodec^=vp9][height=1080]+ba"'
 
+# Play folder of videos
 alias play='cvlc -Zf --recursive expand'
-
 play2() {
   find "$1" -type f,l -print0 | xargs -0 mpv -fs --no-osd-bar --shuffle
+}
+
+# Remove non-english audio and subtitles from video
+ffeng() {
+  ffmpeg -i "$1" -map 0:v -map 0:m:language:eng -c copy "$2"
 }
 
 HISTCONTROL=ignoreboth
