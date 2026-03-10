@@ -1,4 +1,4 @@
-<title>Command Line notes</title>>
+<title>Command Line notes</title>
 <ul>
   <li>Separate PDF into pages (<a href="https://superuser.com/questions/345086/split-pdf-document-from-command-line-in-linux">SO</a>): pdfseparate -f # -l # input.pdf output.pdf</li>
   <li>
@@ -13,6 +13,12 @@
       <li>Chapter titles: yt-dlp --split-chapters -P 'chapters' -o "chapter:%(section_title)s.%(ext)s" [URL]</li>
       <li>Audio playlist: yt-dlp -f 140 --split-chapters -o "chapter:%(title)s/%(section_number)02d - %(section_title)s.%(ext)s" [URL]</li>
       <li>Force 1080p, delays between: yt-dlp -f "bv[height=1080]+ba/b[height=1080]" --min-sleep-interval 300 --max-sleep-interval 400 [URLs]</li>
+    </ul>
+  </li>
+  <li>
+    FFMPEG
+    <ul>
+      <li>Extract audio: for f in *.mp4; do ffmpeg -i "$f" -vn -c:a copy "${f%.*}.m4a"; done</li>
     </ul>
   </li>
   <li>
