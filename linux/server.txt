@@ -1,4 +1,6 @@
-DNS
+###
+# DNS
+###
 
 Avahi renamed your host to buzz-3.local because it detected a hostname conflict. By default it automatically renames to avoid collisions. You can change that behavior so it keeps buzz.local instead of renaming.
 
@@ -22,3 +24,51 @@ When Avahi has a fixed hostname configured, it doesn't auto-generate -2, -3, etc
 Save the file, then restart Avahi:
 
 sudo systemctl restart avahi-daemon
+
+##
+## Conflict with systemd-resolved
+##
+
+Use Avahi only and disable mDNS in systemd-resolved.
+
+Edit:
+
+sudo nano /etc/systemd/resolved.conf
+
+Set:
+
+MulticastDNS=no
+
+Restart:
+
+sudo systemctl restart systemd-resolved
+sudo systemctl restart avahi-daemon
+
+###
+# WATCHDOG
+###
+
+Arch often relies on systemd watchdog + kernel watchdog driver instead of the old daemon.
+
+Enable systemd hardware watchdog (recommended)
+
+Edit systemd config:
+
+sudo nano /etc/systemd/system.conf
+
+Uncomment or add:
+
+RuntimeWatchdogSec=20
+RebootWatchdogSec=10min
+
+Verify it is active
+
+Run:
+
+cat /proc/sys/kernel/watchdog
+
+and:
+
+sudo wdctl
+
+✅ Important: On modern Arch setups, systemd’s built-in watchdog is preferred instead of the old watchdog daemon.
