@@ -1,0 +1,24 @@
+DNS
+
+Avahi renamed your host to buzz-3.local because it detected a hostname conflict. By default it automatically renames to avoid collisions. You can change that behavior so it keeps buzz.local instead of renaming.
+
+Edit the Avahi daemon config:
+
+sudo nano /etc/avahi/avahi-daemon.conf
+
+Find the [server] section and set:
+
+[server]
+host-name=buzz
+domain-name=local
+allow-interfaces=enp1s0
+
+The key part is explicitly setting:
+
+host-name=buzz
+
+When Avahi has a fixed hostname configured, it doesn't auto-generate -2, -3, etc. the same way it does when using the system hostname.
+
+Save the file, then restart Avahi:
+
+sudo systemctl restart avahi-daemon
