@@ -25,6 +25,8 @@ export class GameCanvas {
         top: 0,
         width: '100vw',
         height: '100vh',
+        touchAction: 'none',
+        userSelect: 'none',
       } );
     }
 
