@@ -1,5 +1,5 @@
 export class AnimatedCanvas {
-  ShowFPS = true;
+  ShowFPS = false;
 
   #reqId;
 
@@ -12,7 +12,7 @@ export class AnimatedCanvas {
     if ( !canvas ) {
       document.body.appendChild( this.canvas );
     }
-    
+
     this.ctx = this.canvas.getContext( '2d' /*, { alpha: false }*/ );
     this.ctx.scaleVal = 1;
 
@@ -49,7 +49,7 @@ export class AnimatedCanvas {
       lastTime ??= now;  // for first call only
       const dt = now - lastTime;
       lastTime = now;
-      
+
       this.update( dt );
       this.redraw();
 
@@ -64,25 +64,25 @@ export class AnimatedCanvas {
 
         // this.ctx.save(); {
           this.ctx.beginPath();
-          
+
           this.ctx.rect( 0, 0, 60, 70 );
           for ( let y = 10; y < 70; y += 10 ) {
             this.ctx.moveTo(  0, y );
             this.ctx.lineTo( 60, y );
           }
-          
+
           this.ctx.strokeStyle = 'yellow';
           this.ctx.stroke();
 
           this.ctx.beginPath();
           this.#frameRates.forEach( ( rate, index ) => this.ctx.lineTo( index, 70 - rate ) );
-          
+
           this.ctx.strokeStyle = 'orange';
           this.ctx.stroke();
         // }
         // this.ctx.restore();
       }
-  
+
       this.#reqId = requestAnimationFrame( animate );
     };
 
