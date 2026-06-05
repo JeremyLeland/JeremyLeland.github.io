@@ -72,3 +72,13 @@ and:
 sudo wdctl
 
 ✅ Important: On modern Arch setups, systemd’s built-in watchdog is preferred instead of the old watchdog daemon.
+
+###
+# Jellyfin hardware acceleration
+##
+
+Needed to install:
+intel-gpu-tools (for intel_gpu_top)
+intel-media-driver
+libva-utils
+onevpl-intel-gpu
