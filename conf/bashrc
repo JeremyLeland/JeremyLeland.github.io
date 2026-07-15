@@ -41,6 +41,10 @@ PS1='$(get_battery)\[\e[01;32m\]\A\[\e[00m\]:\[\e[01;34m\]\W\[\e[00m\] \$ '
 alias yt-audio='yt-dlp -f 140 --split-chapters -o "chapter:%(title)s/%(section_number)02d - %(section_title)s.%(ext)s"'
 alias yt-vp9='yt-dlp -f "bv*[vcodec^=vp9][height=1080]+ba"'
 
+# GAMDL shortcut (for calling directly on server)
+alias gamdl='gamdl -c ~/Downloads/gamdl/cookies.txt -o /mnt/external/Music/'
+
+
 # Play folder of videos
 #alias play='cvlc -Zf --recursive expand'
 play() {

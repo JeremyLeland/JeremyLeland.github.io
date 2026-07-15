@@ -38,6 +38,11 @@
     Remove non-English audio and subtitles
     <ul>
       <li>ffmpeg -i input.mkv -map 0:v -map 0:a:m:language:eng -map 0:s:m:language:eng -c copy output.mkv</li>
+      <li>
+for f in *.mkv; do
+  [ -f "$f" ] && ffmpeg -i "$f" -map 0:v -map 0:a:m:language:eng -map 0:s:m:language:eng -c copy "${f%.mkv}_english.mkv"
+done
+      </li>
     </ul>
   </li>
   <li>
