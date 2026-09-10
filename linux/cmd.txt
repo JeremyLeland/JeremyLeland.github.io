@@ -1,0 +1,8 @@
+===
+= Renaming videos from YouTube with perl-rename
+===
+
+perl-rename 's/^\[SUPERWINGS6\] ([\w\s\-,'\''!]+)\s.+EP(\d+).+/Super Wings.S06E$2.$1.webm/' *.webm
+perl-rename -n 's/^([\w\s\-,'\''!]+)\s.+EP(\d+).+/Super Wings.S05E$2.$1.webm/' *.webm
+
+The main chunk for titles is '([\w\s\-,'\''!]+)', which includes bash escaping for '.
