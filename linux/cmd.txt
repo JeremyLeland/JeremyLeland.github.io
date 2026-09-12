@@ -8,3 +8,8 @@ perl-rename -n 's/^([\w\s\-,'\''!]+)\s.+EP(\d+).+/Super Wings.S05E$2.$1.webm/' *
 The main chunk for titles is '([\w\s\-,'\''!]+)', which includes bash escaping for '.
 
 Test the command with '-n', then run without to actually rename.
+
+Can do padded zeros for episode number with sprintf
+
+perl-rename 's/LoliRock - ([\w\s,!]+)\s.+ Episode (\d+).+/sprintf("LoliRock.S01E%02d.%s.webm", $2, $1)/e' *.webm
+
