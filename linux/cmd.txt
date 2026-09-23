@@ -1,0 +1,67 @@
+==================================================
+= Renaming videos from YouTube with perl-rename =
+==================================================
+
+perl-rename -n 's/^\[SUPERWINGS6\] ([\w\s\-,'\''!]+)\s.+EP(\d+).+/Super Wings.S06E$2.$1.webm/' *.webm
+perl-rename -n 's/^([\w\s\-,'\''!]+)\s.+EP(\d+).+/Super Wings.S05E$2.$1.webm/' *.webm
+
+The main chunk for titles is '([\w\s\-,'\''!]+)', which includes bash escaping for '.
+
+Test the command with '-n', then run without to actually rename.
+
+Can do padded zeros for episode number with sprintf
+
+perl-rename 's/LoliRock - ([\w\s,!]+)\s.+ Episode (\d+).+/sprintf("LoliRock.S01E%02d.%s.webm", $2, $1)/e' *.webm
+
+=======
+= VPN =
+=======
+
+ - PIA (Public Internet Access): https://helpdesk.privateinternetaccess.com/hc/en-us/articles/46770624896923-Linux-Set-Up-a-Manual-OpenVPN-Connection-Through-Terminal
+ - Proton VPN: https://protonvpn.com/support/linux-vpn-arch
+
+Using PIA for now (ProtonVPN required a bunch of gnome dependencies for gnome-keyring)
+
+Looks like I could have done this instead: https://helpdesk.privateinternetaccess.com/hc/en-us/articles/46565791890971-Linux-Manual-Connection-Scripts
+
+The VPN connection is straightforward enough, but the port forwarding (important for torrenting) is a pain. Abandoning this project for now.
+
+sudo pacman -S openvpn
+wget -O openvpn.zip https://www.privateinternetaccess.com/openvpn/openvpn.zip
+unzip -o openvpn.zip
+sudo cp ca_vancouver.ovpn /etc/openvpn/client/myvpn.conf
+ 
+
+# Start
+sudo systemctl start openvpn-client@myvpn
+
+# Stop
+sudo systemctl stop openvpn-client@myvpn
+
+# Restart
+sudo systemctl restart openvpn-client@myvpn
+
+# Status
+systemctl status openvpn-client@myvpn
+
+# Enable at boot
+sudo systemctl enable openvpn-client@myvpn
+
+# Enable + start now
+sudo systemctl enable --now openvpn-client@myvpn
+
+# Logs
+journalctl -u openvpn-client@myvpn -f
+
+# Check tunnel
+ip addr show tun0
+
+# Check routing
+ip route
+
+
+Check public IP from command line:
+curl ifconfig.me
+curl api.ipify.org
+
+
