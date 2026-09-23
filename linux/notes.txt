@@ -1,0 +1,21 @@
+9/23:
+  - Debian 13 Dolphin doesn't show video metadeta (dimensions, duration)
+    - File Indexing is enabled
+    - FFMPEGThumbs package was already installed
+    - Values show up in file details, just not columns
+    - Is this a bug in the debian version of Dolphin?
+    - Not the biggest of deals, but annoying if it's just bugged in Debian
+
+9/22:
+  - Should probably keep notes on this stuff like I have been with coding
+  - Trying alternative editors
+  - Kate
+    - Comment selection: ctrl + c
+    - Theme: has VSCodium dark, which is decent, but doesn't have quite my github dimmed
+      - How hard would it be to make one?
+    - UI: GUI, easy to style fonts/colors separately from terminal
+    - Move lines up/down: Ctrl+Shift+Up/Down, can I switch to Alt+Up/Down?
+    - Indent current line: ???
+    - VSCode bindings
+      - https://wrhol.com/blog/posts/kate-shortcuts/kate_vscode.shortcuts
+      - https://github.com/mer30hamid/kate-vscode/blob/main/kate-vscode.shortcuts
