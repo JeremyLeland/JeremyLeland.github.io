@@ -1,3 +1,13 @@
+9/24:
+  - Fixed Dolphin not showing metadata
+    - Purging the index might have done it?
+      - balooctl6 purge    *** THIS SEEMS KEY ***
+      - systemctl --user restart kde-baloo (not sure if this was needed)
+      - Not sure if baloo was running before, maybe it needed to be turned on too
+      - Don't think mediainfo was needed here after all
+    - Anyway, this was one of the things that was really bugging me about my Debian install
+      - so I'm glad it's working now! Less pressure to reboot
+      
 9/23:
   - Debian 13 Dolphin doesn't show video metadeta (dimensions, duration)
     - File Indexing is enabled
