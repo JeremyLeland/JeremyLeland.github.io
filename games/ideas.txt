@@ -1,0 +1,8 @@
+Chinese Checkers
+
+Memory
+  - Flip cards to match
+  - Cute monster images?
+
+Osmos
+  - Circles grow and shrink as the "eat" each other
