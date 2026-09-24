@@ -5,6 +5,12 @@
     - Values show up in file details, just not columns
     - Is this a bug in the debian version of Dolphin?
     - Not the biggest of deals, but annoying if it's just bugged in Debian
+  - MacBook Air keeps sleeping but not hibernating
+    - Turns out /etc/systemd/sleep.conf has default HibernateDelaySec of 2 hours.
+      - Laptop is probably dying before then
+      - Can try setting this shorter
+      - Can test directly with sudo systemctl suspend-then-hibernate
+      - Check logs with sudo journalctl -b -1 | grep -Ei 'hibernat'
 
 9/22:
   - Should probably keep notes on this stuff like I have been with coding
