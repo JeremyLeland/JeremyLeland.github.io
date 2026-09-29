@@ -1,3 +1,14 @@
+9/28:
+  - Using Kate with LSP would involve typescript-language-server
+    - This requires Node.js
+      - This brings in hundreds of packages (annoying, not sure how big a deal it actually is)
+      - This doesn't work on Debian 13 out of the box
+        - typescript-language-server@6.0.1 requires node>=22.22.2
+        - Debian 13 has node v20.19.2
+  - Did vim/nvim have another option, or did that also require npm?
+    - Whole thing may not be worth it...just stick with VS Code which has it all built in
+
+
 9/24:
   - Fixed Dolphin not showing metadata
     - Purging the index might have done it?

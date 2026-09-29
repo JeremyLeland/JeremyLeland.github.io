@@ -1,3 +1,6 @@
+Port the collision code from liero tests in tiles to platform project
+  - Seem to have solved the issues I was having there
+
 Chinese Checkers
 
 Memory
