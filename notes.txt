@@ -1,0 +1,32 @@
+9/29:
+  - Starting general notes for life here
+
+  - iPhone upgrade options
+    - iPhone 18 Pro Max $47.92/mo
+    - iPhone 18 Pro     $43.75/mo
+    - iPhone 17 Pro     $39.59/mo
+    - iPhone 17         $32.50/mo
+    - iPhone 17 Pro Max $43.75/mo
+    - iPhone Air        $39.59/mo
+    - iPhone 17e        $22.92/mo
+    - iPhone 16         $28.34/mo
+    - iPhone 16 Plus    $28.34/mo
+    - iPhone 15         $20.00/mo
+
+  - Seems like 17e and 16 are more what I'm looking for
+    - 17e is "essentially the modern small-ish iPhone, without paying for Pro features you don't...care about."
+    - 16 is "basically the more feature-rich version of the 17e, despite being an older generation."
+
+      	            15	      17e	      16	      17
+--------------------------------------------------------
+Monthly             $20.00	  $22.92	  $28.34	  $32.50
+Physical size       ⭐⭐⭐⭐	⭐⭐⭐⭐	⭐⭐⭐⭐	⭐⭐⭐
+Weight	            171g	    169g	    170g	    177g
+Screen	            6.1"	    6.1"	    6.1"    	6.3"
+256GB	              Yes	      Yes	      Yes*	    Yes
+Apple Intelligence	No      	Yes     	Yes     	Yes
+USB-C	              Yes	      Yes	      Yes	      Yes
+ProMotion 120Hz	    No	      No	      No	      Yes
+Newer generation	  2023	    2026	    2024	    2025
+
+

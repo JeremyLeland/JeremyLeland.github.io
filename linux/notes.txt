@@ -1,3 +1,9 @@
+9/29:
+  - It's automatically applying its own formatting as I type
+    - I could fix it to be my formatting
+    - Or maybe disable it
+    - But it's kind of annoying right now
+
 9/28:
   - Using Kate with LSP would involve typescript-language-server
     - This requires Node.js
@@ -7,6 +13,21 @@
         - Debian 13 has node v20.19.2
   - Did vim/nvim have another option, or did that also require npm?
     - Whole thing may not be worth it...just stick with VS Code which has it all built in
+  - Can try zed as an alternative
+    - Not built into Debian -- install with a script
+      - How does it update?
+    - All the AI ick
+    - It's an alternative to electron, not sure I care about that part
+    - It has a Vim mode, that's intersting
+    - It'll let me choose VS Code bindings as part of initial setup
+    - Seems like it has built is "vtsls" typescript language server
+      - Addresses my npm complaint, at least
+    - My preferred theme (GitHub Dark Dimmed): https://github.com/PyaeSoneAungRgn/github-zed-theme
+      - similar, not quite the same...grays are different
+    - Has rainbow brackets (it calls it "colorize brackets")
+    - Pretty slick overall. 
+      - Not sure it gives me much advantage over VSCode at this point, but it is an alternative
+      - Most comparable in terms of minimal additional setup, but has most of the same trade-offs
 
 
 9/24:
