@@ -3,3 +3,10 @@
 ==========================
 
 https://github.com/OldUnreal/FullGameInstallers/tree/master/Linux
+
+========
+= EPUB =
+========
+
+On Debian 13 (Trixie), install Okular’s extra backends for EPUB support:
+sudo apt install okular okular-extra-backends
