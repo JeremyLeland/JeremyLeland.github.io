@@ -1,6 +1,14 @@
-==================================================
+=========================
+= Live CDs (ISO to USB) =
+=========================
+
+sudo dd if=diskimage.iso of=/dev/sdc bs=8M status=progress oflag=direct
+
+Use lsblk to confirm which device is USB drive
+
+=================================================
 = Renaming videos from YouTube with perl-rename =
-==================================================
+=================================================
 
 perl-rename -n 's/^\[SUPERWINGS6\] ([\w\s\-,'\''!]+)\s.+EP(\d+).+/Super Wings.S06E$2.$1.webm/' *.webm
 perl-rename -n 's/^([\w\s\-,'\''!]+)\s.+EP(\d+).+/Super Wings.S05E$2.$1.webm/' *.webm
