@@ -1,3 +1,25 @@
+10/6:
+  - Fedora worked
+    - Installed easily and clearly
+    - Built ladybird once I got dependencies installed properly
+    - Can put it through paces on printer, scanner, steam, vs code etc later
+    - Remains an alternative if I have issues with Arch and Debian
+
+10/5:
+  - Ubuntu's rust not recent enough to build ladybird
+  - Try another OS on macbook to see if it works easier for ladybird builds
+    - Something with more recent packages
+      - Not arch, since that probably still has the ICU issue
+      - OpenSUSE?
+        - Error message during install, and won't even log into first boot
+          - Tried KDE and XFCE
+          - KDE won't get past login screen
+          - XFCE logged in automatically, but then I couldn't click anything
+          - seriously? How is this what they ship? Not great
+      - Fedora?
+        - Worked last time, don't remember how it ended up getting screwed up
+        - I'll try it again, then write down how it gets screwed up this time
+  
 9/29:
   - It's automatically applying its own formatting as I type
     - I could fix it to be my formatting
