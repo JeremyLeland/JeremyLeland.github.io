@@ -4,6 +4,17 @@
     - Built ladybird once I got dependencies installed properly
     - Can put it through paces on printer, scanner, steam, vs code etc later
     - Remains an alternative if I have issues with Arch and Debian
+  - Wireless in Fedora?
+    - Macbook has BCM4360 (lspci | grep -i -E 'network')
+    - Supposedly covered by broadcom-wl
+      - Need to enable RPM Fusion repository
+        - This annoys me, but I guess this is where non-free stuff comes from?
+      - sudo dnf install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+      - sudo dnf install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+      - sudo dnf install broadcom-wl
+      - Reboot
+        - works!
+
 
 10/5:
   - Ubuntu's rust not recent enough to build ladybird
