@@ -10,3 +10,32 @@ https://github.com/OldUnreal/FullGameInstallers/tree/master/Linux
 
 On Debian 13 (Trixie), install Okular’s extra backends for EPUB support:
 sudo apt install okular okular-extra-backends
+
+============
+= VSCodium =
+============
+
+*** Install ***
+
+From: https://repo.vscodium.dev/
+
+GPG Key
+Add the GPG key of the repository:
+
+curl -fsSL https://repo.vscodium.dev/vscodium.gpg \
+  | gpg --dearmor \
+  | sudo dd of=/usr/share/keyrings/vscodium.gpg
+
+Add the .sources file:
+sudo curl --output-dir /etc/apt/sources.list.d -LO https://repo.vscodium.dev/vscodium.sources
+
+Update then install VSCodium:
+sudo apt update && sudo apt install codium
+
+*** Settings ***
+Copy from saved here
+
+*** Extensions ***
+GitHub Theme (for my theme, GitHub Dimmed)
+
+EditCSV (was useful with OSDR stuff)
