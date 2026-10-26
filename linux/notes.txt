@@ -1,3 +1,24 @@
+10/25:
+  - Updated Debian and now the sound isn't working
+  - $ sudo fuser -v /dev/snd/*
+                     USER        PID ACCESS COMMAND
+/dev/snd/controlC0:  iggames    3415 F.... fluidsynth
+/dev/snd/controlC1:  iggames   12933 F.... wireplumber
+/dev/snd/pcmC0D0p:   iggames    3415 F...m fluidsynth
+/dev/snd/seq:        iggames    3415 f.... fluidsynth
+                     iggames   12931 F.... pipewire
+/dev/snd/timer:      iggames    3415 f.... fluidsynth
+
+  - "fluidsynth" is taking up /dev/snd/pcmC0D0p, which is my main soundcard I guess
+  - Fixed it by turning off fluidsynth service for now. 
+    - Probably will be busted on reboot, maybe I should disable the service completely
+      - What does it even do? Something about MIDI? Is it on my Arch setup?
+  - Some commands that helped debug this:
+    - aplay -l
+    - wpctl status
+    - pactl list cards short
+
+
 10/6:
   - Fedora worked
     - Installed easily and clearly
