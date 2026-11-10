@@ -117,10 +117,12 @@ function getColorForDate( date ) {
     const MillisecondPerDay = 1000 * 60 * 60 * 24;
     const daysAgo = ( Date.now() - lastDone ) / MillisecondPerDay;
 
-    const red = Math.min( 256, 7 * daysAgo );
-    const green = 7 * 256 / Math.max( 0.01, daysAgo );
+    const MaxDays = 90;
+    
+    const GreenHue = 120;
+    const hue = Math.min( 1, 1 - daysAgo / MaxDays ) * GreenHue;
 
-    return `rgb( ${ red }, ${ green }, 0 )`;
+    return `hsl( ${ hue }, 100%, 50% )`;
   }
   else {
     return 'red';
