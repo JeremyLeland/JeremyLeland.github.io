@@ -120,7 +120,7 @@ function getColorForDate( date ) {
     const MaxDays = 90;
     
     const GreenHue = 120;
-    const hue = Math.min( 1, 1 - daysAgo / MaxDays ) * GreenHue;
+    const hue = Math.max( 0, 1 - daysAgo / MaxDays ) * GreenHue;
 
     return `hsl( ${ hue }, 100%, 50% )`;
   }
