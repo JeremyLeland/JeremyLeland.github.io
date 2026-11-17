@@ -23,14 +23,10 @@ const Constants = {
   ],
 };
 
-const sounds = {};
-
-Constants.Limbs.forEach( limb => {
-  Constants.Colors.forEach( color => {
-    const combined = `${ limb } ${ color }`;
-    sounds[ combined ] = new Audio( `./audio/${ combined }.ogg` );
-  } );
-} );
+// Use one Audio() and keep changing its src before playing to work around iOS Safari limits
+// Seeems the simplest fix from suggestions here:
+// https://stackoverflow.com/questions/31776548/why-cant-javascript-play-audio-files-on-iphone-safari
+const sound = new Audio();
 
 const FootPath1 = new Path2D( `
   M -0.9024639426356051,0.009603489512464591
@@ -169,7 +165,8 @@ gameCanvas.update = ( dt ) => {
     const name = `${ Constants.Limbs[ limb ] } ${ Constants.Colors[ color ] }`;
 
     console.log( name );
-    sounds[ name ].play();
+    sound.src = `./audio/${ name }.ogg`;
+    sound.play();
 
     // For now, do automatic re-spins every 5 seconds
     timer = setTimeout( doSpin, 5000 );
