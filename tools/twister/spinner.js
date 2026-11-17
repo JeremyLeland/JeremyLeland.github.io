@@ -143,6 +143,8 @@ const spinner = {
   dAngle: 0,
 };
 
+let timer;
+
 const limbColors = Array( NumLimbs );
 
 const gameCanvas = new GameCanvas();
@@ -168,6 +170,9 @@ gameCanvas.update = ( dt ) => {
 
     console.log( name );
     sounds[ name ].play();
+
+    // For now, do automatic re-spins every 5 seconds
+    timer = setTimeout( doSpin, 5000 );
   }
 }
 
@@ -278,16 +283,10 @@ gameCanvas.draw = ( ctx ) => {
 }
 
 
-
-//
-// Input
-//
-
 const MinSpins = 1;
 const MaxSpins = 3;
 
-gameCanvas.pointerDown = ( m ) => {
-
+function doSpin() {
   // const goalAngle = Math.atan2( m.y, m.x );
   const goalAngle = getAngleForIndex( roll() );
 
@@ -321,4 +320,14 @@ function roll() {
 
 function getAngleForIndex( i ) {
   return ( i + 0.5 ) * TWO_PI / NumLimbs / NumColors;
+}
+
+
+//
+// Input
+//
+
+gameCanvas.pointerDown = ( m ) => {
+  clearTimeout( timer );
+  doSpin();
 }
