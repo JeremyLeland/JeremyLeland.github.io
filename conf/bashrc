@@ -65,5 +65,9 @@ pull_all_git() {
   find -name .git -print -execdir git pull \;
 }
 
+fetch_all_git() {
+  find -name .git -print -execdir git fetch --all \;
+}
+
 
 HISTCONTROL=ignoreboth
