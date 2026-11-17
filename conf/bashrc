@@ -56,4 +56,14 @@ ffeng() {
   ffmpeg -i "$1" -map 0:v -map 0:m:language:eng -c copy "$2"
 }
 
+# Git
+new_repo() {
+  gh repo create JeremyLeland/$1 --public --source=. --remote=origin --push
+}
+
+pull_all_git() {
+  find -name .git -print -execdir git pull \;
+}
+
+
 HISTCONTROL=ignoreboth
