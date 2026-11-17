@@ -23,6 +23,15 @@ const Constants = {
   ],
 };
 
+const sounds = {};
+
+Constants.Limbs.forEach( limb => {
+  Constants.Colors.forEach( color => {
+    const combined = `${ limb } ${ color }`;
+    sounds[ combined ] = new Audio( `./audio/${ combined }.ogg` );
+  } );
+} );
+
 const FootPath1 = new Path2D( `
   M -0.9024639426356051,0.009603489512464591
   L -0.3304297683130988,0.9340301407338849
@@ -154,6 +163,11 @@ gameCanvas.update = ( dt ) => {
     const color = index % NumColors;
 
     limbColors[ limb ] = color;
+
+    const name = `${ Constants.Limbs[ limb ] } ${ Constants.Colors[ color ] }`;
+
+    console.log( name );
+    sounds[ name ].play();
   }
 }
 
