@@ -168,8 +168,8 @@ gameCanvas.update = ( dt ) => {
     sound.src = `./audio/${ name }.ogg`;
     sound.play();
 
-    // For now, do automatic re-spins every 5 seconds
-    timer = setTimeout( doSpin, 5000 );
+    // For now, do automatic re-spins every 10 seconds
+    timer = setTimeout( doSpin, 10 * 1000 );
   }
 }
 
